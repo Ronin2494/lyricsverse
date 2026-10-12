@@ -5,6 +5,7 @@ import {saveRating,getRatingSummary} from '../api/src/ratings.mjs';
 function mockDatabase(){
  const records=new Map();
  const collection={
+  async createIndex(keys,options){ assert.deepEqual(keys,{visitorId:1});assert.equal(options.unique,true);return 'unique_rating_visitor'; },
   async updateOne(filter,update,options){
    assert.equal(options.upsert,true);
    const previous=records.get(filter.visitorId);

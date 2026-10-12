@@ -18,7 +18,7 @@ export function jsonResponse(res, status, data, origin) {
 }
 function allowedOrigin(req, env) {
   const origin = req.headers.origin;
-  const allowed = new Set([env.CORS_ORIGIN, 'http://localhost:4173', 'http://127.0.0.1:4173'].filter(Boolean));
+  const allowed = new Set(['https://lyricsverse.onrender.com',env.CORS_ORIGIN, 'http://localhost:4173', 'http://127.0.0.1:4173'].filter(Boolean));
   if (!origin) return env.CORS_ORIGIN || 'https://lyricsverse.onrender.com';
   return allowed.has(origin) ? origin : null;
 }
@@ -35,13 +35,13 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         const auth=adminAuthStatus(req,env);
         if(auth==='not_configured') return jsonResponse(res,503,{error:'admin_key_not_configured'},origin);
         if(auth!=='ok') return jsonResponse(res,401,{error:'invalid_admin_key'},origin);
-        if(req.method==='GET') {try{return jsonResponse(res,200,{data:await listAdminLyrics()},origin);}catch{return jsonResponse(res,503,{error:'database_unavailable'},origin);}}
+        if(req.method==='GET') {try{return jsonResponse(res,200,{data:await listAdminLyrics()},origin);}catch(e){console.error('Admin list failed:',e?.message);return jsonResponse(res,503,{error:'database_unavailable'},origin);}}
         if(req.method!=='POST') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
         const length=Number(req.headers['content-length']||0);
         if(length>75000) return jsonResponse(res,413,{error:'payload_too_large'},origin);
         let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>75000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}
         let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}
-        try{return jsonResponse(res,201,{data:await createAdminLyrics(body)},origin);}catch(e){return jsonResponse(res,e.message==='database_unavailable'?503:400,{error:e.message||'invalid_payload'},origin);}
+        try{return jsonResponse(res,201,{data:await createAdminLyrics(body)},origin);}catch(e){const validation=['invalid_payload','required_fields_missing','invalid_language','invalid_status','invalid_access_tier'];if(!validation.includes(e.message)){console.error('Admin save failed:',e?.message);return jsonResponse(res,503,{error:'database_write_failed'},origin);}return jsonResponse(res,400,{error:e.message},origin);}
       }
       if(req.method==='POST') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
       if (url.pathname === '/health') {

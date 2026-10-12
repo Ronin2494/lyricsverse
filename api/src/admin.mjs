@@ -17,7 +17,8 @@ export function validateLyrics(input) {
   if(!/^[a-zA-Z]{2,8}(-[a-zA-Z0-9]{2,8})*$/.test(language)) throw Error('invalid_language');
   if(!['free','premium'].includes(input.accessTier||'free')) throw Error('invalid_access_tier');
   if(!['draft','published'].includes(input.status)) throw Error('invalid_status');
-  return {title,artist,genre,language,lyrics,status:input.status,accessTier:input.accessTier||'free',source:'original',rights:{lyricsDisplayAuthorized:input.rightsConfirmed===true,proofReference:clean(input.rightsReference,500)||null},createdAt:new Date(),updatedAt:new Date()};
+  if(input.thumbnailUrl && (!/^https:\/\/[^\s]+$/i.test(input.thumbnailUrl)||input.thumbnailUrl.length>1000)) throw Error('invalid_thumbnail_url');
+ return {title,artist,genre,language,lyrics,thumbnailUrl:clean(input.thumbnailUrl,1000)||null,status:input.status,accessTier:input.accessTier||'free',source:'original',rights:{lyricsDisplayAuthorized:input.rightsConfirmed===true,proofReference:clean(input.rightsReference,500)||null},createdAt:new Date(),updatedAt:new Date()};
 }
 export async function createAdminLyrics(input){const doc=validateLyrics(input);const db=await getDatabase();const r=await db.collection('songs').insertOne(doc);return {id:String(r.insertedId),status:doc.status};}
 export async function listAdminLyrics(){const db=await getDatabase();const docs=await db.collection('songs').find({source:'original'},{projection:{lyrics:0,rights:0}}).sort({createdAt:-1}).limit(100).toArray();return docs.map(d=>({...d,_id:String(d._id)}));}

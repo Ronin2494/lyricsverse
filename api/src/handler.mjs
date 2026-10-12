@@ -51,7 +51,7 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
       if (url.pathname === '/api/v1/wikidata/songs') { const language=url.searchParams.get('language')||'en'; if(!['en','hi','pa'].includes(language))return jsonResponse(res,400,{error:'unsupported_language'},origin); try {const data=await fetchCatalog(language);return jsonResponse(res,200,{data,total:data.length,source:'wikidata',lyricsLicensed:false},origin);}catch{return jsonResponse(res,503,{error:'catalog_temporarily_unavailable',data:[]},origin);} }
       if (url.pathname === '/api/v1/catalog/songs') {
         const language = url.searchParams.get('language') || '';
-        if (language && !['en','hi','pa'].includes(language)) return jsonResponse(res,400,{error:'unsupported_language'},origin);
+        if (language && !/^[a-zA-Z]{2,8}(-[a-zA-Z0-9]{2,8})*$/.test(language)) return jsonResponse(res,400,{error:'unsupported_language'},origin);
         const limit = Number(url.searchParams.get('limit') || 24);
         if (!Number.isInteger(limit) || limit < 1 || limit > 100) return jsonResponse(res,400,{error:'invalid_limit'},origin);
         try { const data = await listCatalog({ language, limit }); return jsonResponse(res,200,{data,total:data.length,source:'mongodb'},origin); }

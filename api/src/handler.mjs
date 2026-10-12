@@ -1,3 +1,4 @@
+import { searchMusicBrainz } from './musicbrainz.mjs';
 import {saveRating,getRatingSummary} from './ratings.mjs';
 import { adminAuthStatus, createAdminLyrics, listAdminLyrics } from './admin.mjs';
 import { listPublishedSongs, getPublishedSong } from './repository.mjs';
@@ -96,6 +97,12 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         if (language && !['en','hi'].includes(language)) return jsonResponse(res, 400, { error: 'unsupported_language' }, origin);
         const songs = getAllSongs().filter(s => !language || s.language === language);
         return jsonResponse(res, 200, { data: songs, total: songs.length }, origin);
+      }
+      if (url.pathname === '/api/v1/providers/musicbrainz/search') {
+        const q = (url.searchParams.get('q') || '').trim();
+        if (q.length < 2 || q.length > 120) return jsonResponse(res,400,{error:'invalid_query'},origin);
+        try { const data = await searchMusicBrainz(q); return jsonResponse(res,200,{data,total:data.length,source:'musicbrainz',lyricsLicensed:false},origin); }
+        catch { return jsonResponse(res,503,{error:'provider_unavailable',data:[]},origin); }
       }
       if (url.pathname === '/api/v1/search') {
         const q = url.searchParams.get('q') ?? '';

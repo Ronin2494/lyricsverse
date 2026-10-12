@@ -1,14 +1,15 @@
 import { getDatabase } from './mongo.mjs';
 import { timingSafeEqual, createHash } from 'node:crypto';
 const clean = (v,max=200) => typeof v==='string' ? v.trim().slice(0,max) : '';
-export function authorized(req, env=process.env) {
+export function adminAuthStatus(req, env=process.env) {
   const secret=env.ADMIN_API_KEY;
-  if(!secret || secret.length<24) return false;
+  if(!secret || secret.length<24) return 'not_configured';
   const token=(req.headers.authorization||'').replace(/^Bearer /i,'');
-  if(!token) return false;
+  if(!token) return 'invalid';
   const a=createHash('sha256').update(token).digest(),b=createHash('sha256').update(secret).digest();
-  return timingSafeEqual(a,b);
+  return timingSafeEqual(a,b) ? 'ok' : 'invalid';
 }
+export function authorized(req,env=process.env){return adminAuthStatus(req,env)==='ok';}
 export function validateLyrics(input) {
   if(!input || typeof input!=='object' || Array.isArray(input)) throw Error('invalid_payload');
   const title=clean(input.title),artist=clean(input.artist),genre=clean(input.genre,100),language=clean(input.language,64),lyrics=clean(input.lyrics,50000);

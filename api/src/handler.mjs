@@ -103,7 +103,7 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         const q=(url.searchParams.get('q')||'').trim();
         if(q.length<2||q.length>120)return jsonResponse(res,400,{error:'invalid_query'},origin);
         const [lrclib,others]=await Promise.all([searchLrclib(q).catch(()=>[]),searchAdditionalSources(q)]);
-        const sources=[...lrclib.filter(x=>x.hasLyrics).slice(0,1).map(x=>({provider:'LRCLIB',title:x.title,artist:x.artist,url:x.source})),...others.map(x=>({provider:x.provider,title:x.title,artist:x.artist,url:x.url}))];
+        const sources=[...lrclib.filter(x=>x.hasLyrics&&q.toLocaleLowerCase().split(/\s+/).every(term=>(x.title+' '+x.artist).toLocaleLowerCase().includes(term))).slice(0,1).map(x=>({provider:'LRCLIB',title:x.title,artist:x.artist,url:x.source})),...others.map(x=>({provider:x.provider,title:x.title,artist:x.artist,url:x.url}))];
         return jsonResponse(res,200,{data:sources,query:q},origin);
       }
       if (url.pathname === '/api/v1/providers/lrclib/search') {

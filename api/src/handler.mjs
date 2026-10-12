@@ -1,3 +1,4 @@
+import {saveRating,getRatingSummary} from './ratings.mjs';
 import { adminAuthStatus, createAdminLyrics, listAdminLyrics } from './admin.mjs';
 import { listPublishedSongs, getPublishedSong } from './repository.mjs';
 import { getWikidataSongs } from './wikidata.mjs';
@@ -49,6 +50,21 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>75000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}
         let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}
         try{return jsonResponse(res,201,{data:await createAdminLyrics(body)},origin);}catch(e){const validation=['invalid_payload','required_fields_missing','invalid_language','invalid_status','invalid_access_tier'];if(!validation.includes(e.message)){console.error('Admin save failed:',e?.message);return jsonResponse(res,503,{error:'database_write_failed'},origin);}return jsonResponse(res,400,{error:e.message},origin);}
+      }
+      if (url.pathname === '/api/v1/ratings') {
+        if (req.method === 'GET') {
+          try { return jsonResponse(res,200,{data:await getRatingSummary()},origin); }
+          catch { return jsonResponse(res,503,{error:'database_unavailable'},origin); }
+        }
+        if (req.method !== 'POST') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
+        let raw='';
+        for await (const chunk of req) { raw+=chunk; if(raw.length>1024) return jsonResponse(res,413,{error:'payload_too_large'},origin); }
+        let body;
+        try { body=JSON.parse(raw); } catch { return jsonResponse(res,400,{error:'invalid_json'},origin); }
+        if (!body || !Number.isInteger(body.rating) || body.rating<1 || body.rating>5 || typeof body.visitorId!=='string' || !/^[a-f0-9-]{36}$/.test(body.visitorId))
+          return jsonResponse(res,400,{error:'invalid_rating_payload'},origin);
+        try { await saveRating(body); return jsonResponse(res,200,{data:await getRatingSummary()},origin); }
+        catch { return jsonResponse(res,503,{error:'database_unavailable'},origin); }
       }
       if(req.method==='POST') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
       if (url.pathname === '/health') {

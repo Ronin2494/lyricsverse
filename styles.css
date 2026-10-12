@@ -312,3 +312,10 @@ button:focus-visible { outline-offset: 2px; }
 .original-floater-link{font-size:12px;font-weight:700;color:var(--lv-color-accent);white-space:nowrap}
 .original-floater-close{position:absolute;right:8px;top:5px;width:26px;height:26px;border:0;background:transparent;color:var(--lv-color-muted);font-size:20px}
 @media(max-width:767px){.original-floater{right:12px;bottom:82px;width:min(320px,calc(100vw - 24px));padding:11px 32px 11px 11px}.original-floater-icon{width:34px;height:34px}}
+
+
+/* Song artwork: user-supplied covers with a graceful fallback */
+img.original-floater-icon{object-fit:cover;display:block}
+.original-thumbnail-fallback{display:grid;place-items:center;background:var(--lv-color-raised);color:var(--lv-color-accent)}
+.original-reader-art{margin:20px 0;max-width:220px}
+.original-reader-image{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--lv-radius-lg);border:1px solid var(--lv-color-border)}

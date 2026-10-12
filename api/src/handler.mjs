@@ -31,6 +31,13 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
     let url;
     try { url = new URL(req.url, 'http://localhost'); } catch { return jsonResponse(res, 400, { error: 'invalid_url' }, origin); }
     try {
+      if (url.pathname === '/api/v1/admin/session') {
+        if(req.method!=='GET') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
+        const auth=adminAuthStatus(req,env);
+        if(auth==='not_configured') return jsonResponse(res,503,{error:'admin_key_not_configured'},origin);
+        if(auth!=='ok') return jsonResponse(res,401,{error:'invalid_admin_key'},origin);
+        return jsonResponse(res,200,{authenticated:true},origin);
+      }
       if (url.pathname === '/api/v1/admin/lyrics') {
         const auth=adminAuthStatus(req,env);
         if(auth==='not_configured') return jsonResponse(res,503,{error:'admin_key_not_configured'},origin);

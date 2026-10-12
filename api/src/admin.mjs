@@ -2,7 +2,7 @@ import { getDatabase } from './mongo.mjs';
 import { timingSafeEqual, createHash } from 'node:crypto';
 const clean = (v,max=200) => typeof v==='string' ? v.trim().slice(0,max) : '';
 export function adminAuthStatus(req, env=process.env) {
-  const secret=env.ADMIN_API_KEY;
+  const secret=typeof env.ADMIN_API_KEY==='string'?env.ADMIN_API_KEY.trim():'';
   if(!secret || secret.length<24) return 'not_configured';
   const token=(req.headers.authorization||'').replace(/^Bearer /i,'');
   if(!token) return 'invalid';

@@ -2,7 +2,6 @@ const agent='LyricVerse/1.0 (https://lyricsverse.onrender.com)';
 const cache=new Map();
 const validUrl=url=>typeof url==='string'&&/^https:\/\//.test(url);
 const providers=[
- {name:'LRCLIB',url:q=>'https://lrclib.net/api/search?q='+encodeURIComponent(q),map:body=>Array.isArray(body)?body.filter(r=>r.plainLyrics||r.syncedLyrics).map(r=>({title:r.trackName,artist:r.artistName,url:'https://lrclib.net/',hasLyrics:true})):[]},
  {name:'Genius',url:q=>'https://genius.com/api/search/song?q='+encodeURIComponent(q),map:body=>(body.response?.sections?.flatMap(s=>s.hits||[])||body.response?.hits||[]).map(h=>({title:h.result?.title,artist:h.result?.primary_artist?.name,url:h.result?.url}))}
 ];
 export async function searchAdditionalSources(query,fetcher=fetch){
@@ -18,5 +17,5 @@ export async function searchAdditionalSources(query,fetcher=fetch){
   });
   const best=ranked[0];const text=best?(best.title+' '+best.artist).toLocaleLowerCase():'';return best&&terms.every(t=>text.includes(t))?{provider:provider.name,...best}:null;
  }catch{return null;}}));
- const data=results.filter(Boolean);cache.set(key,{expires:Date.now()+300000,data});if(cache.size>100)cache.delete(cache.keys().next().value);return data;
+ const data=[...results.filter(Boolean),{provider:'Web lyrics search',title:q,artist:'Search the web for this song',url:'https://www.google.com/search?q='+encodeURIComponent('"'+q+'" lyrics')}];cache.set(key,{expires:Date.now()+300000,data});if(cache.size>100)cache.delete(cache.keys().next().value);return data;
 }

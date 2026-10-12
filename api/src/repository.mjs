@@ -19,7 +19,7 @@ export function validateSong(input) {
   return { title: input.title.trim(), language: input.language, source: input.source, externalId: input.externalId || null, artistNames: input.artistNames, status: input.status || 'draft', rights: { lyricsDisplayAuthorized: rights.lyricsDisplayAuthorized === true, audioDistributionAuthorized: rights.audioDistributionAuthorized === true, proofReference: rights.proofReference || null }, createdAt: new Date(), updatedAt: new Date() };
 }
 export async function listPublishedSongs({ language, limit = 24 } = {}) {
-  if (language && !LANGUAGES.has(language)) throw invalid('invalid_language');
+  if (language && !/^[a-zA-Z]{2,8}(-[a-zA-Z0-9]{2,8})*$/.test(language)) throw invalid('invalid_language');
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 24));
   const db = await getDatabase();
   const query = { status: 'published', ...(language ? { language } : {}) };

@@ -1,3 +1,4 @@
+import { getWikidataSongs } from './wikidata.mjs';
 import { getAllSongs, getGenres, getLanguages, getLyrics, getSong, searchSongs } from './catalog.mjs';
 
 export function jsonResponse(res, status, data, origin) {
@@ -19,7 +20,7 @@ function allowedOrigin(req, env) {
   if (!origin) return env.CORS_ORIGIN || 'https://lyricsverse.onrender.com';
   return allowed.has(origin) ? origin : null;
 }
-export function createHandler({ env = process.env, checkDb = async () => ({ available: false, reason: 'not_configured' }) } = {}) {
+export function createHandler({ env = process.env, fetchCatalog = getWikidataSongs, checkDb = async () => ({ available: false, reason: 'not_configured' }) } = {}) {
   return async (req, res) => {
     const origin = allowedOrigin(req, env);
     if (!origin) return jsonResponse(res, 403, { error: 'origin_not_allowed' }, 'null');
@@ -32,6 +33,7 @@ export function createHandler({ env = process.env, checkDb = async () => ({ avai
         const db = await checkDb();
         return jsonResponse(res, 200, { service: 'lyricsverse-api', status: 'ok', database: db.available ? 'connected' : 'not_connected', catalog: 'original_demo', ...(!db.available ? { detail: db.reason } : {}) }, origin);
       }
+      if (url.pathname === '/api/v1/wikidata/songs') { const language=url.searchParams.get('language')||'en'; if(!['en','hi','pa'].includes(language))return jsonResponse(res,400,{error:'unsupported_language'},origin); try {const data=await fetchCatalog(language);return jsonResponse(res,200,{data,total:data.length,source:'wikidata',lyricsLicensed:false},origin);}catch{return jsonResponse(res,503,{error:'catalog_temporarily_unavailable',data:[]},origin);} }
       if (url.pathname === '/api/v1/languages') return jsonResponse(res, 200, { data: getLanguages() }, origin);
       if (url.pathname === '/api/v1/genres') {
         const language = url.searchParams.get('language') || 'en';

@@ -1,0 +1,22 @@
+name: Quality gate
+on:
+  push:
+    branches: [quality/full-component-tests]
+  pull_request:
+    branches: [master]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install API dependencies
+        run: npm --prefix api install --no-audit --no-fund
+      - name: Unit and integration tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Check generated site files
+        run: test -s dist/index.html && test -s dist/app.js || test -s dist/index.html

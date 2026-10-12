@@ -3,8 +3,7 @@ const cache=new Map();
 const validUrl=url=>typeof url==='string'&&/^https:\/\//.test(url);
 const providers=[
  {name:'LRCLIB',url:q=>'https://lrclib.net/api/search?q='+encodeURIComponent(q),map:body=>Array.isArray(body)?body.filter(r=>r.plainLyrics||r.syncedLyrics).map(r=>({title:r.trackName,artist:r.artistName,url:'https://lrclib.net/',hasLyrics:true})):[]},
- {name:'Genius',url:q=>'https://genius.com/api/search/song?q='+encodeURIComponent(q),map:body=>(body.response?.sections?.flatMap(s=>s.hits||[])||body.response?.hits||[]).map(h=>({title:h.result?.title,artist:h.result?.primary_artist?.name,url:h.result?.url}))},
- {name:'MusicBrainz',url:q=>'https://musicbrainz.org/ws/2/recording/?query='+encodeURIComponent(q)+'&fmt=json&limit=8',map:body=>(body.recordings||[]).map(r=>({title:r.title,artist:(r['artist-credit']||[]).map(a=>a.name||a.artist?.name||'').join(''),url:/^[0-9a-f-]{36}$/i.test(r.id||'')?'https://musicbrainz.org/recording/'+r.id:null}))}
+ {name:'Genius',url:q=>'https://genius.com/api/search/song?q='+encodeURIComponent(q),map:body=>(body.response?.sections?.flatMap(s=>s.hits||[])||body.response?.hits||[]).map(h=>({title:h.result?.title,artist:h.result?.primary_artist?.name,url:h.result?.url}))}
 ];
 export async function searchAdditionalSources(query,fetcher=fetch){
  const q=String(query||'').trim();if(q.length<2||q.length>120)return [];
@@ -17,7 +16,7 @@ export async function searchAdditionalSources(query,fetcher=fetch){
    const score=x=>terms.reduce((n,t)=>n+(String(x.title)+' '+String(x.artist)).toLocaleLowerCase().includes(t),0);
    return score(b)-score(a);
   });
-  return ranked.length?{provider:provider.name,...ranked[0]}:null;
+  const best=ranked[0];const text=best?(best.title+' '+best.artist).toLocaleLowerCase():'';return best&&terms.every(t=>text.includes(t))?{provider:provider.name,...best}:null;
  }catch{return null;}}));
  const data=results.filter(Boolean);cache.set(key,{expires:Date.now()+300000,data});if(cache.size>100)cache.delete(cache.keys().next().value);return data;
 }

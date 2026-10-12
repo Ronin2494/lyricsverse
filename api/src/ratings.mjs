@@ -4,9 +4,18 @@ export function validateRating(value) {
   if (!Number.isInteger(value) || value < 1 || value > 5) throw new Error('invalid_rating');
   return value;
 }
+let ratingsIndexPromise;
+export async function ensureRatingsIndex(database = getDatabase) {
+  if (!ratingsIndexPromise) ratingsIndexPromise = (async () => {
+    const db = await database();
+    await db.collection('ratings').createIndex({ visitorId: 1 }, { unique: true, name: 'unique_rating_visitor' });
+  })().catch(error => { ratingsIndexPromise = undefined; throw error; });
+  return ratingsIndexPromise;
+}
 export async function saveRating({ rating, visitorId }, database = getDatabase) {
   validateRating(rating);
   if (typeof visitorId !== 'string' || !/^[a-f0-9-]{36}$/.test(visitorId)) throw new Error('invalid_visitor_id');
+  await ensureRatingsIndex(database);
   const db = await database();
   await db.collection('ratings').updateOne(
     { visitorId },

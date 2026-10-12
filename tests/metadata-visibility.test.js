@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('../src/app.js',import.meta.url),'utf8');
+const handler=readFileSync(new URL('../api/src/handler.mjs',import.meta.url),'utf8');
+const section=(start,end)=>{const a=source.indexOf(start);const b=source.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,'expected page boundaries');return source.slice(a,b);};
+test('homepage never renders metadata-only Wikidata catalog',()=>{const home=section('function homeHTML()','function searchPageHTML()');assert.doesNotMatch(home,/realCatalogHTML\(\)|realSongCard\(/);});
+test('search never renders metadata-only Wikidata cards',()=>{const search=section('function searchPageHTML()','function libraryHTML()');assert.doesNotMatch(search,/realCatalogHTML\(\)|realSongCard\(|Lyrics not yet licensed/);});
+test('app bootstrap and language switching never fetch Wikidata',()=>{assert.doesNotMatch(source,/\bloadRealCatalog\(\s*\)\s*;/);});
+test('LRCLIB discovery only exposes songs with lyrics and matching search terms',()=>{assert.match(handler,/lrclib\.filter\(x=>x\.hasLyrics&&/);assert.match(handler,/\.every\(term=>/);});
+test('Original Compositions section stays present',()=>{assert.match(source,/\$\{originalCompositionsHTML\(\)\}/);});

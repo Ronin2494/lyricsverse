@@ -1,3 +1,4 @@
+import { searchAdditionalSources } from './additional-sources.mjs';
 import { searchLrclib } from './lrclib.mjs';
 import {saveRating,getRatingSummary} from './ratings.mjs';
 import { adminAuthStatus, createAdminLyrics, listAdminLyrics } from './admin.mjs';
@@ -97,6 +98,13 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         if (language && !['en','hi'].includes(language)) return jsonResponse(res, 400, { error: 'unsupported_language' }, origin);
         const songs = getAllSongs().filter(s => !language || s.language === language);
         return jsonResponse(res, 200, { data: songs, total: songs.length }, origin);
+      }
+      if (url.pathname === '/api/v1/providers/discovery/search') {
+        const q=(url.searchParams.get('q')||'').trim();
+        if(q.length<2||q.length>120)return jsonResponse(res,400,{error:'invalid_query'},origin);
+        const [lrclib,others]=await Promise.all([searchLrclib(q).catch(()=>[]),searchAdditionalSources(q)]);
+        const sources=[...lrclib.filter(x=>x.hasLyrics).slice(0,1).map(x=>({provider:'LRCLIB',title:x.title,artist:x.artist,url:x.source})),...others.map(x=>({provider:x.provider,title:x.title,artist:x.artist,url:x.url}))];
+        return jsonResponse(res,200,{data:sources,query:q},origin);
       }
       if (url.pathname === '/api/v1/providers/lrclib/search') {
         const q=(url.searchParams.get('q')||'').trim();

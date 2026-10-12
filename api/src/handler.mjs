@@ -43,7 +43,7 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         try { const data = await listCatalog({ language, limit }); return jsonResponse(res,200,{data,total:data.length,source:'mongodb'},origin); }
         catch { return jsonResponse(res,503,{error:'database_unavailable'},origin); }
       }
-      const catalogMatch = url.pathname.match(/^\\/api\\/v1\\/catalog\\/songs\\/([a-f0-9]{24})$/i);
+      const catalogMatch = url.pathname.match(/^\/api\/v1\/catalog\/songs\/([a-f0-9]{24})$/i);
       if (catalogMatch) {
         try { const song = await getCatalogSong(catalogMatch[1]); return song ? jsonResponse(res,200,{data:song},origin) : jsonResponse(res,404,{error:'song_not_found'},origin); }
         catch { return jsonResponse(res,503,{error:'database_unavailable'},origin); }

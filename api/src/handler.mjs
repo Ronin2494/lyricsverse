@@ -1,3 +1,4 @@
+import { authorized, createAdminLyrics, listAdminLyrics } from './admin.mjs';
 import { listPublishedSongs, getPublishedSong } from './repository.mjs';
 import { getWikidataSongs } from './wikidata.mjs';
 import { getAllSongs, getGenres, getLanguages, getLyrics, getSong, searchSongs } from './catalog.mjs';
@@ -9,8 +10,8 @@ export function jsonResponse(res, status, data, origin) {
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
     'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Vary': 'Origin'
   });
   res.end(JSON.stringify(data));
@@ -26,10 +27,21 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
     const origin = allowedOrigin(req, env);
     if (!origin) return jsonResponse(res, 403, { error: 'origin_not_allowed' }, 'null');
     if (req.method === 'OPTIONS') return jsonResponse(res, 204, null, origin);
-    if (req.method !== 'GET' && req.method !== 'HEAD') return jsonResponse(res, 405, { error: 'method_not_allowed' }, origin);
+    if (!['GET','HEAD','POST'].includes(req.method)) return jsonResponse(res, 405, { error: 'method_not_allowed' }, origin);
     let url;
     try { url = new URL(req.url, 'http://localhost'); } catch { return jsonResponse(res, 400, { error: 'invalid_url' }, origin); }
     try {
+      if (url.pathname === '/api/v1/admin/lyrics') {
+        if (!authorized(req,env)) return jsonResponse(res,401,{error:'unauthorized'},origin);
+        if(req.method==='GET') {try{return jsonResponse(res,200,{data:await listAdminLyrics()},origin);}catch{return jsonResponse(res,503,{error:'database_unavailable'},origin);}}
+        if(req.method!=='POST') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
+        const length=Number(req.headers['content-length']||0);
+        if(length>75000) return jsonResponse(res,413,{error:'payload_too_large'},origin);
+        let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>75000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}
+        let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}
+        try{return jsonResponse(res,201,{data:await createAdminLyrics(body)},origin);}catch(e){return jsonResponse(res,e.message==='database_unavailable'?503:400,{error:e.message||'invalid_payload'},origin);}
+      }
+      if(req.method==='POST') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
       if (url.pathname === '/health') {
         const db = await checkDb();
         return jsonResponse(res, 200, { service: 'lyricsverse-api', status: 'ok', database: db.available ? 'connected' : 'not_connected', catalog: 'original_demo', ...(!db.available ? { detail: db.reason } : {}) }, origin);

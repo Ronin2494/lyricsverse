@@ -1,9 +1,23 @@
 const agent='LyricVerse/1.0 (https://lyricsverse.onrender.com)';
+const cache=new Map();
+const validUrl=url=>typeof url==='string'&&/^https:\/\//.test(url);
+const providers=[
+ {name:'LRCLIB',url:q=>'https://lrclib.net/api/search?q='+encodeURIComponent(q),map:body=>Array.isArray(body)?body.filter(r=>r.plainLyrics||r.syncedLyrics).map(r=>({title:r.trackName,artist:r.artistName,url:'https://lrclib.net/',hasLyrics:true})):[]},
+ {name:'Genius',url:q=>'https://genius.com/api/search/song?q='+encodeURIComponent(q),map:body=>(body.response?.sections?.flatMap(s=>s.hits||[])||body.response?.hits||[]).map(h=>({title:h.result?.title,artist:h.result?.primary_artist?.name,url:h.result?.url}))},
+ {name:'MusicBrainz',url:q=>'https://musicbrainz.org/ws/2/recording/?query='+encodeURIComponent(q)+'&fmt=json&limit=8',map:body=>(body.recordings||[]).map(r=>({title:r.title,artist:(r['artist-credit']||[]).map(a=>a.name||a.artist?.name||'').join(''),url:/^[0-9a-f-]{36}$/i.test(r.id||'')?'https://musicbrainz.org/recording/'+r.id:null}))}
+];
 export async function searchAdditionalSources(query,fetcher=fetch){
  const q=String(query||'').trim();if(q.length<2||q.length>120)return [];
- const sources=[
-  {name:'MusicBrainz',url:'https://musicbrainz.org/ws/2/recording/?query='+encodeURIComponent(q)+'&fmt=json&limit=5',map:body=>(body.recordings||[]).map(r=>({title:r.title,artist:(r['artist-credit']||[]).map(a=>a.name||a.artist?.name||'').join(''),url:/^[0-9a-f-]{36}$/i.test(r.id||'')?'https://musicbrainz.org/recording/'+r.id:null}))},
-  {name:'Apple Music',url:'https://itunes.apple.com/search?term='+encodeURIComponent(q)+'&entity=song&limit=5',map:body=>(body.results||[]).map(r=>({title:r.trackName,artist:r.artistName,url:r.trackViewUrl}))}
- ];
- const results=await Promise.all(sources.map(async s=>{try{const response=await fetcher(s.url,{headers:{'User-Agent':agent,Accept:'application/json'},signal:AbortSignal.timeout(4500)});if(!response.ok)return null;const body=await response.json();const items=s.map(body);const item=items.find(x=>x.title&&x.artist&&typeof x.url==='string'&&x.url.startsWith('https://'));return item?{provider:s.name,...item}:null;}catch{return null;}}));return results.filter(Boolean);
+ const key=q.toLocaleLowerCase(),hit=cache.get(key);if(hit&&hit.expires>Date.now())return hit.data;
+ const results=await Promise.all(providers.map(async provider=>{try{
+  const response=await fetcher(provider.url(q),{headers:{'User-Agent':agent,Accept:'application/json'},signal:AbortSignal.timeout(4500)});
+  if(!response.ok)return null;const items=provider.map(await response.json());
+  const terms=q.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  const ranked=items.filter(x=>x.title&&x.artist&&validUrl(x.url)).sort((a,b)=>{
+   const score=x=>terms.reduce((n,t)=>n+(String(x.title)+' '+String(x.artist)).toLocaleLowerCase().includes(t),0);
+   return score(b)-score(a);
+  });
+  return ranked.length?{provider:provider.name,...ranked[0]}:null;
+ }catch{return null;}}));
+ const data=results.filter(Boolean);cache.set(key,{expires:Date.now()+300000,data});if(cache.size>100)cache.delete(cache.keys().next().value);return data;
 }

@@ -300,3 +300,15 @@ button:focus-visible { outline-offset: 2px; }
 @media(max-width:850px){.original-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.original-compositions{padding:20px}.original-heading{align-items:flex-start;flex-direction:column}.original-grid{grid-template-columns:1fr}.original-card{padding:20px}.original-lyrics{padding:20px}}
 @media(prefers-reduced-motion:reduce){.original-card{transition:none}}
+
+
+/* Compact, dismissible original composition floater */
+.original-floater{position:fixed;right:22px;bottom:22px;z-index:55;display:flex;align-items:center;gap:12px;width:min(350px,calc(100vw - 32px));padding:14px 38px 14px 14px;background:var(--lv-color-surface);border:1px solid var(--lv-color-primary);border-radius:16px;box-shadow:0 14px 40px #0009}
+.original-floater-icon{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;background:var(--lv-color-raised);color:var(--lv-color-accent);font-size:22px}
+.original-floater-copy{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.original-floater-label{font-size:10px;font-weight:800;letter-spacing:.07em;color:var(--lv-color-accent)}
+.original-floater-copy strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.original-floater-copy small{font-size:12px;color:var(--lv-color-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.original-floater-link{font-size:12px;font-weight:700;color:var(--lv-color-accent);white-space:nowrap}
+.original-floater-close{position:absolute;right:8px;top:5px;width:26px;height:26px;border:0;background:transparent;color:var(--lv-color-muted);font-size:20px}
+@media(max-width:767px){.original-floater{right:12px;bottom:82px;width:min(320px,calc(100vw - 24px));padding:11px 32px 11px 11px}.original-floater-icon{width:34px;height:34px}}

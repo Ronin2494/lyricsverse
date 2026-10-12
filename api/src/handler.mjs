@@ -1,4 +1,4 @@
-import { authorized, createAdminLyrics, listAdminLyrics } from './admin.mjs';
+import { adminAuthStatus, createAdminLyrics, listAdminLyrics } from './admin.mjs';
 import { listPublishedSongs, getPublishedSong } from './repository.mjs';
 import { getWikidataSongs } from './wikidata.mjs';
 import { getAllSongs, getGenres, getLanguages, getLyrics, getSong, searchSongs } from './catalog.mjs';
@@ -32,7 +32,9 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
     try { url = new URL(req.url, 'http://localhost'); } catch { return jsonResponse(res, 400, { error: 'invalid_url' }, origin); }
     try {
       if (url.pathname === '/api/v1/admin/lyrics') {
-        if (!authorized(req,env)) return jsonResponse(res,401,{error:'unauthorized'},origin);
+        const auth=adminAuthStatus(req,env);
+        if(auth==='not_configured') return jsonResponse(res,503,{error:'admin_key_not_configured'},origin);
+        if(auth!=='ok') return jsonResponse(res,401,{error:'invalid_admin_key'},origin);
         if(req.method==='GET') {try{return jsonResponse(res,200,{data:await listAdminLyrics()},origin);}catch{return jsonResponse(res,503,{error:'database_unavailable'},origin);}}
         if(req.method!=='POST') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
         const length=Number(req.headers['content-length']||0);

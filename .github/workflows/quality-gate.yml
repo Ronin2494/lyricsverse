@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install API dependencies
-        run: npm --prefix api ci
+        run: npm --prefix api install --no-audit --no-fund
       - name: Unit and integration tests
         run: npm test
       - name: Production build

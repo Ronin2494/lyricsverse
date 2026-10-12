@@ -42,9 +42,9 @@ export const hindiDemoLyrics = {
   ]
 };
 export const allSongs = [readerSong, ...topSongs, ...newSongs, ...hindiSongs];
-export const genresHindi = ['All','Hindi Pop','Hindi Indie','Acoustic'];
-export const genresDesktop = ['All','Pop','Rock','Hip-Hop','R&B','Indie','Electronic','K-Pop'];
-export const genresMobile = ['All','Pop','Rock','R&B'];
+export const genresHindi = ['All','Hindi-English Mix','Hindi Pop','Hindi Indie','Acoustic'];
+export const genresDesktop = ['All','Hindi-English Mix','Pop','Rock','Hip-Hop','R&B','Indie','Electronic','K-Pop'];
+export const genresMobile = ['All','Hindi-English Mix','Pop','Rock','R&B'];
 export const originalDemoLyrics = [
   { section:'[Verse 1]', lines:[
     'The city holds its breath tonight',

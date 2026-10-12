@@ -1,4 +1,4 @@
-import { getAllSongs, getGenres, getLyrics, getSong, searchSongs } from './catalog.mjs';
+import { getAllSongs, getGenres, getLanguages, getLyrics, getSong, searchSongs } from './catalog.mjs';
 
 export function jsonResponse(res, status, data, origin) {
   res.writeHead(status, {
@@ -32,12 +32,24 @@ export function createHandler({ env = process.env, checkDb = async () => ({ avai
         const db = await checkDb();
         return jsonResponse(res, 200, { service: 'lyricsverse-api', status: 'ok', database: db.available ? 'connected' : 'not_connected', catalog: 'original_demo', ...(!db.available ? { detail: db.reason } : {}) }, origin);
       }
-      if (url.pathname === '/api/v1/genres') return jsonResponse(res, 200, { data: getGenres() }, origin);
-      if (url.pathname === '/api/v1/songs') return jsonResponse(res, 200, { data: getAllSongs(), total: getAllSongs().length }, origin);
+      if (url.pathname === '/api/v1/languages') return jsonResponse(res, 200, { data: getLanguages() }, origin);
+      if (url.pathname === '/api/v1/genres') {
+        const language = url.searchParams.get('language') || 'en';
+        if (!['en','hi'].includes(language)) return jsonResponse(res, 400, { error: 'unsupported_language' }, origin);
+        return jsonResponse(res, 200, { data: getGenres(language) }, origin);
+      }
+      if (url.pathname === '/api/v1/songs') {
+        const language = url.searchParams.get('language') || '';
+        if (language && !['en','hi'].includes(language)) return jsonResponse(res, 400, { error: 'unsupported_language' }, origin);
+        const songs = getAllSongs().filter(s => !language || s.language === language);
+        return jsonResponse(res, 200, { data: songs, total: songs.length }, origin);
+      }
       if (url.pathname === '/api/v1/search') {
         const q = url.searchParams.get('q') ?? '';
         if (q.length > 120) return jsonResponse(res, 400, { error: 'query_too_long' }, origin);
-        return jsonResponse(res, 200, { data: searchSongs(q), query: q }, origin);
+        const language = url.searchParams.get('language') || '';
+        if (language && !['en','hi'].includes(language)) return jsonResponse(res, 400, { error: 'unsupported_language' }, origin);
+        return jsonResponse(res, 200, { data: searchSongs(q, language), query: q, language: language || 'all' }, origin);
       }
       const match = url.pathname.match(/^\/api\/v1\/songs\/([a-z0-9-]{1,80})$/);
       if (match) {

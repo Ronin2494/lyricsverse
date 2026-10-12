@@ -32,3 +32,16 @@ See `FIGMA_LOCK.md`. The four approved Figma views must not change without appro
 - Rating stars save the individual visitor selection in local storage; no aggregate scores are claimed.
 - Mood discovery, product-explanation sections and full footer.
 - Public social icons are share/watch links, not fictional LyricVerse social accounts.
+
+## Hindi lyrics discovery (v0.4)
+
+- Browse **English / हिन्दी** from the homepage lyrics section or search page. The selection is saved locally.
+- Four fictional Hindi demo songs include original, internally authored Devanagari verse samples. They are explicitly **not real Bollywood lyrics**.
+- Search supports Hindi titles in Devanagari and Roman aliases such as `Sitaron Ki Baat`.
+- Noto Sans Devanagari is used for Hindi text while the original Sora/Inter design remains unchanged for English.
+- API: `GET /api/v1/languages`, `GET /api/v1/songs?language=hi`, `GET /api/v1/genres?language=hi`, `GET /api/v1/search?q=%E0%A4%B8%E0%A4%BF%E0%A4%A4%E0%A4%BE%E0%A4%B0%E0%A5%8B%E0%A4%82&language=hi`, `GET /api/v1/lyrics/sitaron-ki-baat`.
+- Database metadata migration `api/db/002_hindi_language.sql` adds language codes and localized search aliases; it is not yet applied to Render Postgres.
+
+### Production lyrics sourcing
+
+Only sample lyrics are displayed today. Before enabling copyrighted Hindi or English song text, obtain commercial API access and confirm the licensed provider grants public website display rights for every requested song and region. Musixmatch is a candidate, **not an active integration or confirmed Hindi catalog**. Respect provider copyright/attribution, country restrictions, caching/storage limitations, and branding rules. Until credentials and permissions are configured, third-party lyrics remain unavailable rather than being scraped from other websites.

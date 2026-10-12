@@ -262,3 +262,17 @@ button:focus-visible { outline-offset: 2px; }
 @media(prefers-reduced-motion:reduce){.mood-card,.compact-lyric-card{transition:none}.hero-v2 *{animation:none!important;transition:none!important}}
 
 .rotator-pause{font-size:12px;background:transparent;border:1px solid #ffffff33;}
+
+/* Hindi/Devanagari support — use current LyricVerse palette and existing spacing. */
+[lang="hi"] { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; }
+.lyrics-panel[lang="hi"] .verse { width:100%; }
+.lyrics-panel[lang="hi"] .lyric-line { font-family:'Noto Sans Devanagari','Inter',sans-serif; line-height:1.85; white-space:normal; overflow-wrap:anywhere; }
+.lyrics-panel[lang="hi"] h3 { font-family:'Noto Sans Devanagari','Inter',sans-serif; line-height:1.7; }
+.language-switch{display:inline-flex;gap:4px;padding:4px;border-radius:24px;background:var(--lv-color-raised);border:1px solid var(--lv-color-border)}
+.language-option{border:0;background:transparent;color:var(--lv-color-muted);border-radius:20px;padding:7px 14px;font:600 12px/1.4 'Inter',sans-serif;min-height:35px}
+.language-option[lang="hi"]{font-family:'Noto Sans Devanagari','Inter',sans-serif;}
+.language-option.selected{background:var(--lv-color-primary);color:var(--lv-color-background)}
+.lyrics-language-bar,.search-language-bar{display:flex;align-items:center;gap:15px;justify-content:space-between;margin:0 0 18px;color:var(--lv-color-muted);font-size:12px;font-weight:600;}
+.search-language-bar{justify-content:flex-start;margin:0 0 12px;}
+.song-card[lang="hi"] .song-card-title {font-family:'Noto Sans Devanagari','Inter',sans-serif}
+@media(max-width:767px){.lyrics-language-bar{gap:6px;margin-top:-2px;}.language-switch{flex:0 0 auto}.language-option{padding:6px 10px;min-height:33px}.compact-card-copy strong[lang="hi"]{font-size:13px;white-space:normal;line-height:1.55}.compact-artist[lang="hi"]{font-size:11px;line-height:1.45}.song-card-details [lang="hi"]{font-family:'Noto Sans Devanagari','Inter',sans-serif;white-space:normal;line-height:1.5}.lyrics-panel[lang="hi"] .lyric-line{font-size:calc(17px + var(--lyrics-adjust));white-space:normal;line-height:1.9}.search-language-bar{flex-wrap:wrap;}}

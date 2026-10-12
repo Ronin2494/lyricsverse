@@ -24,3 +24,7 @@ Source Figma: https://www.figma.com/design/5pzyFO15tcqDbkUnbKTEuj
 - Mobile redesign: Figma node `13:247` — 390px, stacked 2×2 lyrics / videos / links / moods / footer.
 - Original Figma frames remain preserved. The revised frontend homepage is the matching implementation target.
 - Match the mockup using native DOM and assets; do not embed full mockup screenshots in the site.
+
+## Approved feature extension — Hindi language
+
+Language selection is a requested functional addition. It uses the existing violet surface styles, rounds, and spacing. English remains the initial mode. Hindi demo titles and lyrics use Noto Sans Devanagari; the existing English layout, artwork, and Figma-approved reader geometry remain locked. No third-party copyrighted lyrics are copied.

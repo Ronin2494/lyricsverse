@@ -1,9 +1,9 @@
 {
   "name": "lyricsverse",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
-  "description": "LyricVerse discovery homepage v0.3, Figma reader design and separate catalog API",
+  "description": "LyricVerse discovery homepage v0.4, Figma reader design and separate catalog API",
   "scripts": {
     "dev": "npm run build && python3 -m http.server 4173 --directory dist",
     "build": "node scripts/build.mjs",

@@ -1,3 +1,4 @@
+import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
 import { searchLrclib } from './lrclib.mjs';
 import {saveRating,getRatingSummary} from './ratings.mjs';
@@ -99,11 +100,16 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         const songs = getAllSongs().filter(s => !language || s.language === language);
         return jsonResponse(res, 200, { data: songs, total: songs.length }, origin);
       }
+      if (url.pathname === '/api/v1/providers/lrclib/lyrics') {
+        const id=Number(url.searchParams.get('id'));
+        if(!Number.isSafeInteger(id)||id<1)return jsonResponse(res,400,{error:'invalid_id'},origin);
+        try {const data=await fetchAuthorizedLyrics(id,{authorizedIds:String(env.LRCLIB_AUTHORIZED_IDS||'').split(',').map(x=>x.trim()).filter(Boolean)});return jsonResponse(res,data.status==='permission_required'?403:200,{data},origin);}catch{return jsonResponse(res,502,{error:'lyrics_provider_unavailable'},origin);}
+      }
       if (url.pathname === '/api/v1/providers/discovery/search') {
         const q=(url.searchParams.get('q')||'').trim();
         if(q.length<2||q.length>120)return jsonResponse(res,400,{error:'invalid_query'},origin);
         const [lrclib,others]=await Promise.all([searchLrclib(q).catch(()=>[]),searchAdditionalSources(q)]);
-        const sources=[...lrclib.filter(x=>x.hasLyrics&&q.toLocaleLowerCase().split(/\s+/).every(term=>(x.title+' '+x.artist).toLocaleLowerCase().includes(term))).slice(0,1).map(x=>({provider:'LRCLIB',title:x.title,artist:x.artist,url:x.source})),...others.map(x=>({provider:x.provider,title:x.title,artist:x.artist,url:x.url}))];
+        const sources=[...lrclib.filter(x=>x.hasLyrics&&q.toLocaleLowerCase().split(/\s+/).every(term=>(x.title+' '+x.artist).toLocaleLowerCase().includes(term))).slice(0,1).map(x=>({provider:'LRCLIB',title:x.title,artist:x.artist,url:x.source,id:x.id})),...others.map(x=>({provider:x.provider,title:x.title,artist:x.artist,url:x.url}))];
         return jsonResponse(res,200,{data:sources,query:q},origin);
       }
       if (url.pathname === '/api/v1/providers/lrclib/search') {

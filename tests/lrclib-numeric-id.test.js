@@ -1,0 +1,1 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';const handler=readFileSync(new URL('../api/src/handler.mjs',import.meta.url),'utf8');test('discovery returns numeric LRCLIB track IDs to reader',()=>{assert.match(handler,/id:Number\(String\(x\.id\)\.replace\(\/\^lrclib-\//);});

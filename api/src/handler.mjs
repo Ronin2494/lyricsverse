@@ -1,7 +1,8 @@
+import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
 import { searchLrclib } from './lrclib.mjs';
 import {saveRating,getRatingSummary} from './ratings.mjs';
-import { adminAuthStatus, createAdminLyrics, listAdminLyrics } from './admin.mjs';
+import { adminAuthStatus, createAdminLyrics, listAdminLyrics, listAdminActivity } from './admin.mjs';
 import { listPublishedSongs, getPublishedSong } from './repository.mjs';
 import { getWikidataSongs } from './wikidata.mjs';
 import { getAllSongs, getGenres, getLanguages, getLyrics, getSong, searchSongs } from './catalog.mjs';
@@ -41,6 +42,7 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         if(auth!=='ok') return jsonResponse(res,401,{error:'invalid_admin_key'},origin);
         return jsonResponse(res,200,{authenticated:true},origin);
       }
+      if (url.pathname === '/api/v1/admin/activity') {if(req.method!=='GET')return jsonResponse(res,405,{error:'method_not_allowed'},origin);const auth=adminAuthStatus(req,env);if(auth!=='ok')return jsonResponse(res,auth==='not_configured'?503:401,{error:auth==='not_configured'?'admin_key_not_configured':'invalid_admin_key'},origin);try{return jsonResponse(res,200,{data:await listAdminActivity()},origin);}catch{return jsonResponse(res,503,{error:'database_unavailable'},origin);}}
       if (url.pathname === '/api/v1/admin/lyrics') {
         const auth=adminAuthStatus(req,env);
         if(auth==='not_configured') return jsonResponse(res,503,{error:'admin_key_not_configured'},origin);
@@ -51,7 +53,7 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         if(length>75000) return jsonResponse(res,413,{error:'payload_too_large'},origin);
         let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>75000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}
         let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}
-        try{return jsonResponse(res,201,{data:await createAdminLyrics(body)},origin);}catch(e){const validation=['invalid_payload','required_fields_missing','invalid_language','invalid_status','invalid_access_tier'];if(!validation.includes(e.message)){console.error('Admin save failed:',e?.message);return jsonResponse(res,503,{error:'database_write_failed'},origin);}return jsonResponse(res,400,{error:e.message},origin);}
+        try{return jsonResponse(res,201,{data:await createAdminLyrics(body,env.ADMIN_ACTOR_ID||'primary-admin')},origin);}catch(e){const validation=['invalid_payload','required_fields_missing','invalid_language','invalid_status','invalid_access_tier'];if(!validation.includes(e.message)){console.error('Admin save failed:',e?.message);return jsonResponse(res,503,{error:'database_write_failed'},origin);}return jsonResponse(res,400,{error:e.message},origin);}
       }
       if (url.pathname === '/api/v1/ratings') {
         if (req.method === 'GET') {
@@ -99,11 +101,16 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         const songs = getAllSongs().filter(s => !language || s.language === language);
         return jsonResponse(res, 200, { data: songs, total: songs.length }, origin);
       }
+      if (url.pathname === '/api/v1/providers/lrclib/lyrics') {
+        const id=Number(url.searchParams.get('id'));
+        if(!Number.isSafeInteger(id)||id<1)return jsonResponse(res,400,{error:'invalid_id'},origin);
+        try {const data=await fetchAuthorizedLyrics(id,{authorizedIds:String(env.LRCLIB_AUTHORIZED_IDS||'').split(',').map(x=>x.trim()).filter(Boolean)});return jsonResponse(res,data.status==='permission_required'?403:200,{data},origin);}catch{return jsonResponse(res,502,{error:'lyrics_provider_unavailable'},origin);}
+      }
       if (url.pathname === '/api/v1/providers/discovery/search') {
         const q=(url.searchParams.get('q')||'').trim();
         if(q.length<2||q.length>120)return jsonResponse(res,400,{error:'invalid_query'},origin);
         const [lrclib,others]=await Promise.all([searchLrclib(q).catch(()=>[]),searchAdditionalSources(q)]);
-        const sources=[...lrclib.filter(x=>x.hasLyrics&&q.toLocaleLowerCase().split(/\s+/).every(term=>(x.title+' '+x.artist).toLocaleLowerCase().includes(term))).slice(0,1).map(x=>({provider:'LRCLIB',title:x.title,artist:x.artist,url:x.source})),...others.map(x=>({provider:x.provider,title:x.title,artist:x.artist,url:x.url}))];
+        const sources=[...lrclib.filter(x=>x.hasLyrics&&q.toLocaleLowerCase().split(/\s+/).every(term=>(x.title+' '+x.artist).toLocaleLowerCase().includes(term))).slice(0,1).map(x=>({provider:'LRCLIB',title:x.title,artist:x.artist,url:x.source,id:x.id})),...others.map(x=>({provider:x.provider,title:x.title,artist:x.artist,url:x.url}))];
         return jsonResponse(res,200,{data:sources,query:q},origin);
       }
       if (url.pathname === '/api/v1/providers/lrclib/search') {

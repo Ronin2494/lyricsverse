@@ -1,0 +1,1 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {execFileSync} from 'node:child_process';test('frontend entrypoint parses as valid JavaScript',()=>{assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',new URL('../src/app.js',import.meta.url).pathname],{stdio:'pipe'}));});

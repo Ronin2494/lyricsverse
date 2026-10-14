@@ -36,7 +36,7 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
     let url;
     try { url = new URL(req.url, 'http://localhost'); } catch { return jsonResponse(res, 400, { error: 'invalid_url' }, origin); }
     try {
-      if (url.pathname==='/api/v1/auth/config'&&req.method==='GET')return jsonResponse(res,200,{data:{googleClientId:env.GOOGLE_CLIENT_ID||null,emailEnabled:authConfigured(env)&&!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL,authReady:authConfigured(env)&&!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL&&!!env.GOOGLE_CLIENT_ID}},origin);
+      if (url.pathname==='/api/v1/auth/config'&&req.method==='GET')return jsonResponse(res,200,{data:{googleClientId:env.GOOGLE_CLIENT_ID||null,emailEnabled:authConfigured(env)&&!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL,authReady:authConfigured(env)&&!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL&&!!env.GOOGLE_CLIENT_ID&&!!(env.MONGODB_URI||env.MONGO_DB_URI)}},origin);
       if (url.pathname.startsWith('/api/v1/auth/')) {
         const route=url.pathname,token=(req.headers.authorization||'').replace(/^Bearer /i,'');
         if(route==='/api/v1/auth/me'&&req.method==='GET'){const user=await currentUser(token);return jsonResponse(res,user?200:401,user?{data:{user}}:{error:'unauthorized'},origin);}

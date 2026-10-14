@@ -345,3 +345,6 @@ img.original-floater-icon{object-fit:cover;display:block}
 
 /* Song favorites: visible above every song card */
 .favorite-card{position:relative;min-width:0}.favorite-card>.song-card{display:block}.favorite-heart{position:absolute;top:10px;right:10px;z-index:2;display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(255,255,255,.7);border-radius:50%;background:#101729;color:#fff;font-size:26px;line-height:1;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.3)}.favorite-heart.is-saved{color:#ff688f;background:#281629}.favorite-heart:hover,.favorite-heart:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* Profile saved songs: consistent responsive cards */
+.profile-saved-section{width:100%;max-width:1200px;margin:28px auto;padding:24px}.profile-saved-section .section-heading{margin-bottom:20px}.profile-saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:18px}.profile-saved-grid .song-card{width:100%}.profile-saved-grid .favorite-card{min-width:0}@media(max-width:767px){.profile-saved-section{padding:16px}.profile-saved-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}

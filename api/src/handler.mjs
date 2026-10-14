@@ -1,4 +1,4 @@
-import {requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,logout} from './auth.mjs';
+import {authConfigured,requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,logout} from './auth.mjs';
 import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
 import { searchLrclib } from './lrclib.mjs';

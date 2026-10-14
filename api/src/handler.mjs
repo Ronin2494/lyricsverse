@@ -1,3 +1,4 @@
+import {authConfigured,requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,logout} from './auth.mjs';
 import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
 import { searchLrclib } from './lrclib.mjs';
@@ -35,6 +36,20 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
     let url;
     try { url = new URL(req.url, 'http://localhost'); } catch { return jsonResponse(res, 400, { error: 'invalid_url' }, origin); }
     try {
+      if (url.pathname==='/api/v1/auth/config'&&req.method==='GET')return jsonResponse(res,200,{data:{googleClientId:env.GOOGLE_CLIENT_ID||null,emailEnabled:authConfigured(env)&&!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL,authReady:authConfigured(env)&&!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL&&!!env.GOOGLE_CLIENT_ID}},origin);
+      if (url.pathname.startsWith('/api/v1/auth/')) {
+        const route=url.pathname,token=(req.headers.authorization||'').replace(/^Bearer /i,'');
+        if(route==='/api/v1/auth/me'&&req.method==='GET'){const user=await currentUser(token);return jsonResponse(res,user?200:401,user?{data:{user}}:{error:'unauthorized'},origin);}
+        if(route==='/api/v1/auth/logout'&&req.method==='POST'){await logout(token);return jsonResponse(res,200,{ok:true},origin);}
+        if(!['/api/v1/auth/email/request','/api/v1/auth/email/verify','/api/v1/auth/google'].includes(route)||req.method!=='POST')return jsonResponse(res,405,{error:'method_not_allowed'},origin);
+        const length=Number(req.headers['content-length']||0);if(length>12000)return jsonResponse(res,413,{error:'payload_too_large'},origin);
+        let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>12000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}
+        let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}
+        try{
+          const data=route.endsWith('/email/request')?await requestEmailOtp(body.email,env):route.endsWith('/email/verify')?await verifyEmailOtp(body.email,body.code,env):await googleSignIn(body.credential,env);
+          return jsonResponse(res,200,{data});
+        }catch(error){const key=error?.message||'auth_failed';const status=key==='auth_not_configured'?503:key==='rate_limited'?429:key==='email_delivery_failed'?502:key.startsWith('invalid')?400:503;return jsonResponse(res,status,{error:status===503?'auth_unavailable':key},origin);}
+      }
       if (url.pathname === '/api/v1/admin/session') {
         if(req.method!=='GET') return jsonResponse(res,405,{error:'method_not_allowed'},origin);
         const auth=adminAuthStatus(req,env);

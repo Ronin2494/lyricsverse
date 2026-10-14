@@ -57,10 +57,17 @@ export async function currentUser(token,{dbFactory=getDatabase,now=Date.now}={})
  const session=await db.collection('user_sessions').findOne({tokenHash:hash,expiresAt:{$gt:new Date(now())}});
  if(!session)return null;
  const user=await db.collection('users').findOne({_id:session.userId});
- return user?{id:String(user._id),email:user.email,name:user.name||null,preferredLanguage:user.preferredLanguage||'en',favoriteGenres:user.favoriteGenres||[]}:null;
+ return user?{id:String(user._id),email:user.email,name:user.name||null,preferredLanguage:user.preferredLanguage||'en',favoriteGenres:user.favoriteGenres||[],savedSongs:user.savedSongs||[]}:null;
 }
 export async function logout(token,{dbFactory=getDatabase}={}){if(typeof token!=='string'||token.length>200)return;const db=await dbFactory();await db.collection('user_sessions').deleteOne({tokenHash:createHash('sha256').update(token).digest('hex')});}
 
+export async function updateSavedSongs(token,savedSongs,{dbFactory=getDatabase,now=Date.now}={}){
+ const user=await currentUser(token,{dbFactory,now});if(!user)throw Error('unauthorized');
+ if(!Array.isArray(savedSongs)||savedSongs.length>500||savedSongs.some(id=>typeof id!=='string'||id.length<1||id.length>160))throw Error('invalid_saved_songs');
+ const db=await dbFactory();const {ObjectId}=await import('mongodb');
+ await db.collection('users').updateOne({_id:new ObjectId(user.id)},{$set:{savedSongs:[...new Set(savedSongs)],updatedAt:new Date(now())}});
+ return currentUser(token,{dbFactory,now});
+}
 export async function updateProfile(token,updates,{dbFactory=getDatabase,now=Date.now}={}){
  const user=await currentUser(token,{dbFactory,now});if(!user)throw Error('unauthorized');
  if(!updates||typeof updates!=='object'||Array.isArray(updates))throw Error('invalid_profile');

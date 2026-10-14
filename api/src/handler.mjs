@@ -47,7 +47,7 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
         let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}
         try{
           const data=route.endsWith('/email/request')?await requestEmailOtp(body.email,env):route.endsWith('/email/verify')?await verifyEmailOtp(body.email,body.code,env):await googleSignIn(body.credential,env);
-          return jsonResponse(res,200,{data});
+          return jsonResponse(res,200,{data},origin);
         }catch(error){const key=error?.message||'auth_failed';const status=key==='auth_not_configured'?503:key==='rate_limited'?429:key==='email_delivery_failed'?502:key.startsWith('invalid')?400:503;if(status===503)console.error('[auth] '+route+' failed:',error);return jsonResponse(res,status,{error:status===503?'auth_unavailable':key},origin);}
       }
       if (url.pathname === '/api/v1/admin/session') {

@@ -31,12 +31,23 @@ test('auth config returns boolean readiness when all providers and MongoDB are c
   assert.equal(data.emailEnabled, true);
 });
 
-test('auth gate stays disabled if any required setting is missing', async () => {
-  for (const key of Object.keys(configured)) {
+test('shared prerequisites are required regardless of provider', async () => {
+  for (const key of ['AUTH_SECRET', 'MONGODB_URI']) {
     const env = { ...configured };
     delete env[key];
     const data = await readAuthConfig(env);
     assert.equal(data.authReady, false, key + ' missing');
     assert.equal(typeof data.authReady, 'boolean');
+  }
+});
+
+test('one configured provider is sufficient for authentication readiness', async () => {
+  for (const key of ['RESEND_API_KEY', 'AUTH_FROM_EMAIL', 'GOOGLE_CLIENT_ID']) {
+    const env = { ...configured };
+    delete env[key];
+    const data = await readAuthConfig(env);
+    assert.equal(data.authReady, true, key + ' missing should not disable the other provider');
+    assert.equal(data.emailEnabled, key === 'GOOGLE_CLIENT_ID');
+    assert.equal(Boolean(data.googleClientId), key !== 'GOOGLE_CLIENT_ID');
   }
 });

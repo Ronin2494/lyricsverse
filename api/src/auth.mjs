@@ -57,6 +57,17 @@ export async function currentUser(token,{dbFactory=getDatabase,now=Date.now}={})
  const session=await db.collection('user_sessions').findOne({tokenHash:hash,expiresAt:{$gt:new Date(now())}});
  if(!session)return null;
  const user=await db.collection('users').findOne({_id:session.userId});
- return user?{id:String(user._id),email:user.email,name:user.name||null}:null;
+ return user?{id:String(user._id),email:user.email,name:user.name||null,preferredLanguage:user.preferredLanguage||'en',favoriteGenres:user.favoriteGenres||[]}:null;
 }
 export async function logout(token,{dbFactory=getDatabase}={}){if(typeof token!=='string'||token.length>200)return;const db=await dbFactory();await db.collection('user_sessions').deleteOne({tokenHash:createHash('sha256').update(token).digest('hex')});}
+
+export async function updateProfile(token,updates,{dbFactory=getDatabase,now=Date.now}={}){
+ const user=await currentUser(token,{dbFactory,now});if(!user)throw Error('unauthorized');
+ if(!updates||typeof updates!=='object'||Array.isArray(updates))throw Error('invalid_profile');
+ const name=updates.name,language=updates.preferredLanguage,genres=updates.favoriteGenres;
+ if(typeof name!=='string'||name.trim().length<1||name.trim().length>80)throw Error('invalid_name');
+ if(!['en','hi'].includes(language))throw Error('invalid_language');
+ if(!Array.isArray(genres)||genres.length>10||genres.some(g=>typeof g!=='string'||g.length>40||!['Pop','Rock','Hip-Hop','R&B','Indie','Bollywood','Classical','Electronic','Other'].includes(g)))throw Error('invalid_genres');
+ const db=await dbFactory();const {ObjectId}=await import('mongodb');await db.collection('users').updateOne({_id:new ObjectId(user.id)},{$set:{name:name.trim(),preferredLanguage:language,favoriteGenres:[...new Set(genres)],updatedAt:new Date(now())}});
+ return currentUser(token,{dbFactory,now});
+}

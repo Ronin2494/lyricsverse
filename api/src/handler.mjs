@@ -1,4 +1,4 @@
-import {authConfigured,requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,logout} from './auth.mjs';
+import {authConfigured,requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,updateProfile,logout} from './auth.mjs';
 import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
 import { searchLrclib } from './lrclib.mjs';
@@ -40,6 +40,7 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
       if (url.pathname.startsWith('/api/v1/auth/')) {
         const route=url.pathname,token=(req.headers.authorization||'').replace(/^Bearer /i,'');
         if(route==='/api/v1/auth/me'&&req.method==='GET'){const user=await currentUser(token);return jsonResponse(res,user?200:401,user?{data:{user}}:{error:'unauthorized'},origin);}
+        if(route==='/api/v1/auth/profile'&&req.method==='POST'){let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>12000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}try{return jsonResponse(res,200,{data:{user:await updateProfile(token,body)}},origin);}catch(error){return jsonResponse(res,error.message==='unauthorized'?401:400,{error:error.message==='unauthorized'?'unauthorized':error.message.startsWith('invalid_')?error.message:'profile_update_failed'},origin);}}
         if(route==='/api/v1/auth/logout'&&req.method==='POST'){await logout(token);return jsonResponse(res,200,{ok:true},origin);}
         if(!['/api/v1/auth/email/request','/api/v1/auth/email/verify','/api/v1/auth/google'].includes(route)||req.method!=='POST')return jsonResponse(res,405,{error:'method_not_allowed'},origin);
         const length=Number(req.headers['content-length']||0);if(length>12000)return jsonResponse(res,413,{error:'payload_too_large'},origin);

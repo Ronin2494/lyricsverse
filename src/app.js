@@ -116,7 +116,7 @@ async function initGoogleAuth(){
 function render(){
  const route=currentRoute();
  if(!authConfigChecked){app.innerHTML='<main role="status" class="auth-loading">Loading LyricVerse…</main>';return;}
- if(authReady&&!authUser){app.innerHTML=authHTML();void initGoogleAuth();return;}
+ if(route.page==='profile'&&!authUser){app.innerHTML=profileHTML();void initGoogleAuth();return;}
  app.innerHTML=route.page==='profile'?profileHTML():route.page==='original'?originalReaderHTML():route.page==='lyrics'?readerHTML():route.page==='search'?searchPageHTML():route.page==='library'?libraryHTML():route.page==='info'?infoHTML():homeHTML();
  document.title=route.page==='lyrics'?`${allSongs.find(s=>s.id===route.slug)?.title||'Lyrics'} — LyricVerse`:'LyricVerse — Every song has a story';
  if(route.page==='lyrics'){document.documentElement.style.setProperty('--lyrics-adjust',`${state.fontBoost}px`);}else document.documentElement.style.removeProperty('--lyrics-adjust');

@@ -357,3 +357,6 @@ img.original-floater-icon{object-fit:cover;display:block}
 
 /* Clearly distinguish fictional Figma fixtures from verified music metadata */
 .demo-song-label{display:inline-block;margin-top:3px;font-size:11px;line-height:1.4;letter-spacing:.03em;color:var(--lv-color-muted,#b9c4d9)}
+
+/* Real metadata discovery: reuse the compact artwork card system and design tokens */
+.homepage-v2 .verified-catalog{width:100%;max-width:1200px;margin:0 auto;padding:36px 24px}.homepage-v2 .verified-catalog .compact-lyrics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.verified-catalog .compact-lyric-card{min-width:0}.verified-catalog .catalog-song-thumbnail{width:100%;height:100%;object-fit:cover}@media(max-width:900px){.homepage-v2 .verified-catalog .compact-lyrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.homepage-v2 .verified-catalog{padding:24px 16px}.homepage-v2 .verified-catalog .compact-lyrics-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}

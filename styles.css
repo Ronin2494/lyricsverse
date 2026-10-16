@@ -377,3 +377,17 @@ img.original-floater-icon{object-fit:cover;display:block}
 @keyframes ambient-pearl-pop{40%{transform:scale(1.22);opacity:1;filter:brightness(1.6)}100%{transform:scale(1.6);opacity:0;filter:blur(8px)}}
 @media(max-width:650px){.homepage-v2 .ambient-pearls{min-height:180px;padding:10px 8px;overflow:hidden}.homepage-v2 .ambient-pearl-field{min-height:180px;gap:3px}.homepage-v2 .ambient-pearl{--size:clamp(72px,22vw,110px);padding:8px}.homepage-v2 .ambient-pearl:nth-child(n){--size:clamp(72px,22vw,110px)}.ambient-pearl .pearl-song{font-size:10px}.ambient-pearl .pearl-artist{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.ambient-rain,.homepage-v2 .ambient-pearl{animation:none!important;transition:none!important}}
+
+/* Holographic music constellation: depth is provided by a single shared WebGL scene. */
+.homepage-v2 .holographic-orbs{position:relative;isolation:isolate;min-height:280px;overflow:hidden;border:1px solid rgba(120,183,255,.16);border-radius:28px;background:radial-gradient(ellipse at 28% 45%,rgba(35,87,165,.22),transparent 52%),radial-gradient(ellipse at 76% 35%,rgba(105,60,184,.18),transparent 50%),#0b132a;box-shadow:inset 0 1px rgba(255,255,255,.08),0 28px 80px rgba(1,6,28,.32)}
+.holographic-orbs .orb-stage{position:absolute;inset:0;z-index:0;pointer-events:none}
+.holographic-orbs .orb-canvas{display:block;width:100%;height:100%}
+.holographic-orbs .ambient-pearl-field{position:relative;z-index:1;min-height:280px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;gap:12px;padding:24px}
+.homepage-v2 .holographic-orbs .holographic-orb-link{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:100%;height:190px;min-width:0;padding:20px 8px;border:0;background:none;box-shadow:none;border-radius:50%;text-align:center;text-decoration:none;animation:none;transform:translate3d(0,0,0);transition:transform .35s ease,filter .35s ease}
+.homepage-v2 .holographic-orbs .holographic-orb-link:hover,.homepage-v2 .holographic-orbs .holographic-orb-link:focus-visible{transform:translateY(-8px) scale(1.05);filter:drop-shadow(0 0 18px rgba(100,205,255,.5))}
+.holographic-orb-link .orb-symbol{font-size:35px;color:#e2f9ff;text-shadow:0 0 18px #64d9ff,0 0 38px #8570ff;line-height:1}
+.holographic-orbs .holographic-orb-link .pearl-song{font-size:clamp(11px,1.2vw,15px);line-height:1.25;font-weight:750;color:#fff;text-shadow:0 2px 9px #071027,0 0 12px #071027}
+.holographic-orbs .holographic-orb-link .pearl-artist{font-size:11px;color:#d6e9ff;text-shadow:0 2px 8px #071027}
+.holographic-orbs.orb-webgl-unavailable .holographic-orb-link,.holographic-orbs:has(.orb-canvas:empty) .holographic-orb-link{background:radial-gradient(circle at 32% 24%,rgba(255,255,255,.25),transparent 26%),radial-gradient(circle,rgba(58,106,201,.38),rgba(32,28,86,.2) 66%,transparent 72%);border:1px solid rgba(160,205,255,.18)}
+@media(max-width:650px){.homepage-v2 .holographic-orbs{min-height:230px;border-radius:18px}.holographic-orbs .ambient-pearl-field{min-height:230px;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;padding:8px}.homepage-v2 .holographic-orbs .holographic-orb-link{height:108px;padding:7px}.holographic-orb-link .orb-symbol{font-size:22px}.holographic-orbs .holographic-orb-link .pearl-song{font-size:11px}.holographic-orbs .holographic-orb-link .pearl-artist{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.homepage-v2 .holographic-orbs .holographic-orb-link{transition:none;transform:none!important}}

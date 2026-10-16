@@ -1,6 +1,6 @@
 /* Verified chart listings, sourced 2026-10-16. Lyrics links open provider search results,
    NOT a claim that any song's lyrics are licensed or hosted by LyricVerse. */
-const chartSongs = [
+const rawChartSongs = [
   {
     "id": "patient-zero",
     "title": "Patient Zero",
@@ -677,6 +677,33 @@ const chartSongs = [
     "sourceUrl": "https://soundcharts.com/en/charts/spotify/india"
   }
 ];
+// Curated editorial photography for discovery cards. These are NOT official album covers.
+// Pexels free-to-use photographs: https://www.pexels.com/license/
+// Distinct subjects and genre pools prevent repeated generic vinyl/gradient thumbnails.
+// Image failures are handled by the coverHTML SVG fallback.
+const EDITORIAL_PHOTO_IDS = {
+ Pop:[1763075,1190297,1699161,2747449,1540406,167491,2240771,1105666,210922,164938],
+ Country:[167964,2479312,2253879,1005417,1366919,1181406],
+ 'Hip-Hop':[164745,258283,167636,1190297,1763075,1105666],
+ Indie:[1389429,164938,1699161,167491,210922,1540406],
+ 'R&B':[2240771,1190297,1763075,167964,1699161,164745],
+ Rock:[1105666,167636,164745,1699161,1190297,210922],
+ Punjabi:[2747449,1540406,2240771,167491,1763075,1190297,1699161,210922],
+ 'Hindi Pop':[1699161,1190297,2747449,1763075,2240771,1540406,167491,210922,164938,167964]
+};
+const TITLE_PHOTO_IDS = {
+ 'solar-eclipse':1366919,'midnight-sun':1366919,'boston':466685,'dracula':619419,
+ 'the-fate-of-ophelia':167964,'die-with-a-smile':1190297,'iris':1389429,
+ 'finding-her':1699161,'husn':167491,'pyaar':2240771
+};
+const genreCounters=new Map();
+const chartSongs=rawChartSongs.map(song=>{
+ const pool=EDITORIAL_PHOTO_IDS[song.genre]||EDITORIAL_PHOTO_IDS.Pop;
+ const index=genreCounters.get(song.genre)||0;
+ genreCounters.set(song.genre,index+1);
+ const photoId=TITLE_PHOTO_IDS[song.id]||pool[index%pool.length];
+ return {...song,thumbnailUrl:`https://images.pexels.com/photos/${photoId}/pexels-photo-${photoId}.jpeg?auto=compress&cs=tinysrgb&w=480&h=480&fit=crop`,imageSource:'Pexels',imageType:'editorial'};
+});
 export const topSongs=chartSongs.filter(song=>song.chart==='Hot 100'||song.chart==='Global 200');
 export const hindiSongs=chartSongs.filter(song=>song.language==='hi');
 export const punjabiSongs=chartSongs.filter(song=>song.language==='pa');

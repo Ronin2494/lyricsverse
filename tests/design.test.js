@@ -56,3 +56,12 @@ test('main hero highlighted phrase rotates independently from feature rotator',(
  assert.ok(app.includes('data-rotator-text'));
  assert.ok(css.includes('hero-highlight-reveal'));
 });
+
+test('homepage catalog uses varied editorial images instead of repeated generic art',()=>{
+ const catalog=fs.readFileSync(new URL('../src/catalog.js',import.meta.url),'utf8');
+ assert.ok(catalog.includes('EDITORIAL_PHOTO_IDS'));
+ assert.ok(catalog.includes('thumbnailUrl:'));
+ assert.ok(catalog.includes('images.pexels.com/photos/'));
+ assert.ok(app.includes('song.thumbnailUrl||song.artworkUrl'));
+ assert.ok(app.includes('data-fallback='));
+});

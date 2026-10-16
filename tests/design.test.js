@@ -40,3 +40,12 @@ test('search, reader, uploaded lyrics and profile have dedicated responsive comp
  assert.ok(css.includes('@media(max-width:650px)'));
  assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
+
+test('music universe hero uses layered artwork with semantic decorative hiding',()=>{
+ assert.ok(app.includes('universe-track-card'));
+ assert.ok(app.includes('universe-orbit-one'));
+ assert.ok(app.includes('universe-glow-magenta'));
+ assert.ok(css.includes('.universe-track-card'));
+ assert.ok(css.includes('.neon-vinyl-reflection'));
+ assert.ok(css.includes('@media(max-width:650px)'));
+});

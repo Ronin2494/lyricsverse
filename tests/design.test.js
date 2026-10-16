@@ -49,3 +49,10 @@ test('music universe hero uses layered artwork with semantic decorative hiding',
  assert.ok(css.includes('.neon-vinyl-reflection'));
  assert.ok(css.includes('@media(max-width:650px)'));
 });
+
+test('main hero highlighted phrase rotates independently from feature rotator',()=>{
+ assert.ok(app.includes('HERO_HIGHLIGHTS'));
+ assert.ok(app.includes('data-hero-highlight'));
+ assert.ok(app.includes('data-rotator-text'));
+ assert.ok(css.includes('hero-highlight-reveal'));
+});

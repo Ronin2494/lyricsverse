@@ -565,3 +565,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
 .neon-hero .hero-highlight-rotator.highlight-sweep{animation:hero-highlight-reveal .6s cubic-bezier(.2,.7,.25,1) both}
 @keyframes hero-highlight-reveal{from{opacity:.15;filter:blur(6px);transform:translateY(9px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.neon-hero .hero-highlight-rotator.highlight-sweep{animation:none!important}}
+
+/* Use the same photographic cover across discovery, reader and related tracks. */
+.song-profile-banner .reader-art.cover-art,.related-item .related-art.cover-art{position:relative;overflow:hidden;padding:0;display:block;flex-shrink:0}
+.song-profile-banner .reader-art.cover-art .song-cover-thumbnail,.related-item .related-art.cover-art .song-cover-thumbnail{display:block;width:100%;height:100%;object-fit:cover;object-position:center}

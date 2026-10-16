@@ -18,7 +18,7 @@ test('health reports database readiness without fabricating a connection', async
 test('catalog returns real international Punjabi and Hindi songs', async () => {const x=await run('/api/v1/songs');assert.equal(x.body.data.length,45);});
 test('search is case insensitive and returns known songs', async () => {const x=await run('/api/v1/search?q=PATIENT');assert.equal(x.body.data[0].id,'patient-zero');});
 test('search input has length limit', async () => {const x=await run('/api/v1/search?q='+'a'.repeat(121));assert.equal(x.status,400);});
-test('song lookup and 404', async () => {assert.equal((await run('/api/v1/songs/after-the-rain')).status,200);assert.equal((await run('/api/v1/songs/nonexistent')).status,404);});
+test('song lookup and 404', async () => {assert.equal((await run('/api/v1/songs/patient-zero')).status,200);assert.equal((await run('/api/v1/songs/nonexistent')).status,404);});
 test('unlicensed songs do not expose lyrics', async () => {const x=await run('/api/v1/lyrics/patient-zero');assert.equal(x.body.data.status,'unavailable');assert.deepEqual(x.body.data.sections,[]);});
 test('origin checking disallows unknown websites', async () => {const x=await run('/api/v1/songs',{headers:{Origin:'https://evil.example'}});assert.equal(x.status,403);});
 test('writes are not allowed', async () => {const x=await run('/api/v1/songs',{method:'POST'});assert.equal(x.status,405);});

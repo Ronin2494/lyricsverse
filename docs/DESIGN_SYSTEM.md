@@ -40,3 +40,15 @@
 - CSS implementation: `styles.css`
 - WebGL implementation: `src/music-orbs.js`
 - Homepage integration: `src/app.js`
+
+## Sitewide immersive redesign — October 16, 2026
+
+The user expanded the scope from one orb component to the **entire LyricVerse site**. The following rules apply to all routes, including homepage, search, reader, profile, favorites and admin.
+
+- **Surface hierarchy:** Deep-space canvas `#070b1c`, layered navy translucent panels, luminous edges and softly shaded depth. Keep readable foreground contrast and existing semantic HTML.
+- **Components:** Glass studio cards, gradient primary CTAs, pill-shaped actions, subtle elevation on hover, luminous search focus rings and restrained atmospheric textures.
+- **Typography:** Strong editorial headings with slightly tighter tracking; never reduce readability for lyrics, metadata or form fields.
+- **Motion:** Soft hover elevation and gradual lighting shifts; no forced scroll effects or distracting reader animations. Honor reduced-motion.
+- **Layout:** Consistent radius, borders, spacing, shadows and focus states on desktop and mobile. No content reordering that breaks song navigation or account workflows.
+- **Scope and status:** The CSS foundation and admin styling are the **first implementation pass**, not a claim that all pages have been fully redesigned or visually accepted. Follow up with per-page composition and browser QA.
+- **Implementation:** `styles.css` for shared route styling; `admin.html` for standalone editor. No API or search behavior changes.

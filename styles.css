@@ -457,3 +457,59 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
  html{scroll-behavior:auto}
  :is(.song-card,.compact-lyric-card,.mood-card,.search-result,.profile-card,.button,.button-primary,.button-secondary,.signin-button){transition:none!important;transform:none!important}
 }
+
+/* Approved Neon Music Universe: structural layouts rather than a cosmetic theme. */
+.neon-home{display:flex;flex-direction:column;gap:clamp(26px,4vw,58px)}
+.neon-hero{min-height:clamp(480px,48vw,660px);display:grid!important;grid-template-columns:minmax(0,1fr) minmax(340px,.9fr);align-items:center;padding:clamp(24px,4.8vw,76px)!important;overflow:hidden}
+.neon-hero-content{position:relative;z-index:3;max-width:680px;grid-column:1;grid-row:1}
+.neon-hero-content .hero-v2-copy{max-width:none}
+.neon-hero-content .hero-headline-intro{max-width:440px}
+.neon-hero-content .hero-search-box{max-width:590px;margin-block:28px 20px}
+.neon-hero-cosmos{position:relative;grid-column:2;grid-row:1;height:100%;min-height:390px;perspective:1000px;pointer-events:none}
+.neon-vinyl{position:absolute;left:13%;top:8%;width:min(35vw,440px);aspect-ratio:1;border-radius:50%;transform:rotate(-19deg) rotateY(-28deg);background:repeating-radial-gradient(circle at center,transparent 0 5px,rgba(181,170,255,.18) 6px 7px,transparent 8px 12px),conic-gradient(from 22deg,#03091e,#382178,#c12bd9,#4a72ff,#050c2b,#e04fce,#13265d,#03091e);box-shadow:0 0 0 3px rgba(170,142,255,.4),0 0 46px rgba(172,51,255,.65),0 0 130px rgba(52,91,255,.38),inset 0 0 50px #02061a;animation:neon-vinyl-float 9s ease-in-out infinite}
+.neon-vinyl:before{content:"";position:absolute;inset:7%;border:1px solid rgba(255,255,255,.23);border-radius:50%;box-shadow:inset 0 0 22px rgba(198,85,255,.32)}
+.neon-vinyl-inner{position:absolute;inset:36%;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,#ff85f6,#8243e3 48%,#091b55 51%,#1b134c);box-shadow:0 0 25px rgba(255,111,232,.8);font-size:22px;font-weight:850;color:#fff}
+.neon-wave{position:absolute;width:115%;height:48%;top:33%;left:-4%;border-radius:50%;border:2px solid rgba(81,174,255,.75);transform:rotate(-24deg);box-shadow:0 0 18px #4e84ff,0 0 60px rgba(129,60,255,.5),inset 0 0 40px rgba(112,79,255,.2)}
+.neon-wave-b{top:37%;transform:rotate(26deg);border-color:rgba(246,88,242,.7);box-shadow:0 0 18px #e952f0,0 0 50px rgba(169,60,255,.45)}
+.neon-star,.neon-music-note{position:absolute;color:#f2c0ff;text-shadow:0 0 16px #e554ff,0 0 35px #6b78ff;font-size:48px}
+.neon-star-one{top:6%;left:18%}.neon-star-two{right:4%;bottom:15%}.neon-music-note{top:14%;right:12%;font-size:72px;transform:rotate(-20deg)}
+@keyframes neon-vinyl-float{0%,100%{translate:0 0}50%{translate:0 -16px}}
+.neon-genre-strip{display:flex;align-items:center;flex-wrap:wrap;gap:18px;padding:8px 0}
+.neon-genre-strip .genres{flex:1;min-width:0}
+.neon-home .song-section{padding:0}
+.neon-home .song-section .section-heading h2,.neon-home .moods-section h2{font-size:clamp(24px,2.8vw,40px)}
+.neon-home .song-card-image{overflow:hidden;border-radius:16px}
+.neon-home .song-card-image img{transition:transform .4s ease}
+.neon-home .song-card:hover .song-card-image img{transform:scale(1.07)}
+.neon-home .mood-grid{gap:18px}
+.neon-home .mood-card{min-height:190px;overflow:hidden;position:relative}
+.neon-home .mood-card:before{content:"";position:absolute;inset:-40%;pointer-events:none;background:radial-gradient(circle at 60% 40%,rgba(240,76,230,.22),transparent 40%);transform:rotate(15deg)}
+.neon-home .neon-closing{background:radial-gradient(circle at 83% 50%,rgba(147,60,245,.35),transparent 43%),linear-gradient(115deg,#0b1a55,#160d43)!important;border:1px solid rgba(152,157,255,.4);box-shadow:0 20px 65px rgba(28,19,94,.35);border-radius:28px;padding:clamp(24px,4vw,54px)}
+.neon-search-page{max-width:1240px;margin-inline:auto}
+.neon-search-header{display:flex;flex-direction:column;gap:16px;min-height:275px;justify-content:center;overflow:hidden;background:radial-gradient(circle at 88% 28%,rgba(235,54,212,.3),transparent 40%),radial-gradient(circle at 5% 90%,rgba(50,105,248,.28),transparent 50%),#0a1438!important}
+.neon-search-header .neon-search-control{width:min(100%,760px)}
+.neon-search-header .search-language-bar{margin-top:6px}
+.neon-search-content{display:grid;gap:24px}
+.neon-search-page .provider-results,.neon-search-page .local-lyrics-results{background:linear-gradient(135deg,rgba(18,29,75,.85),rgba(7,16,45,.9));border:1px solid rgba(142,161,255,.25);border-radius:24px;padding:clamp(18px,3vw,34px)}
+.neon-reader{max-width:1280px;margin-inline:auto}
+.neon-reader-hero{background:radial-gradient(circle at 88% 18%,rgba(199,67,230,.23),transparent 45%),linear-gradient(125deg,rgba(21,30,80,.88),rgba(9,17,47,.94));border:1px solid rgba(146,153,255,.35);border-radius:28px;padding:clamp(16px,3vw,34px);box-shadow:0 20px 55px rgba(0,4,28,.3)}
+.neon-reader-hero .song-profile-banner{border:0;box-shadow:none;background:transparent!important}
+.neon-reader-columns{margin-top:28px;align-items:start}
+.neon-reader-columns>*{border-radius:24px}
+.neon-original-reader{max-width:1160px;margin-inline:auto}
+.neon-original-layout{display:grid;grid-template-columns:minmax(220px,.38fr) minmax(0,.62fr);gap:clamp(22px,4vw,55px);align-items:start;margin-top:26px}
+.neon-original-cover{position:sticky;top:110px;border-radius:24px;overflow:hidden;background:radial-gradient(circle at 40% 30%,#6a46b3,#0d1946);box-shadow:0 30px 65px rgba(3,5,32,.5)}
+.neon-original-cover img{width:100%;height:auto;display:block;aspect-ratio:1;object-fit:cover}
+.neon-original-detail{min-width:0}
+.neon-original-detail h1{font-size:clamp(36px,5vw,72px);letter-spacing:-.05em;line-height:1.1}
+.neon-original-detail .original-lyrics{margin-top:30px;padding:clamp(18px,3vw,36px);background:linear-gradient(145deg,rgba(23,35,78,.9),rgba(7,16,45,.95));border:1px solid rgba(142,161,255,.27);border-radius:24px;line-height:1.9}
+.neon-profile{max-width:1180px;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.neon-profile-hero{grid-column:1/-1;border-radius:28px;padding:clamp(26px,5vw,65px);background:radial-gradient(circle at 85% 10%,rgba(231,69,214,.28),transparent 44%),radial-gradient(circle at 0 90%,rgba(48,110,255,.24),transparent 50%),linear-gradient(120deg,#0e1a50,#110c35);border:1px solid rgba(148,155,255,.3)}
+.neon-profile-hero h1{font-size:clamp(40px,5vw,72px);letter-spacing:-.06em;margin:8px 0}
+.neon-profile .profile-panel{grid-column:1}
+.neon-profile .neon-favorites{grid-column:2}
+.neon-profile .profile-saved-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.neon-library{max-width:1200px;margin-inline:auto}
+@media(max-width:900px){.neon-hero{grid-template-columns:1fr 0.65fr}.neon-vinyl{width:38vw}.neon-profile{grid-template-columns:1fr}.neon-profile .profile-panel,.neon-profile .neon-favorites{grid-column:1}}
+@media(max-width:650px){.neon-home{gap:26px}.neon-hero{min-height:420px;display:block!important;padding:24px!important}.neon-hero-content{position:relative;z-index:3}.neon-hero-cosmos{position:absolute;inset:0 0 auto auto;width:65%;height:55%;min-height:0;opacity:.62}.neon-vinyl{width:230px;left:18%;top:10%;opacity:.8}.neon-hero-content h1{max-width:300px}.neon-hero-content .hero-search-box{margin-top:30px}.neon-hero-content .rotator-line{max-width:340px}.neon-genre-strip{display:block}.neon-genre-strip .section-kicker{display:block;margin-bottom:10px}.neon-home .mood-card{min-height:130px}.neon-original-layout{grid-template-columns:1fr}.neon-original-cover{position:static;width:min(60%,260px);margin:auto}.neon-original-detail h1{font-size:36px}.neon-reader-hero{padding:12px}.neon-search-header{min-height:235px}.neon-profile-hero{padding:25px}.neon-profile .profile-saved-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.neon-vinyl{animation:none!important}.neon-home .song-card-image img{transition:none!important}}

@@ -27,3 +27,16 @@ test('neon theme retains accessible focus and reduced-motion support',()=>{
  assert.ok(app.includes('function readerHTML'));
  assert.ok(app.includes('function profileHTML'));
 });
+
+test('approved neon layouts replace original homepage hero markup',()=>{
+ assert.ok(app.includes('neon-hero-cosmos'));
+ assert.ok(app.includes('neon-vinyl'));
+ assert.ok(app.includes('neon-genre-strip'));
+ assert.ok(app.includes("sectionHTML('Trending now'"));
+ assert.ok(css.includes('.neon-vinyl'));
+});
+test('search, reader, uploaded lyrics and profile have dedicated responsive compositions',()=>{
+ for(const route of ['neon-search-page','neon-reader-hero','neon-original-layout','neon-profile-hero','neon-favorites'])assert.ok(app.includes(route),route);
+ assert.ok(css.includes('@media(max-width:650px)'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
+});

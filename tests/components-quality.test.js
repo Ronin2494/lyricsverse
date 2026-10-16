@@ -29,7 +29,7 @@ test('song card navigates to original reader',()=>{
 test('published free originals are loaded from public API',()=>{
  assert.match(app,/\/api\/v1\/catalog\/songs\?limit=24/);
  assert.match(app,/s\.status==='published'/);
- assert.match(app,/s\.source==='original'/);
+ assert.match(app,/s\.source==='original'/);assert.match(app,/s\.featuredOwnComposition===true/);assert.match(app,/deepak sharma/);
 });
 test('API and database layers exist',()=>{
  assert.match(mongo,/MONGODB_DATABASE/);

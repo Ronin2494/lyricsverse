@@ -684,8 +684,8 @@ export const newSongs=[...punjabiSongs,...hindiSongs];
 export const readerSong=topSongs[0];
 export const hindiDemoLyrics={};
 export const allSongs = [...topSongs,...punjabiSongs,...hindiSongs];
-export const genresHindi = ['All','Hindi Pop','Punjabi'];
-export const genresDesktop = ['All','Pop','Rock','Hip-Hop','R&B','Indie','Country','Hindi Pop','Punjabi'];
-export const genresMobile = ['All','Pop','Hip-Hop','Hindi Pop','Punjabi'];
+export const genresHindi = ['All','Hindi-English Mix','Hindi Pop','Punjabi'];
+export const genresDesktop = ['All','Hindi-English Mix','Pop','Rock','Hip-Hop','R&B','Indie','Country','Hindi Pop','Punjabi'];
+export const genresMobile = ['All','Hindi-English Mix','Pop','Hip-Hop','Hindi Pop','Punjabi'];
 export const originalDemoLyrics=[];
 export function findSongs(query){const q=String(query??'').trim().normalize('NFC').toLocaleLowerCase();return !q?[]:allSongs.filter(s=>[s.title,s.artist,s.genre,s.chart].filter(Boolean).some(k=>k.normalize('NFC').toLocaleLowerCase().includes(q)));}

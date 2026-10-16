@@ -354,3 +354,6 @@ img.original-floater-icon{object-fit:cover;display:block}
 
 /* Shared song-cover artwork for homepage, search, reader and saved songs */
 .cover-art .song-cover-thumbnail{display:block;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}.song-card-image .cover-art{width:100%;height:100%;overflow:hidden}.song-cover-thumbnail{background:var(--lv-color-surface,#111a30)}
+
+/* Clearly distinguish fictional Figma fixtures from verified music metadata */
+.demo-song-label{display:inline-block;margin-top:3px;font-size:11px;line-height:1.4;letter-spacing:.03em;color:var(--lv-color-muted,#b9c4d9)}

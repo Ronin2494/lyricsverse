@@ -1,5 +1,6 @@
 import { getDatabase } from './mongo.mjs';
 import { timingSafeEqual, createHash } from 'node:crypto';
+export const isDeepakArtist = artist => /^(deepak|deepak sharma)$/i.test(String(artist||'').trim());
 const clean = (v,max=200) => typeof v==='string' ? v.trim().slice(0,max) : '';
 export function adminAuthStatus(req, env=process.env) {
   const secret=typeof env.ADMIN_API_KEY==='string'?env.ADMIN_API_KEY.trim():'';
@@ -18,8 +19,8 @@ export function validateLyrics(input) {
   if(!['free','premium'].includes(input.accessTier||'free')) throw Error('invalid_access_tier');
   if(!['draft','published'].includes(input.status)) throw Error('invalid_status');
   if(input.thumbnailUrl && (!/^https:\/\/[^\s]+$/i.test(input.thumbnailUrl)||input.thumbnailUrl.length>1000)) throw Error('invalid_thumbnail_url');
- return {title,artist,genre,language,lyrics,thumbnailUrl:clean(input.thumbnailUrl,1000)||null,status:input.status,accessTier:input.accessTier||'free',source:'original',rights:{lyricsDisplayAuthorized:input.rightsConfirmed===true,proofReference:clean(input.rightsReference,500)||null},createdAt:new Date(),updatedAt:new Date()};
+ return {title,artist,genre,language,lyrics,thumbnailUrl:clean(input.thumbnailUrl,1000)||null,status:input.status,accessTier:input.accessTier||'free',source:isDeepakArtist(artist)?'original':'licensed',featuredOwnComposition:isDeepakArtist(artist)&&input.featuredOwnComposition===true,rights:{lyricsDisplayAuthorized:input.rightsConfirmed===true,proofReference:clean(input.rightsReference,500)||null},createdAt:new Date(),updatedAt:new Date()};
 }
 export async function createAdminLyrics(input,actor='primary-admin'){const doc=validateLyrics(input);const db=await getDatabase();const adminId=clean(actor,120)||'primary-admin';doc.createdBy={type:'admin',id:adminId};const r=await db.collection('songs').insertOne(doc);await db.collection('admin_activity').insertOne({adminId,action:'lyrics_created',songId:r.insertedId,title:doc.title,artist:doc.artist,status:doc.status,createdAt:new Date()});return {id:String(r.insertedId),status:doc.status,createdBy:adminId};}
 export async function listAdminActivity(){const db=await getDatabase();const docs=await db.collection('admin_activity').find({}).sort({createdAt:-1}).limit(100).toArray();return docs.map(d=>({...d,_id:String(d._id),songId:String(d.songId)}));}
-export async function listAdminLyrics(){const db=await getDatabase();const docs=await db.collection('songs').find({source:'original'},{projection:{lyrics:0,rights:0}}).sort({createdAt:-1}).limit(100).toArray();return docs.map(d=>({...d,_id:String(d._id)}));}
+export async function listAdminLyrics(){const db=await getDatabase();const docs=await db.collection('songs').find({}),{projection:{lyrics:0,rights:0}}).sort({createdAt:-1}).limit(100).toArray();return docs.map(d=>({...d,_id:String(d._id)}));}

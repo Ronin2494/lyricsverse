@@ -15,3 +15,15 @@ test('original Figma SVG assets exist',()=>{
     assert.ok(b.includes('<svg')&&b.length>100,file);
   }
 });
+
+test('approved Neon Music Universe visual tokens are present across routes',()=>{
+ for(const color of ['#050a20','#0d1634','#15234a','#bf74ff','#69e5ff','#fa70e6'])assert.ok(css.includes(color),color);
+ for(const selector of ['.hero-v2','.search-page-header','.song-profile-banner','.profile-panel','.bottom-nav'])assert.ok(css.includes(selector),selector);
+});
+test('neon theme retains accessible focus and reduced-motion support',()=>{
+ assert.ok(css.includes(':focus-visible'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
+ assert.ok(app.includes('function searchPageHTML'));
+ assert.ok(app.includes('function readerHTML'));
+ assert.ok(app.includes('function profileHTML'));
+});

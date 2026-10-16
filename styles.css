@@ -586,3 +586,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
  .neon-reader .song-profile-banner .profile-info{width:100%!important}
  .neon-reader .song-profile-banner .profile-info h1{font-size:clamp(26px,7vw,38px)!important}
 }
+
+.youtube-preview-panel{margin-top:24px;padding:clamp(16px,3vw,28px);border:1px solid rgba(147,154,255,.35);border-radius:22px;background:rgba(8,16,48,.65);color:#f4f3ff}
+.youtube-preview-panel h2{font-size:clamp(18px,2.5vw,26px);margin:0 0 16px}
+.youtube-preview-panel a{color:#9de6ff;text-decoration:underline;text-underline-offset:4px}
+.youtube-preview-frame{display:block;width:100%;max-width:760px;aspect-ratio:16/9;height:auto;border:0;border-radius:14px;background:#030715;margin-bottom:14px}

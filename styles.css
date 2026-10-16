@@ -391,3 +391,69 @@ img.original-floater-icon{object-fit:cover;display:block}
 .holographic-orbs.orb-webgl-unavailable .holographic-orb-link,.holographic-orbs:has(.orb-canvas:empty) .holographic-orb-link{background:radial-gradient(circle at 32% 24%,rgba(255,255,255,.25),transparent 26%),radial-gradient(circle,rgba(58,106,201,.38),rgba(32,28,86,.2) 66%,transparent 72%);border:1px solid rgba(160,205,255,.18)}
 @media(max-width:650px){.homepage-v2 .holographic-orbs{min-height:230px;border-radius:18px}.holographic-orbs .ambient-pearl-field{min-height:230px;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;padding:8px}.homepage-v2 .holographic-orbs .holographic-orb-link{height:108px;padding:7px}.holographic-orb-link .orb-symbol{font-size:22px}.holographic-orbs .holographic-orb-link .pearl-song{font-size:11px}.holographic-orbs .holographic-orb-link .pearl-artist{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.homepage-v2 .holographic-orbs .holographic-orb-link{transition:none;transform:none!important}}
+
+/* NEON MUSIC UNIVERSE — approved cross-page design, 2026-10-16.
+   Deliberately scoped after legacy rules to preserve existing markup and behavior. */
+:root{
+ --lv-color-background:#050a20;--lv-color-surface:#0d1634;--lv-color-raised:#15234a;
+ --lv-color-text:#f8faff;--lv-color-muted:#c3cdeb;--lv-color-secondary:#a8b7dd;
+ --lv-color-primary:#bf74ff;--lv-color-accent:#69e5ff;--lv-color-border:#40568c;
+ --neon-pink:#fa70e6;--neon-blue:#48bfff;--neon-purple:#8956ff;
+ --neon-glass:linear-gradient(145deg,rgba(30,42,91,.85),rgba(8,15,43,.93));
+ --neon-border:1px solid rgba(143,153,255,.32);
+ --neon-shadow:0 22px 64px rgba(0,2,26,.55),inset 0 1px rgba(255,255,255,.08);
+}
+html{scroll-behavior:smooth}
+body{background:#050a20!important;color:#f8faff;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse 55% 36% at 90% 8%,rgba(135,48,233,.23),transparent 70%),radial-gradient(ellipse 55% 55% at 0% 63%,rgba(25,91,218,.17),transparent 75%),radial-gradient(circle at 45% 93%,rgba(241,59,189,.09),transparent 40%);opacity:1}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.18;background-image:radial-gradient(circle,rgba(173,191,255,.8) .65px,transparent 1.3px);background-size:47px 51px;mask-image:linear-gradient(120deg,transparent,#000 45%,transparent)}
+.site-nav{background:rgba(6,12,36,.87)!important;border-bottom:1px solid rgba(129,154,255,.2);box-shadow:0 12px 40px rgba(0,0,20,.32);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
+.wordmark{font-weight:800;letter-spacing:-.045em}
+:is(.desktop-links,.mobile-menu) a:hover{color:#94eaff}
+.homepage-v2,.discovery-main,.reader-main,.original-reader,.profile-main{position:relative}
+.hero-v2,.discovery-hero{isolation:isolate;position:relative;overflow:hidden;background:radial-gradient(ellipse at 78% 35%,rgba(171,48,225,.34),transparent 48%),radial-gradient(ellipse at 90% 75%,rgba(27,107,255,.3),transparent 50%),linear-gradient(120deg,#0c1640 0%,#090d31 55%,#170e48 100%)!important;border:var(--neon-border);border-radius:32px;box-shadow:var(--neon-shadow),0 0 75px rgba(93,49,237,.15)}
+.hero-v2::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:repeating-radial-gradient(ellipse at 87% 53%,transparent 0 22px,rgba(103,140,255,.09) 23px 24px,transparent 25px 46px);mask-image:linear-gradient(90deg,transparent 36%,#000 90%)}
+.hero-v2-copy h1{font-size:clamp(42px,5.5vw,88px);line-height:1.06;letter-spacing:-.065em;text-shadow:0 8px 38px rgba(0,0,0,.4);text-wrap:balance}
+.hero-gradient-text{background:linear-gradient(95deg,#f9d0ff,#ff84e2 36%,#9e9cff 67%,#70e8ff);background-clip:text;-webkit-background-clip:text;color:transparent}
+.hero-artwork{filter:drop-shadow(0 0 38px rgba(153,78,255,.38)) saturate(1.35)}
+.record-disc{box-shadow:0 0 40px rgba(158,55,255,.35),0 0 85px rgba(34,137,255,.22),inset 0 0 34px rgba(229,89,245,.25)!important}
+.record-halo{filter:drop-shadow(0 0 24px rgba(90,170,255,.45))}
+:is(.button-primary,.hero-cta){background:linear-gradient(100deg,#ec82f4,#a87bff 54%,#74d7ff)!important;color:#07102c!important;border:0!important;box-shadow:0 10px 32px rgba(150,74,241,.35),inset 0 1px rgba(255,255,255,.52);font-weight:750}
+:is(.button,.button-primary,.button-secondary,.signin-button){border-radius:999px;transition:transform .25s ease,box-shadow .25s ease,filter .25s ease}
+:is(.button,.button-primary,.button-secondary,.signin-button):hover{transform:translateY(-2px);box-shadow:0 15px 42px rgba(132,73,230,.27)}
+:is(.search-input,.search-header,.search-hero){border-radius:999px!important;background:rgba(246,247,255,.96)!important;color:#111a40!important;border:1px solid rgba(218,224,255,.95)!important;box-shadow:0 10px 35px rgba(0,2,28,.28)}
+.search-input input{color:#111a40!important;background:transparent!important}
+.search-input input::placeholder{color:#46547b!important}
+.search-input:focus-within{outline:2px solid #a78bfa;outline-offset:3px;box-shadow:0 0 28px rgba(136,116,255,.4)}
+:is(.genre-discovery,.song-section,.mixed-songs,.moods-section,.how-section,.closing-cta,.profile-panel,.search-page-header,.song-profile-banner,.reader-columns,.original-reader,.info-page){position:relative}
+:is(.song-card,.compact-lyric-card,.mood-card,.profile-panel,.profile-card,.reader-card,.reader-lyrics,.original-reader,.closing-cta,.info-card,.search-page-header,.song-profile-banner,.provider-results,.local-lyrics-results){background-image:var(--neon-glass);border:var(--neon-border);box-shadow:var(--neon-shadow);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:22px}
+:is(.song-card,.compact-lyric-card,.mood-card,.search-result,.profile-card){transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+:is(.song-card,.compact-lyric-card,.mood-card,.search-result,.profile-card):hover{transform:translateY(-5px);border-color:rgba(232,129,253,.68);box-shadow:0 20px 56px rgba(14,7,64,.5),0 0 25px rgba(151,79,255,.15)}
+:is(.song-section,.genre-discovery,.search-page,.profile-main,.reader-main) h1,:is(.song-section,.genre-discovery,.search-page,.profile-main,.reader-main) h2{letter-spacing:-.04em}
+:is(.section-kicker,.eyebrow){color:#a8eaff;letter-spacing:.13em}
+:is(.genre-chip,.chip,.language-switch button,.search-language-bar button){border-radius:999px;transition:background .2s ease,box-shadow .2s ease}
+:is(.genre-chip,.chip,.language-switch button):hover{box-shadow:0 0 22px rgba(174,102,250,.25)}
+.search-page-header{padding:clamp(24px,4vw,52px);background:radial-gradient(ellipse at 85% 25%,rgba(166,70,241,.23),transparent 65%),var(--neon-glass)}
+.search-page-header h1{font-size:clamp(34px,4vw,64px);letter-spacing:-.055em}
+.search-page .provider-results,.search-page .local-lyrics-results{padding:clamp(16px,2.5vw,30px);margin-block:24px}
+.search-page .compact-lyric-card{overflow:hidden}
+.original-reader,.reader-main{line-height:1.75}
+:is(.original-reader,.reader-main) :is(p,.lyrics-text,.lyrics-body){max-width:76ch}
+.song-profile-banner{background:radial-gradient(ellipse at 80% 0%,rgba(177,58,242,.23),transparent 60%),var(--neon-glass)}
+.profile-panel{padding:clamp(20px,4vw,48px);background:radial-gradient(ellipse at 90% 0%,rgba(124,62,238,.22),transparent 50%),var(--neon-glass)}
+.profile-panel h1{font-size:clamp(30px,4vw,56px)}
+:is(.bottom-nav,.mobile-menu){background:rgba(6,12,36,.93)!important;backdrop-filter:blur(22px);border-top:1px solid rgba(142,156,255,.28)}
+:is(input,select,textarea){accent-color:#be79f7}
+:focus-visible{outline:3px solid #75eaff!important;outline-offset:3px}
+@media(max-width:700px){
+ .hero-v2,.discovery-hero{border-radius:22px}
+ .hero-v2-copy h1{font-size:clamp(35px,9vw,54px)}
+ .hero-artwork{opacity:.65}
+ .search-page-header,.profile-panel,.song-profile-banner{border-radius:18px;padding:20px}
+ .song-card,.compact-lyric-card{border-radius:16px}
+ .site-nav{backdrop-filter:blur(14px)}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ :is(.song-card,.compact-lyric-card,.mood-card,.search-result,.profile-card,.button,.button-primary,.button-secondary,.signin-button){transition:none!important;transform:none!important}
+}

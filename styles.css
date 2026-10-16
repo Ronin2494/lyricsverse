@@ -391,3 +391,28 @@ img.original-floater-icon{object-fit:cover;display:block}
 .holographic-orbs.orb-webgl-unavailable .holographic-orb-link,.holographic-orbs:has(.orb-canvas:empty) .holographic-orb-link{background:radial-gradient(circle at 32% 24%,rgba(255,255,255,.25),transparent 26%),radial-gradient(circle,rgba(58,106,201,.38),rgba(32,28,86,.2) 66%,transparent 72%);border:1px solid rgba(160,205,255,.18)}
 @media(max-width:650px){.homepage-v2 .holographic-orbs{min-height:230px;border-radius:18px}.holographic-orbs .ambient-pearl-field{min-height:230px;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;padding:8px}.homepage-v2 .holographic-orbs .holographic-orb-link{height:108px;padding:7px}.holographic-orb-link .orb-symbol{font-size:22px}.holographic-orbs .holographic-orb-link .pearl-song{font-size:11px}.holographic-orbs .holographic-orb-link .pearl-artist{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.homepage-v2 .holographic-orbs .holographic-orb-link{transition:none;transform:none!important}}
+
+/* SITEWIDE IMMERSIVE REDESIGN V1 — one coherent visual language across every route. */
+:root{--lv-color-background:#070b1c;--lv-color-surface:#101b34;--lv-color-raised:#182744;--lv-color-border:#425879;--lv-radius-lg:22px;--lv-radius-xl:30px;--lv-elevation:0 24px 70px rgba(0,3,24,.48);--lv-glass:linear-gradient(142deg,rgba(35,53,93,.82),rgba(13,23,48,.9));--lv-edge:1px solid rgba(150,202,255,.23)}
+body{background:radial-gradient(ellipse 68% 33% at 90% 5%,rgba(105,67,203,.18),transparent 70%),radial-gradient(ellipse 65% 34% at 3% 34%,rgba(32,147,195,.12),transparent 75%),#070b1c;background-attachment:fixed}
+#app{position:relative;isolation:isolate}
+#app:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.14;background-image:radial-gradient(circle at center,rgba(202,223,255,.45) .6px,transparent .9px);background-size:31px 31px;mask-image:linear-gradient(110deg,transparent 5%,#000 45%,transparent 95%)}
+.site-nav{position:relative;z-index:20;background:rgba(8,15,36,.76)!important;backdrop-filter:blur(24px) saturate(145%);-webkit-backdrop-filter:blur(24px) saturate(145%);border-bottom:1px solid rgba(146,181,240,.16);box-shadow:0 10px 45px rgba(0,0,0,.18)}
+.discovery-hero,.hero-v2{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 78% 42%,rgba(103,72,212,.28),transparent 55%),radial-gradient(ellipse at 20% 70%,rgba(24,159,197,.17),transparent 60%),linear-gradient(130deg,#0e1a36,#101129 70%,#161336)!important;border:var(--lv-edge);border-radius:34px;box-shadow:var(--lv-elevation),inset 0 1px rgba(255,255,255,.09)}
+.discovery-hero:after{content:"";position:absolute;inset:auto -15% -75% 28%;height:120%;z-index:-1;pointer-events:none;border-radius:50%;background:radial-gradient(ellipse,rgba(98,115,251,.18),transparent 67%);filter:blur(26px)}
+.hero-v2-copy h1{letter-spacing:-.055em;text-wrap:balance;text-shadow:0 12px 46px rgba(1,3,22,.36)}
+.hero-gradient-text{background:linear-gradient(110deg,#e9faff 0%,#8de5ff 30%,#b5a4ff 65%,#f3b4e5 100%);background-clip:text;-webkit-background-clip:text;color:transparent}
+.button,.button-primary,.button-secondary{border-radius:999px;transition:transform .22s ease,box-shadow .22s ease,background .22s ease}
+.button-primary{background:linear-gradient(115deg,#a17aff,#77b7ff)!important;color:#080e23!important;box-shadow:0 12px 28px rgba(111,111,242,.27),inset 0 1px rgba(255,255,255,.35)}
+.button:hover{transform:translateY(-2px)}
+:is(.song-card,.card-shell,.compact-lyric-card,.search-result,.profile-panel,.reader-main,.reader-card,.song-section,.genre-discovery,.mood-card,.info-card,.library-card,.profile-card,.closing-cta){transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
+:is(.song-card,.compact-lyric-card,.profile-panel,.reader-card,.mood-card,.info-card,.library-card,.profile-card){border:var(--lv-edge);background-image:var(--lv-glass);box-shadow:0 15px 42px rgba(0,3,20,.25),inset 0 1px rgba(255,255,255,.06);backdrop-filter:blur(14px)}
+:is(.song-card,.compact-lyric-card,.mood-card,.library-card):hover{transform:translateY(-5px);border-color:rgba(140,216,255,.56);box-shadow:0 24px 58px rgba(0,5,32,.44),0 0 28px rgba(98,140,250,.12)}
+:is(.search-page,.reader-main,.profile-main,.homepage-v2,.discovery-main){position:relative}
+.search-page-header,.profile-header,.song-profile-banner{position:relative;border-radius:28px;background:radial-gradient(ellipse at 85% 15%,rgba(109,87,221,.18),transparent 55%),linear-gradient(145deg,rgba(19,34,69,.85),rgba(11,21,45,.82));border:var(--lv-edge);box-shadow:var(--lv-elevation);padding:clamp(22px,4vw,46px)}
+.search-input{border-radius:18px;box-shadow:0 12px 35px rgba(2,7,32,.24),inset 0 1px rgba(255,255,255,.06);transition:box-shadow .2s ease,border-color .2s ease}
+.search-input:focus-within{box-shadow:0 0 0 2px rgba(100,230,231,.38),0 16px 45px rgba(23,105,184,.25)}
+:is(.song-section,.genre-discovery,.search-page,.reader-main,.profile-main) h1,:is(.song-section,.genre-discovery,.search-page,.reader-main,.profile-main) h2{letter-spacing:-.035em}
+:is(input,select,textarea){accent-color:#a17aff}
+@media(max-width:650px){.discovery-hero,.hero-v2{border-radius:22px}.search-page-header,.profile-header,.song-profile-banner{border-radius:20px;padding:18px}.site-nav{backdrop-filter:blur(15px)}}
+@media(prefers-reduced-motion:reduce){.button,:is(.song-card,.compact-lyric-card,.mood-card,.library-card){transition:none!important;transform:none!important}body{background-attachment:scroll}}

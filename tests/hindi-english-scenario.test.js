@@ -36,7 +36,8 @@ test('Hindi-English genre is hidden when another genre is selected',()=>{
 });
 test('unpublished originals are excluded by the catalog loading rule',()=>{
  const loader=app.slice(app.indexOf('async function loadOriginalCompositions'),app.indexOf('function thumbnailHTML'));
- assert.match(loader,/publishedSongs=\(data\.data\|\|\[\]\)\.filter\(s=>s\.status==='published'/);\n assert.match(loader,/originalCompositions=publishedSongs\.filter\(s=>s\.source==='original'/);
+ assert.match(loader,/publishedSongs=\(data\.data\|\|\[\]\)\.filter\(s=>s\.status==='published'/);
+ assert.match(loader,/originalCompositions=publishedSongs\.filter\(s=>s\.source==='original'/);
  assert.match(loader,/\(s\.accessTier\|\|'free'\)==='free'/);
 });
 test('empty Hindi-English category has a visible empty state',()=>{

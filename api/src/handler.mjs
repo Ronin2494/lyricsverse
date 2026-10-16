@@ -36,6 +36,25 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
     let url;
     try { url = new URL(req.url, 'http://localhost'); } catch { return jsonResponse(res, 400, { error: 'invalid_url' }, origin); }
     try {
+      if(url.pathname==='/api/v1/media/youtube-preview'&&req.method==='GET'){
+        const title=(url.searchParams.get('title')||'').trim().slice(0,120);
+        const artist=(url.searchParams.get('artist')||'').trim().slice(0,120);
+        if(!title||!artist)return jsonResponse(res,400,{error:'missing_song'},origin);
+        const searchUrl='https://www.youtube.com/results?search_query='+encodeURIComponent(artist+' '+title+' official audio');
+        if(!env.YOUTUBE_API_KEY)return jsonResponse(res,200,{data:{videoId:null,searchUrl,available:false}},origin);
+        const params=new URLSearchParams({part:'snippet',type:'video',videoEmbeddable:'true',maxResults:'5',q:artist+' '+title+' official audio',key:env.YOUTUBE_API_KEY});
+        try{
+          const response=await fetch('https://www.googleapis.com/youtube/v3/search?'+params,{signal:AbortSignal.timeout(6500)});
+          if(!response.ok)return jsonResponse(res,200,{data:{videoId:null,searchUrl,available:false}},origin);
+          const data=await response.json();
+          const normalized=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+          const tokens=normalized(title).split(' ').filter(Boolean);
+          const matches=(data.items||[]).filter(x=>/^[a-zA-Z0-9_-]{11}$/.test(x.id?.videoId||'')&&tokens.every(t=>normalized(x.snippet?.title).includes(t)));
+          const chosen=matches.find(x=>normalized(x.snippet?.title).includes(normalized(artist)))||matches[0];
+          const videoId=chosen?.id?.videoId||null;
+          return jsonResponse(res,200,{data:{videoId,searchUrl,available:!!videoId,watchUrl:videoId?'https://www.youtube.com/watch?v='+videoId:null}},origin);
+        }catch{return jsonResponse(res,200,{data:{videoId:null,searchUrl,available:false}},origin);}
+      }
       if (url.pathname==='/api/v1/auth/config'&&req.method==='GET')return jsonResponse(res,200,{data:{googleClientId:authConfigured(env)&&(env.MONGODB_URI||env.MONGO_DB_URI)?env.GOOGLE_CLIENT_ID||null:null,emailEnabled:authConfigured(env)&&!!(env.MONGODB_URI||env.MONGO_DB_URI)&&!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL,authReady:authConfigured(env)&&!!(env.MONGODB_URI||env.MONGO_DB_URI)&&(!!env.GOOGLE_CLIENT_ID||(!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL))}},origin);
       if (url.pathname.startsWith('/api/v1/auth/')) {
         const route=url.pathname,token=(req.headers.authorization||'').replace(/^Bearer /i,'');

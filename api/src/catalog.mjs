@@ -1,5 +1,4 @@
-// Fictional demonstration metadata sourced from the approved Figma design.
-// This catalog intentionally contains no third-party copyrighted lyrics.
+// Real song metadata only; third-party lyrics are not hosted.
 import { allSongs, genresDesktop, genresHindi, originalDemoLyrics, hindiDemoLyrics } from '../../src/catalog.js';
 
 export function getAllSongs() {
@@ -16,7 +15,5 @@ export function getSong(id) {
 export function getGenres(language = 'en') { return language === 'hi' ? [...genresHindi] : [...genresDesktop]; }
 export function getLanguages() { return [{ code: 'en', name: 'English', nativeName: 'English' }, { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' }]; }
 export function getLyrics(id) {
-  if (hindiDemoLyrics[id]) return { status: 'original_demo_only', language: 'hi', sections: hindiDemoLyrics[id], source: 'LyricVerse original Hindi fictional prototype' };
-  if (id !== 'after-the-rain') return { status: 'unavailable', sections: [], source: null };
-  return { status: 'original_demo_only', language: 'en', sections: originalDemoLyrics, source: 'LyricVerse original fictional prototype' };
+  return { status: 'unavailable', sections: [], source: null };
 }

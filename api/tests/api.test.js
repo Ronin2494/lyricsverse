@@ -15,16 +15,16 @@ async function run(path, options = {}) {
   } finally { server.close(); }
 }
 test('health reports database readiness without fabricating a connection', async () => {const x=await run('/health');assert.equal(x.status,200);assert.equal(x.body.database,'not_connected');});
-test('catalog returns eleven English and four Hindi demonstration songs', async () => {const x=await run('/api/v1/songs');assert.equal(x.body.data.length,15);});
-test('search is case insensitive and returns known songs', async () => {const x=await run('/api/v1/search?q=AFTER');assert.equal(x.body.data[0].id,'after-the-rain');});
+test('catalog returns real international Punjabi and Hindi songs', async () => {const x=await run('/api/v1/songs');assert.equal(x.body.data.length,45);});
+test('search is case insensitive and returns known songs', async () => {const x=await run('/api/v1/search?q=PATIENT');assert.equal(x.body.data[0].id,'patient-zero');});
 test('search input has length limit', async () => {const x=await run('/api/v1/search?q='+'a'.repeat(121));assert.equal(x.status,400);});
-test('song lookup and 404', async () => {assert.equal((await run('/api/v1/songs/after-the-rain')).status,200);assert.equal((await run('/api/v1/songs/nonexistent')).status,404);});
-test('unlicensed songs do not expose lyrics', async () => {const x=await run('/api/v1/lyrics/chasing-lights');assert.equal(x.body.data.status,'unavailable');assert.deepEqual(x.body.data.sections,[]);});
+test('song lookup and 404', async () => {assert.equal((await run('/api/v1/songs/patient-zero')).status,200);assert.equal((await run('/api/v1/songs/nonexistent')).status,404);});
+test('unlicensed songs do not expose lyrics', async () => {const x=await run('/api/v1/lyrics/patient-zero');assert.equal(x.body.data.status,'unavailable');assert.deepEqual(x.body.data.sections,[]);});
 test('origin checking disallows unknown websites', async () => {const x=await run('/api/v1/songs',{headers:{Origin:'https://evil.example'}});assert.equal(x.status,403);});
 test('writes are not allowed', async () => {const x=await run('/api/v1/songs',{method:'POST'});assert.equal(x.status,405);});
 
 test('language discovery includes Hindi / हिन्दी', async () => {const x=await run('/api/v1/languages');assert.equal(x.status,200);assert.equal(x.body.data.find(x=>x.code==='hi').nativeName,'हिन्दी');});
-test('Hindi catalog filter yields four songs with language metadata', async () => {const x=await run('/api/v1/songs?language=hi');assert.equal(x.status,200);assert.equal(x.body.total,4);assert.ok(x.body.data.every(s=>s.language==='hi'));});
-test('Devanagari and Romanized search work', async () => {let x=await run('/api/v1/search?q='+encodeURIComponent('सितारों'));assert.equal(x.body.data[0].id,'sitaron-ki-baat');x=await run('/api/v1/search?q=sitaron');assert.equal(x.body.data[0].language,'hi');});
-test('Hindi original lyrics are marked demonstrative and never described as licensed', async () => {const x=await run('/api/v1/lyrics/sitaron-ki-baat');assert.equal(x.body.data.status,'original_demo_only');assert.equal(x.body.data.language,'hi');assert.equal(x.body.data.sections.length,2);});
+test('Hindi catalog filter yields fifteen songs with language metadata', async () => {const x=await run('/api/v1/songs?language=hi');assert.equal(x.status,200);assert.equal(x.body.total,15);assert.ok(x.body.data.every(s=>s.language==='hi'));});
+test('Hindi song search works', async () => {const x=await run('/api/v1/search?q='+encodeURIComponent('Arz Kiya Hai'));assert.equal(x.body.data[0].language,'hi');});
+test('Hindi tracks do not expose unlicensed lyrics', async () => {const x=await run('/api/v1/lyrics/arz-kiya-hai');assert.equal(x.body.data.status,'unavailable');assert.deepEqual(x.body.data.sections,[]);});
 test('invalid language filters are rejected', async () => {const x=await run('/api/v1/songs?language=zz');assert.equal(x.status,400);});

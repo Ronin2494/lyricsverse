@@ -76,7 +76,7 @@ export async function importSongs({ db, fetcher = fetch, markets = MARKETS, limi
       const { catalogKey, ...metadata } = song;
       const res = await collection.updateOne(
         { catalogKey },
-        { $setOnInsert: { catalogKey, createdAt: now, origin: 'chart-import', lyrics: null },
+        { $setOnInsert: { catalogKey, createdAt: now, origin: 'chart-import', source: 'chart-import', status: 'published', language: 'und', rights: { lyricsDisplayAuthorized: false, audioDistributionAuthorized: false }, lyrics: null },
           $set: { ...metadata, lyricsSource, chartUpdatedAt: now, updatedAt: now } },
         { upsert: true });
       if (res.upsertedCount) inserted++; else updated++;
@@ -87,11 +87,11 @@ export async function importSongs({ db, fetcher = fetch, markets = MARKETS, limi
     processed: songs.length, inserted, updated, lyricsMatched, errors, failures };
 }
 export async function main() {
-  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is required');
-  const client = new MongoClient(process.env.MONGODB_URI);
+  if (!(process.env.MONGODB_URI || process.env.MONGO_DB_URI)) throw new Error('MongoDB URI is required');
+  const client = new MongoClient(process.env.MONGODB_URI || process.env.MONGO_DB_URI);
   await client.connect();
   try {
-    const db = client.db(process.env.MONGODB_DB || 'lyricsdb');
+    const db = client.db(process.env.MONGODB_DATABASE || process.env.MONGODB_DB || 'lyricsverse');
     const summary = await importSongs({ db });
     console.log(JSON.stringify(summary));
     if (summary.processed === 0 || summary.errors) process.exitCode = 1;

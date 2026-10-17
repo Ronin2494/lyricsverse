@@ -608,3 +608,16 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
 .neon-profile .profile-identity{border:1px solid var(--interior-border);border-radius:20px;padding:clamp(16px,3vw,28px);background:rgba(25,28,80,.36)}
 @media(max-width:700px){:is(.neon-search-header,.neon-library .search-page-header,.neon-profile-hero,.neon-reader-hero){padding:22px;border-radius:22px}:is(.neon-search-header,.neon-library .search-page-header,.neon-profile-hero)::after{opacity:.35}:is(.neon-search-page,.neon-library,.neon-profile,.neon-reader){width:100%;overflow-x:clip}}
 @media(prefers-reduced-motion:reduce){:is(.neon-search-page,.neon-library) .song-card,:is(.neon-search-page,.neon-library) .search-result{transition:none!important}}
+
+/* Phase 3 — accessible navigation, content clipping and narrow-screen hardening */
+.skip-link{position:fixed;top:12px;left:12px;z-index:99999;transform:translateY(-160%);padding:12px 18px;border:2px solid #69e5ff;border-radius:12px;background:#050a20;color:#f8fafc;font-weight:700;text-decoration:none}
+.skip-link:focus-visible{transform:translateY(0)}
+#app-main:focus{outline:none}
+#app-main :is(h1,h2,h3,p){overflow-wrap:break-word}
+#app-main :is(.song-card,.search-result,.profile-panel,.neon-reader-columns,.neon-search-header){min-width:0}
+@media(max-width:650px){
+ :is(.neon-home,.neon-search-page,.neon-library,.neon-profile,.neon-reader){max-width:100%;min-width:0}
+ #app-main :is(input,select,textarea){max-width:100%}
+ #app-main :is(.button,button,[role="button"]){touch-action:manipulation}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}.skip-link{transition:none!important}}

@@ -7,7 +7,7 @@ From repository root:
 
 ```bash
 npm --prefix api install
-MONGODB_URI='mongodb+srv://...' MONGODB_DB=lyricsdb node api/scripts/import-top-songs.mjs
+MONGODB_URI='mongodb+srv://...' MONGODB_DATABASE=lyricsverse node api/scripts/import-top-songs.mjs
 node --test api/tests/import-top-songs.test.js
 ```
 
@@ -29,3 +29,5 @@ Never use this task to bypass paywalls or anti-bot systems.
 
 The importer reports failed markets, per-song errors, newly inserted records,
 updated records, and external lyrics matches. Run at off-peak hours and monitor logs.
+
+Imported songs have language='und' (unknown) until reliable per-track language metadata is supplied. They are accessible in the all-language catalog view; language-specific filters exclude unknowns. Existing API endpoints return only published records. The initial dataset may contain fewer than 2,000 unique tracks; check the run summary before claiming completion.

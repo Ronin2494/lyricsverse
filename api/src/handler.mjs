@@ -1,3 +1,4 @@
+import {createRateLimiter,rateLimitFor} from './rate-limit.mjs';
 import {authConfigured,requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,updateProfile,updateSavedSongs,logout} from './auth.mjs';
 import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
@@ -27,7 +28,7 @@ function allowedOrigin(req, env) {
   if (!origin) return env.CORS_ORIGIN || 'https://lyricsverse.onrender.com';
   return allowed.has(origin) ? origin : null;
 }
-export function createHandler({ env = process.env, fetchCatalog = getWikidataSongs, listCatalog = listPublishedSongs, getCatalogSong = getPublishedSong, checkDb = async () => ({ available: false, reason: 'not_configured' }) } = {}) {
+export function createHandler({ limitRequest = createRateLimiter(), env = process.env, fetchCatalog = getWikidataSongs, listCatalog = listPublishedSongs, getCatalogSong = getPublishedSong, checkDb = async () => ({ available: false, reason: 'not_configured' }) } = {}) {
   return async (req, res) => {
     const origin = allowedOrigin(req, env);
     if (!origin) return jsonResponse(res, 403, { error: 'origin_not_allowed' }, 'null');
@@ -35,6 +36,10 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
     if (!['GET','HEAD','POST'].includes(req.method)) return jsonResponse(res, 405, { error: 'method_not_allowed' }, origin);
     let url;
     try { url = new URL(req.url, 'http://localhost'); } catch { return jsonResponse(res, 400, { error: 'invalid_url' }, origin); }
+    const peer=String(req.socket?.remoteAddress||'unknown');
+    // Never trust client-provided forwarded IP headers without a verified proxy boundary.
+    const quota=limitRequest(peer+':'+req.method+':'+(url.pathname.startsWith('/api/v1/auth/')?'auth':url.pathname),rateLimitFor(req.method,url.pathname));
+    if(!quota.allowed)return jsonResponse(res,429,{error:'rate_limited',retryAfter:quota.retryAfter},origin);
     try {
       if(url.pathname==='/api/v1/media/youtube-preview'&&req.method==='GET'){
         const title=(url.searchParams.get('title')||'').trim().slice(0,120);

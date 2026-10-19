@@ -1,12 +1,13 @@
 // A single shared WebGL scene supplies depth and reflections; accessible song links stay in HTML.
 let disposeCurrent=()=>{};
+export function stopMusicOrbs(){disposeCurrent();disposeCurrent=()=>{};}
 export function mountMusicOrbs(root){
- disposeCurrent();disposeCurrent=()=>{};
+ stopMusicOrbs();
  if(!root||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  const canvas=root.querySelector('.orb-canvas');if(!canvas)return;
  let cancelled=false,frame=0,renderer,geometry,material,scene,camera,observer,resizeObserver;
  const links=[...root.querySelectorAll('.holographic-orb-link')];
- const cleanup=()=>{cancelled=true;cancelAnimationFrame(frame);observer?.disconnect();resizeObserver?.disconnect();links.forEach(link=>link.removeEventListener('pointermove',onMove));geometry?.dispose();material?.dispose();renderer?.dispose();};
+ const cleanup=()=>{cancelled=true;cancelAnimationFrame(frame);observer?.disconnect();resizeObserver?.disconnect();links.forEach(link=>link.removeEventListener('pointermove',onMove));scene?.traverse(obj=>{if(!obj.isMesh)return;if(obj.geometry!==geometry)obj.geometry?.dispose();if(obj.material!==material)obj.material?.dispose();});geometry?.dispose();material?.dispose();renderer?.dispose();};
  disposeCurrent=cleanup;
  function onMove(e){const rect=e.currentTarget.getBoundingClientRect();e.currentTarget.style.setProperty('--pointer-x',((e.clientX-rect.left)/rect.width-.5).toFixed(2));e.currentTarget.style.setProperty('--pointer-y',((e.clientY-rect.top)/rect.height-.5).toFixed(2));}
  links.forEach(link=>link.addEventListener('pointermove',onMove));
@@ -27,7 +28,7 @@ export function mountMusicOrbs(root){
    const resize=()=>{const r=root.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();};
    resizeObserver=new ResizeObserver(resize);resizeObserver.observe(root);resize();
    let visible=true;observer=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting??false;});observer.observe(root);
-   const animate=t=>{if(cancelled)return;frame=requestAnimationFrame(animate);if(!visible)return;const bounds=root.getBoundingClientRect();const narrow=bounds.width<650;links.forEach((link,i)=>{const b=link.getBoundingClientRect();const x=(b.left+b.width/2-bounds.left)/bounds.width;const y=(b.top+b.height/2-bounds.top)/bounds.height;const v=new THREE.Vector3((x-.5)*2,(.5-y)*2,.3).unproject(camera);const dir=v.sub(camera.position).normalize();const point=camera.position.clone().add(dir.multiplyScalar((0-camera.position.z)/dir.z));const group=spheres[i];group.position.lerp(point,.13);const size=narrow?.43:.75;group.scale.setScalar(size);group.rotation.y=t*.00012+i*.6;group.rotation.z=Math.sin(t*.0003+i)*.12;});renderer.render(scene,camera);};
+   const animate=t=>{if(cancelled)return;frame=requestAnimationFrame(animate);if(!visible||document.hidden)return;const bounds=root.getBoundingClientRect();const narrow=bounds.width<650;links.forEach((link,i)=>{const b=link.getBoundingClientRect();const x=(b.left+b.width/2-bounds.left)/bounds.width;const y=(b.top+b.height/2-bounds.top)/bounds.height;const v=new THREE.Vector3((x-.5)*2,(.5-y)*2,.3).unproject(camera);const dir=v.sub(camera.position).normalize();const point=camera.position.clone().add(dir.multiplyScalar((0-camera.position.z)/dir.z));const group=spheres[i];group.position.lerp(point,.13);const size=narrow?.43:.75;group.scale.setScalar(size);group.rotation.y=t*.00012+i*.6;group.rotation.z=Math.sin(t*.0003+i)*.12;});renderer.render(scene,camera);};
    frame=requestAnimationFrame(animate);
   }catch{root.classList.add('orb-webgl-unavailable');}
  };

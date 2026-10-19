@@ -1,4 +1,4 @@
-import { mountMusicOrbs, stopMusicOrbs } from './music-orbs.js';
+import { stopMusicOrbs } from './music-orbs.js';
 import { mountMotion } from './motion.js';
 import { allSongs, topSongs, newSongs, readerSong, genresDesktop, genresMobile, originalDemoLyrics, hindiDemoLyrics, hindiSongs, punjabiSongs, genresHindi, findSongs } from './catalog.js';
 
@@ -123,7 +123,7 @@ async function initGoogleAuth(){
 }
 function render(){
  const route=currentRoute();
- if(route.page!=='home')stopMusicOrbs();
+ stopMusicOrbs();
  if(!authConfigChecked){app.innerHTML='<main id="app-main" tabindex="-1" role="status" class="auth-loading">Loading LyricVerse…</main>';return;}
  if(route.page==='profile'&&!authUser){app.innerHTML=profileHTML();mountMotion(app);void initGoogleAuth();return;}
  app.innerHTML=route.page==='profile'?profileHTML():route.page==='original'?originalReaderHTML():route.page==='lyrics'?readerHTML():route.page==='search'?searchPageHTML():route.page==='library'?libraryHTML():route.page==='info'?infoHTML():homeHTML();
@@ -131,7 +131,6 @@ function render(){
  if(route.page==='lyrics'){document.documentElement.style.setProperty('--lyrics-adjust',`${state.fontBoost}px`);}else document.documentElement.style.removeProperty('--lyrics-adjust');
  mountMotion(app);
  if(route.page==='home')initSongBanner();
- if(route.page==='home')mountMusicOrbs(document.querySelector('.holographic-orbs'));
  if(originalDismissed)document.querySelector('.original-floater')?.remove();if(state.toast)showToast(state.toast,false);
  if(route.page==='profile'&&!authUser)void initGoogleAuth();
 }

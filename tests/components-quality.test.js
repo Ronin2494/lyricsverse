@@ -27,7 +27,7 @@ test('song card navigates to original reader',()=>{
  assert.match(app,/function originalReaderHTML\(\)/);
 });
 test('published free originals are loaded from public API',()=>{
- assert.match(app,/\/api\/v1\/catalog\/songs\?limit=24/);
+ assert.match(app,/\/api\/v1\/catalog\/songs\?limit=100/);
  assert.match(app,/s\.status==='published'/);
  assert.match(app,/s\.source==='original'/);
 });

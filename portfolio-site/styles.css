@@ -25,3 +25,5 @@
 @keyframes brand-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @media(max-width:700px){.brand-showcase{height:255px;border-radius:22px;margin:8px 0 0}.brand-orbit{left:5%;width:90%;top:12%;height:76%}.brand-overline{top:19px;font-size:8px;letter-spacing:.14em}.brand-wordmark-wrap{width:82%;padding:19px 12px;border-radius:15px}.brand-runner{width:63px;height:88px}.brand-subline{bottom:15px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){.brand-wordmark-wrap,.running-child,.kid-front-leg,.kid-back-leg,.kid-front-arm,.kid-back-arm,.kid-motion-lines{animation:none!important}}
+/* Creative library nav responsiveness */
+@media(max-width:1000px){.site-nav .nav-creative{display:none}}

@@ -1,4 +1,61 @@
 {
-  "description": "Verified individual posts. Add public video URLs here to feature playable clips from Instagram, YouTube, TikTok or Vimeo. Leave items empty until direct post URLs are confirmed.",
-  "items": []
+  "description": "Verified public YouTube videos. Add verified Instagram Reels here when direct post URLs are available.",
+  "items": [
+    {
+      "provider": "youtube",
+      "url": "https://www.youtube.com/watch?v=VAUABrdYU6U",
+      "title": "It's time you started creating Video Resume - AGAIN!",
+      "description": "An introduction to the person behind the products.",
+      "category": "video",
+      "creator": "Deepak Sharma"
+    },
+    {
+      "provider": "youtube",
+      "url": "https://www.youtube.com/shorts/uCM1pc-44SE",
+      "title": "To the Women of This Generation",
+      "description": "An original singing and music short.",
+      "category": "music",
+      "creator": "Deepak Sharma"
+    },
+    {
+      "provider": "youtube",
+      "url": "https://www.youtube.com/shorts/aZCWKkPtq7o",
+      "title": "Sanwar Jaenge",
+      "description": "A short singing performance.",
+      "category": "music",
+      "creator": "Deepak Sharma"
+    },
+    {
+      "provider": "youtube",
+      "url": "https://www.youtube.com/shorts/hb9vAmRyYRo",
+      "title": "Ranjheya Ve — Song Cover",
+      "description": "Singing cover of Ranjheya Ve.",
+      "category": "music",
+      "creator": "Deepak Sharma"
+    },
+    {
+      "provider": "youtube",
+      "url": "https://www.youtube.com/watch?v=w-16B1lQ37s",
+      "title": "How Do Emotions Control Us?",
+      "description": "Exploring emotion, anger and The Courage to Be Disliked.",
+      "category": "video",
+      "creator": "Ronin Simplify Talks"
+    },
+    {
+      "provider": "youtube",
+      "url": "https://www.youtube.com/watch?v=tN-WwB7owxA",
+      "title": "Kubernetes in Under 8 Minutes",
+      "description": "A beginner-friendly explainer about containers and orchestration.",
+      "category": "video",
+      "creator": "Ronin Simplify Talks"
+    },
+    {
+      "provider": "youtube",
+      "url": "https://www.youtube.com/watch?v=sdZTq_ab-rM",
+      "title": "The World's First Permanent Nuclear Tomb",
+      "description": "A story about Finland's Onkalo repository.",
+      "category": "video",
+      "creator": "Ronin Simplify Talks"
+    }
+  ]
 }

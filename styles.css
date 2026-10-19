@@ -711,3 +711,197 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
     animation-duration: .01ms !important;
   }
 }
+
+
+/* Compact featured-song carousel replaces the old four large holographic orbs. */
+.homepage-v2 .song-banner-section {
+  width: min(100%, 1200px);
+  min-width: 0;
+  margin: 2px auto 14px;
+}
+.song-banner-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  color: #d5b1ff;
+  letter-spacing: .16em;
+  font-size: 11px;
+  font-weight: 750;
+}
+.song-banner-heading .song-banner-count {
+  color: #b9c4df;
+  font-size: 11px;
+  letter-spacing: .02em;
+  font-weight: 500;
+}
+.song-banner-slider {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 24px;
+}
+.song-banner-slider::-webkit-scrollbar { display: none; }
+.song-banner-track { display: flex; }
+.song-banner-slide {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  align-items: center;
+  gap: 18px;
+  flex: 0 0 100%;
+  min-width: 0;
+  min-height: 215px;
+  padding: 24px clamp(20px, 4vw, 42px);
+  overflow: hidden;
+  scroll-snap-align: start;
+  border: 1px solid rgba(167, 145, 252, .36);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse 55% 85% at 84% 50%, rgba(151, 83, 240, .30), transparent 78%),
+    linear-gradient(110deg, #101935, #1e1946 58%, #111631);
+  box-shadow: inset 0 1px rgba(255,255,255,.07), 0 16px 36px rgba(0,0,0,.18);
+}
+.song-banner-slide::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 270px;
+  height: 270px;
+  right: 7%;
+  top: -55%;
+  border: 1px solid rgba(179, 150, 255, .12);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.song-banner-copy { min-width: 0; grid-column: 1; grid-row: 1; }
+.song-banner-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: #a4ecff;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.song-banner-copy h3 {
+  margin: 0;
+  color: #fff;
+  font: 750 clamp(18px, 2.4vw, 28px)/1.23 'Sora', sans-serif;
+  letter-spacing: -.035em;
+  overflow-wrap: anywhere;
+}
+.song-banner-copy p {
+  margin: 7px 0 16px;
+  color: #ccd4eb;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.song-banner-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid rgba(176, 154, 250, .54);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(23, 25, 70, .7);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.song-banner-link:hover { border-color: #9ceaff; background: rgba(53, 48, 113, .88); }
+.song-banner-link:focus-visible,
+.song-banner-controls button:focus-visible {
+  outline: 3px solid #83e9ff;
+  outline-offset: 3px;
+}
+.song-banner-art {
+  grid-column: 2;
+  grid-row: 1;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(232, 218, 255, .26);
+  box-shadow: 0 18px 42px rgba(1, 6, 27, .55), 0 0 30px rgba(152, 100, 255, .18);
+  transform: rotate(5deg);
+}
+.song-banner-art .cover-art {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+}
+.song-banner-art .song-cover-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.song-banner-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 11px 0 0;
+}
+.song-banner-controls > button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(156, 150, 229, .38);
+  background: rgba(19, 23, 58, .8);
+  color: #f8faff;
+  cursor: pointer;
+  font-size: 16px;
+}
+.song-banner-controls > button:hover { border-color: #a2eafa; }
+.song-banner-dots { display: flex; justify-content: center; gap: 8px; align-items: center; }
+.song-banner-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #626184;
+  cursor: pointer;
+}
+.song-banner-dots button[aria-current="true"] { width: 24px; background: #bc8bff; }
+@media (max-width: 650px) {
+  .homepage-v2 .song-banner-section { margin: 0 auto 8px; }
+  .song-banner-heading { margin-bottom: 10px; }
+  .song-banner-slide {
+    min-height: 184px;
+    grid-template-columns: minmax(0, 1fr) 108px;
+    gap: 10px;
+    padding: 18px 17px;
+    border-radius: 20px;
+  }
+  .song-banner-slider { border-radius: 20px; }
+  .song-banner-art { width: 108px; height: 108px; border-radius: 15px; transform: rotate(4deg); }
+  .song-banner-eyebrow { font-size: 9px; letter-spacing: .075em; margin-bottom: 8px; }
+  .song-banner-copy h3 { font-size: clamp(17px, 4.8vw, 21px); }
+  .song-banner-copy p { font-size: 12px; margin: 6px 0 12px; }
+  .song-banner-link { font-size: 11px; padding: 6px 11px; min-height: 34px; }
+  .song-banner-controls { padding-top: 8px; gap: 14px; }
+  .song-banner-controls > button { width: 32px; height: 32px; }
+}
+@media (max-width: 360px) {
+  .song-banner-slide { grid-template-columns: minmax(0, 1fr) 88px; padding: 16px 13px; }
+  .song-banner-art { width: 88px; height: 88px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .song-banner-slider { scroll-behavior: auto !important; }
+  .song-banner-art, .song-banner-link, .song-banner-slide { animation: none !important; transition: none !important; }
+}

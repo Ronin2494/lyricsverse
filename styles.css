@@ -905,3 +905,15 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
   .song-banner-slider { scroll-behavior: auto !important; }
   .song-banner-art, .song-banner-link, .song-banner-slide { animation: none !important; transition: none !important; }
 }
+
+
+/* YouTube preview is available on both the catalog reader and published lyrics reader. */
+.original-preview-actions{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0 14px}
+.original-preview-actions .button{min-height:44px}
+.neon-original-detail .youtube-preview-panel{margin:16px 0 22px}
+.neon-original-detail .youtube-preview-frame{width:100%;max-width:100%}
+@media(max-width:640px){
+  .original-preview-actions{margin:16px 0}
+  .original-preview-actions .button{width:100%;justify-content:center}
+  .neon-original-detail .youtube-preview-panel{padding:16px;border-radius:18px}
+}

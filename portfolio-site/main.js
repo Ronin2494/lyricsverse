@@ -23,3 +23,28 @@ let dustCount=coarse?800:1300,dustPos=new Float32Array(dustCount*3);for(let i=0;
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;cam.aspect=w/h;cam.updateProjectionMatrix();renderer.setSize(w,h,false)}window.addEventListener('resize',resize);resize();let phase=0;return{render(p,halt){if(!halt&&!reduceMotion.matches)phase+=.0017;const spiral=p*p*(3-2*p);gal.rotation.y=phase*.58+spiral*6.5;gal.rotation.z=Math.sin(phase*.6)*.07+p*.5;gal.rotation.x=-.32+spiral*.43;cam.position.set(Math.sin(spiral*4.2)*13,7-spiral*6,62-spiral*59);cam.lookAt(0,0,0);gal.scale.setScalar(1+spiral*.42);mat.opacity=.89-clamp((p-.67)*2,0,.75);core.scale.setScalar(1+spiral*3);renderer.render(universe,cam)}}}catch(e){console.info('Using compatible canvas portal fallback',e);return null}}
 setupWebGL().then(result=>{if(result){scene=result}else{scene=canvasFallback()} });
 requestAnimationFrame(animateUI);
+// Small straw-hat adventurer orbiting the Rudransh6619 wordmark.
+const brandStage=document.querySelector('.brand-showcase');
+const brandRunner=document.querySelector('.brand-runner');
+let brandAngle=-Math.PI/2, brandLastFrame=0, brandWidth=0, brandHeight=0;
+if(brandStage&&brandRunner){
+  const measure=()=>{brandWidth=brandStage.clientWidth;brandHeight=brandStage.clientHeight;};
+  measure();window.addEventListener('resize',measure,{passive:true});
+  if('ResizeObserver'in window)new ResizeObserver(measure).observe(brandStage);
+  const tickRunner=(timestamp)=>{
+    const elapsed=brandLastFrame?Math.min((timestamp-brandLastFrame)/1000,.06):0;
+    brandLastFrame=timestamp;
+    if(!reduceMotion.matches&&!paused&&!document.hidden)brandAngle+=elapsed*(2*Math.PI/12);
+    const isSmall=window.innerWidth<=700;
+    const radiusX=brandWidth*(isSmall?.45:.41);
+    const radiusY=brandHeight*.38;
+    const x=Math.cos(brandAngle)*radiusX;
+    const y=Math.sin(brandAngle)*radiusY;
+    const scale=Math.sin(brandAngle)>0?1:.87;
+    const facing=-Math.sin(brandAngle)>=0?1:-1;
+    brandRunner.style.transform=`translate(calc(-50% + ${x.toFixed(1)}px),calc(-50% + ${y.toFixed(1)}px)) scale(${(scale*facing).toFixed(2)},${scale.toFixed(2)})`;
+    brandRunner.style.zIndex=Math.sin(brandAngle)>0?'5':'1';
+    requestAnimationFrame(tickRunner);
+  };
+  requestAnimationFrame(tickRunner);
+}

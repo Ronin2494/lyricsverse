@@ -37,8 +37,8 @@ export function mountMotion(root, { win = window, doc = document } = {}) {
   cleanups.push(() => root.classList.remove('motion-enabled'));
 
   const sectionSelector = [
-    '.neon-genre-strip', '.song-section', '.moods-section', '.ambient-pearls',
-    '.homepage-hub', '.rating-strip', '.how-section', '.closing-cta',
+    '.neon-genre-strip', '.song-section', '.moods-section',
+    '.featured-song-carousel', '.homepage-hub', '.rating-strip', '.how-section', '.closing-cta',
     '.neon-search-header', '.neon-reader-hero', '.reader-columns',
     '.profile-panel', '.profile-saved-section'
   ].join(',');

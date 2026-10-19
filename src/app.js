@@ -197,7 +197,7 @@ function renderRouteTransition(){
  update();
 }
 window.addEventListener('hashchange',()=>{
- state.menu=false;state.readerTab='Lyrics';renderRouteTransition();
+ state.menu=false;state.readerTab='Lyrics';state.youtubePreview=null;state.youtubePreviewLoading=false;renderRouteTransition();
 });
 window.addEventListener('resize',()=>{if(currentRoute().page==='lyrics')render();},{passive:true});
 let rotateTimer;function advanceHeroRotators(){

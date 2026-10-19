@@ -1,4 +1,5 @@
 import { mountMusicOrbs } from './music-orbs.js';
+import { mountMotion } from './motion.js';
 import { allSongs, topSongs, newSongs, readerSong, genresDesktop, genresMobile, originalDemoLyrics, hindiDemoLyrics, hindiSongs, punjabiSongs, genresHindi, findSongs } from './catalog.js';
 
 const app = document.querySelector('#app');
@@ -122,10 +123,11 @@ async function initGoogleAuth(){
 function render(){
  const route=currentRoute();
  if(!authConfigChecked){app.innerHTML='<main id="app-main" tabindex="-1" role="status" class="auth-loading">Loading LyricVerse…</main>';return;}
- if(route.page==='profile'&&!authUser){app.innerHTML=profileHTML();void initGoogleAuth();return;}
+ if(route.page==='profile'&&!authUser){app.innerHTML=profileHTML();mountMotion(app);void initGoogleAuth();return;}
  app.innerHTML=route.page==='profile'?profileHTML():route.page==='original'?originalReaderHTML():route.page==='lyrics'?readerHTML():route.page==='search'?searchPageHTML():route.page==='library'?libraryHTML():route.page==='info'?infoHTML():homeHTML();
  document.title=route.page==='lyrics'?`${allSongs.find(s=>s.id===route.slug)?.title||'Lyrics'} — LyricVerse`:'LyricVerse — Every song has a story';
  if(route.page==='lyrics'){document.documentElement.style.setProperty('--lyrics-adjust',`${state.fontBoost}px`);}else document.documentElement.style.removeProperty('--lyrics-adjust');
+ mountMotion(app);
  if(route.page==='home')mountMusicOrbs(document.querySelector('.holographic-orbs'));
  if(originalDismissed)document.querySelector('.original-floater')?.remove();if(state.toast)showToast(state.toast,false);
  if(route.page==='profile'&&!authUser)void initGoogleAuth();
@@ -138,7 +140,27 @@ app.addEventListener('submit',e=>{const form=e.target.closest('[data-search]');i
 app.addEventListener('input',e=>{if(e.target.matches('input[name="q"]')){state.query=e.target.value;updateSearchResults(e.target.closest('form'));}});
 async function toggleFavorite(id){if(!authUser){location.hash='#/profile';toast('Sign in to save songs to your profile.');return;}const previous=[...state.saved];state.saved=previous.includes(id)?previous.filter(x=>x!==id):[...previous,id];render();try{const response=await fetch(API_URL+'/api/v1/auth/favorites',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+authToken},body:JSON.stringify({savedSongs:state.saved})});const payload=await response.json();if(!response.ok)throw Error(payload.error||'Unable to save song');authUser=payload.data.user;state.saved=authUser.savedSongs||[];render();}catch(error){state.saved=previous;render();toast(error.message);}}
 app.addEventListener('click',async e=>{const heart=e.target.closest('[data-favorite-id]');if(heart){e.preventDefault();await toggleFavorite(heart.dataset.favoriteId);return;}if(e.target.closest('[data-action="dismiss-original"]')){originalDismissed=true;document.querySelector('.original-floater')?.remove();return;}const rating=e.target.closest('[data-rating]');if(rating){void submitRating(Number(rating.dataset.rating));return;}const scroll=e.target.closest('[data-scroll-to]');if(scroll){e.preventDefault();const target=scroll.dataset.scrollTo;if(!['moods','how-it-works'].includes(target))return;const section=document.getElementById(target);if(section){section.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}else{safeStorageSet('sessionStorage','lyricverse:pending-section',target);location.hash='#/';}return;}const pause=e.target.closest('[data-action="pause-rotation"]');if(pause){state.rotationPaused=!state.rotationPaused;pause.setAttribute('aria-pressed',String(state.rotationPaused));pause.setAttribute('aria-label',state.rotationPaused?'Resume headline rotation':'Pause headline rotation');pause.textContent=state.rotationPaused?'▶':'Ⅱ';return;}const rotate=e.target.closest('[data-action="rotate-headline"]');if(rotate){advanceHeroRotators();return;}const mood=e.target.closest('[data-mood]');if(mood){state.filter=mood.dataset.mood;}const language=e.target.closest('[data-language]');if(language){const next=language.dataset.language;if(!['hi','en','pa'].includes(next))return;state.language=next;state.filter='All';state.query='';localStorage.setItem('lyricverse:language',next);realCatalog=[];const previousScroll=window.scrollY;render();window.scrollTo(0,previousScroll);return;}const genre=e.target.closest('[data-genre]');if(genre){state.filter=genre.dataset.genre;render();if(state.filter==='Hindi-English Mix')document.getElementById('hindi-english-songs')?.scrollIntoView({behavior:'smooth',block:'start'});return;}const tab=e.target.closest('[data-tab]');if(tab){state.readerTab=tab.dataset.tab;render();return;}const button=e.target.closest('[data-action]');if(!button)return;const action=button.dataset.action;if(action==='menu'){state.menu=!state.menu;render();}if(action==='save'){const song=allSongs.find(s=>s.id===currentRoute().slug)||readerSong;await toggleFavorite(song.id);}if(action==='font-size'){state.fontBoost=(state.fontBoost+2)%8;document.documentElement.style.setProperty('--lyrics-adjust',state.fontBoost+'px');toast('Text size adjusted');}if(action==='translate')toast('Translations will appear when licensed content is connected.');if(action==='preview'){const route=currentRoute();const song=allSongs.find(x=>x.id===route.slug)||readerSong;state.youtubePreviewLoading=true;state.youtubePreview=null;render();try{const response=await fetch(API_URL+'/api/v1/media/youtube-preview?title='+encodeURIComponent(song.title)+'&artist='+encodeURIComponent(song.artist));const payload=await response.json();if(currentRoute().slug===song.id)state.youtubePreview={...payload.data,songId:song.id};}catch{state.youtubePreview={songId:song.id,videoId:null};}finally{state.youtubePreviewLoading=false;render();document.querySelector('.youtube-preview-panel')?.scrollIntoView({behavior:'smooth',block:'nearest'});}}if(action==='share'){try{await navigator.clipboard.writeText(location.href);toast('Link copied');}catch{toast('Share this page using the address bar.')}}if(action==='sign-in'){e.preventDefault();location.hash='#/profile';render();}if(action==='retry-google'){e.preventDefault();void initGoogleAuth();}if(action==='logout'){e.preventDefault();const token=authToken;authToken='';authUser=null;authStep='email';authError='';safeStorageRemove('sessionStorage','lyricverse:session');render();if(token)void fetch(API_URL+'/api/v1/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token}}).catch(()=>{});}});
-window.addEventListener('hashchange',()=>{state.menu=false;state.readerTab='Lyrics';window.scrollTo(0,0);render();const pending=safeStorageGet('sessionStorage','lyricverse:pending-section');if(pending&&currentRoute().page==='home'){safeStorageRemove('sessionStorage','lyricverse:pending-section');requestAnimationFrame(()=>document.getElementById(pending)?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'}));}});
+function renderRouteTransition(){
+ const update=()=>{
+  window.scrollTo(0,0);
+  render();
+  const pending=safeStorageGet('sessionStorage','lyricverse:pending-section');
+  if(pending&&currentRoute().page==='home'){
+   safeStorageRemove('sessionStorage','lyricverse:pending-section');
+   requestAnimationFrame(()=>document.getElementById(pending)?.scrollIntoView({
+    behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'
+   }));
+  }
+ };
+ if(typeof document.startViewTransition==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  try{const transition=document.startViewTransition(update);void transition.finished.catch(()=>{});return;}
+  catch{ /* Browser did not accept a transition; render directly. */ }
+ }
+ update();
+}
+window.addEventListener('hashchange',()=>{
+ state.menu=false;state.readerTab='Lyrics';renderRouteTransition();
+});
 window.addEventListener('resize',()=>{if(currentRoute().page==='lyrics')render();},{passive:true});
 let rotateTimer;function advanceHeroRotators(){
  state.headlineIndex=(state.headlineIndex+1)%HERO_MESSAGES.length;

@@ -1,4 +1,4 @@
-import { mountMusicOrbs } from './music-orbs.js';
+import { mountMusicOrbs, stopMusicOrbs } from './music-orbs.js';
 import { mountMotion } from './motion.js';
 import { allSongs, topSongs, newSongs, readerSong, genresDesktop, genresMobile, originalDemoLyrics, hindiDemoLyrics, hindiSongs, punjabiSongs, genresHindi, findSongs } from './catalog.js';
 
@@ -129,6 +129,7 @@ function render(){
  if(route.page==='lyrics'){document.documentElement.style.setProperty('--lyrics-adjust',`${state.fontBoost}px`);}else document.documentElement.style.removeProperty('--lyrics-adjust');
  mountMotion(app);
  if(route.page==='home')mountMusicOrbs(document.querySelector('.holographic-orbs'));
+ else stopMusicOrbs();
  if(originalDismissed)document.querySelector('.original-floater')?.remove();if(state.toast)showToast(state.toast,false);
  if(route.page==='profile'&&!authUser)void initGoogleAuth();
 }

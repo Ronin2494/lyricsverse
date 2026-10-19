@@ -11,7 +11,7 @@ export function tiltForPointer(rect, x, y) {
   if (!rect || !rect.width || !rect.height) return { x: 0, y: 0 };
   const horizontal = clamp((x - rect.left) / rect.width * 2 - 1, -1, 1);
   const vertical = clamp((y - rect.top) / rect.height * 2 - 1, -1, 1);
-  return { x: Math.round(-vertical * 40) / 10, y: Math.round(horizontal * 40) / 10 };
+  return { x: Math.round(-vertical * 40) / 10 || 0, y: Math.round(horizontal * 40) / 10 || 0 };
 }
 
 export function stopMotion() {

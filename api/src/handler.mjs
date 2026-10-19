@@ -1,3 +1,4 @@
+import {loadHot100Chart,withPublishedLyrics,chartWithoutAvailability} from './billboard.mjs';
 import {authConfigured,requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,updateProfile,updateSavedSongs,logout} from './auth.mjs';
 import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
@@ -27,7 +28,7 @@ function allowedOrigin(req, env) {
   if (!origin) return env.CORS_ORIGIN || 'https://lyricsverse.onrender.com';
   return allowed.has(origin) ? origin : null;
 }
-export function createHandler({ env = process.env, fetchCatalog = getWikidataSongs, listCatalog = listPublishedSongs, getCatalogSong = getPublishedSong, checkDb = async () => ({ available: false, reason: 'not_configured' }) } = {}) {
+export function createHandler({ env = process.env, fetchCatalog = getWikidataSongs, listCatalog = listPublishedSongs, getCatalogSong = getPublishedSong, loadChart = loadHot100Chart, annotateChart = withPublishedLyrics, checkDb = async () => ({ available: false, reason: 'not_configured' }) } = {}) {
   return async (req, res) => {
     const origin = allowedOrigin(req, env);
     if (!origin) return jsonResponse(res, 403, { error: 'origin_not_allowed' }, 'null');
@@ -70,6 +71,23 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
           const data=route.endsWith('/email/request')?await requestEmailOtp(body.email,env):route.endsWith('/email/verify')?await verifyEmailOtp(body.email,body.code,env):await googleSignIn(body.credential,env);
           return jsonResponse(res,200,{data},origin);
         }catch(error){const key=error?.message||'auth_failed';const status=key==='auth_not_configured'?503:key==='rate_limited'?429:key==='email_delivery_failed'?502:key.startsWith('invalid')?400:503;if(status===503)console.error('[auth] '+route+' failed:',error);return jsonResponse(res,status,{error:status===503?'auth_unavailable':key},origin);}
+      }
+      if(url.pathname==='/api/v1/charts/hot100/top5'){
+        if(req.method!=='GET')return jsonResponse(res,405,{error:'method_not_allowed'},origin);
+        try{
+          const chart=await loadChart();
+          try{return jsonResponse(res,200,{data:await annotateChart(chart)},origin);}
+          catch{return jsonResponse(res,200,{data:chartWithoutAvailability(chart)},origin);}
+        }catch{return jsonResponse(res,503,{error:'chart_unavailable'},origin);}
+      }
+      if(url.pathname==='/api/v1/admin/charts/hot100/missing'){
+        if(req.method!=='GET')return jsonResponse(res,405,{error:'method_not_allowed'},origin);
+        const auth=adminAuthStatus(req,env);
+        if(auth!=='ok')return jsonResponse(res,auth==='not_configured'?503:401,{error:auth==='not_configured'?'admin_key_not_configured':'invalid_admin_key'},origin);
+        try{
+          const chart=await annotateChart(await loadChart());
+          return jsonResponse(res,200,{data:{...chart,missing:chart.songs.filter(song=>!song.lyricsAvailable)}},origin);
+        }catch{return jsonResponse(res,503,{error:'chart_or_database_unavailable'},origin);}
       }
       if (url.pathname === '/api/v1/admin/session') {
         if(req.method!=='GET') return jsonResponse(res,405,{error:'method_not_allowed'},origin);

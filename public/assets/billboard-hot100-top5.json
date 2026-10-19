@@ -1,0 +1,38 @@
+{
+  "chart": "Billboard Hot 100",
+  "date": "2026-10-17",
+  "sourceUrl": "https://www.billboard.com/charts/hot-100/",
+  "dataSource": "https://raw.githubusercontent.com/mhollingshead/billboard-hot-100/main/recent.json",
+  "songs": [
+    {
+      "rank": 1,
+      "title": "Patient Zero",
+      "artist": "Taylor Swift",
+      "lastWeek": 1
+    },
+    {
+      "rank": 2,
+      "title": "Choosin' Texas",
+      "artist": "Ella Langley",
+      "lastWeek": 2
+    },
+    {
+      "rank": 3,
+      "title": "Boston",
+      "artist": "Stella Lefty",
+      "lastWeek": 6
+    },
+    {
+      "rank": 4,
+      "title": "Been By Now",
+      "artist": "Morgan Wallen",
+      "lastWeek": 7
+    },
+    {
+      "rank": 5,
+      "title": "Solar Eclipse",
+      "artist": "Drake & Don Toliver",
+      "lastWeek": null
+    }
+  ]
+}

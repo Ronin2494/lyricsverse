@@ -5,7 +5,9 @@
   const status = document.getElementById('member-empty');
   if (!grid || !status) return;
   const galleryEndpoint = 'https://badbunny-membership-api.onrender.com/api/gallery';
-  const fallbackPaymentUrl = 'https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E';
+  const API = 'https://badbunny-membership-api.onrender.com';
+  let checkoutReady = false;
+  let checkoutMode = 'sandbox';
   const money = cents => new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(cents/100);
   function makeCard(item) {
     if (!item || typeof item !== 'object') return;
@@ -13,7 +15,6 @@
     const title = typeof item.title === 'string' ? item.title : 'Private creative drop';
     const description = typeof item.description === 'string' ? item.description : '';
     const priceCents = Number.isSafeInteger(item.priceCents) && item.priceCents >= 100 ? item.priceCents : 1000;
-    const paymentUrl = typeof item.paypalUrl === 'string' && /^https:\/\/www[.]paypal[.]com\/ncp\/payment\/[a-z0-9]+\/?$/i.test(item.paypalUrl) ? item.paypalUrl : fallbackPaymentUrl;
     const card = document.createElement('article');
     card.className = 'member-media-card';
     const stage = document.createElement('div');
@@ -29,16 +30,38 @@
     const price = document.createElement('div');
     price.className = 'member-item-price';
     price.textContent = money(priceCents) + ' CAD';
-    const pay = document.createElement('a');
+    const pay = document.createElement('button');
+    pay.type = 'button';
     pay.className = 'member-cta member-media-pay';
     pay.textContent = 'PAY WITH PAYPAL ↗';
-    pay.href = paymentUrl;
-    pay.target = '_blank';
-    pay.rel = 'noopener noreferrer';
-    pay.setAttribute('aria-label', 'Pay with PayPal for ' + title + ' (one-time payment)');
+    pay.disabled = !checkoutReady;
+    pay.setAttribute('aria-label', 'Checkout with PayPal for ' + title + ' (one-time payment)');
+    pay.addEventListener('click', async () => {
+      pay.disabled = true;
+      pay.textContent = 'CREATING SECURE CHECKOUT…';
+      try {
+        const response = await fetch(API+'/api/paypal/orders', {
+          method:'POST',headers:{Accept:'application/json','Content-Type':'application/json'},
+          body:JSON.stringify({mediaId:item.id}),signal:AbortSignal.timeout(25000)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'PayPal checkout unavailable.');
+        const destination = new URL(data.approvalUrl);
+        if (destination.protocol !== 'https:' || !['www.paypal.com','www.sandbox.paypal.com'].includes(destination.hostname)) {
+          throw new Error('PayPal returned an invalid checkout destination.');
+        }
+        window.location.assign(destination.href);
+      } catch(error) {
+        note.textContent = error.message;
+        pay.textContent = 'RETRY PAYPAL CHECKOUT ↗';
+        pay.disabled = false;
+      }
+    });
     const note = document.createElement('span');
     note.className = 'member-pay-note';
-    note.textContent = 'One-time payment · PayPal checkout determines the amount charged · Access requires verification';
+    note.textContent = checkoutReady ?
+      (checkoutMode==='sandbox' ? 'SANDBOX TEST — no real charge or content unlock' : 'Secure one-time PayPal checkout · CAD') :
+      'Secure PayPal checkout is being configured';
     const actions = document.createElement('div');
     actions.className = 'member-media-tools';
     actions.append(pay, note);
@@ -46,6 +69,15 @@
     grid.append(card);
   }
   async function loadGallery() {
+    status.textContent = 'Checking secure checkout…';
+    try {
+      const check = await fetch(API+'/api/paypal/health', {headers:{Accept:'application/json'},signal:AbortSignal.timeout(15000)});
+      if (check.ok) {
+        const result = await check.json();
+        checkoutReady = result.connected===true;
+        checkoutMode = result.mode==='live'?'live':'sandbox';
+      }
+    } catch { checkoutReady = false; }
     status.textContent = 'Loading gallery…';
     try {
       const response = await fetch(galleryEndpoint, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(15000) });

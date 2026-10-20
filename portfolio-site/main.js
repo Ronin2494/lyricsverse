@@ -140,7 +140,7 @@ function initVisibility(){let els=[...document.querySelectorAll('.section-reveal
 initVisibility();document.getElementById('year').textContent=new Date().getFullYear();
 motionButton.addEventListener('click',()=>{paused=!paused;motionButton.innerHTML=paused?'RESUME MOTION <span aria-hidden="true">▶</span>':'PAUSE MOTION <span aria-hidden="true">Ⅱ</span>';motionButton.setAttribute('aria-label',paused?'Resume portal animation':'Pause portal animation');motionButton.setAttribute('aria-pressed',String(paused))});
 function animateUI(timestamp){
-  const t=reduceMotion.matches?Math.max(target,.01):(progress=ease(progress,target,.08));
+  const t=reduceMotion.matches?Math.max(target,.01):(progress=ease(progress,target,target>=.999?.16:.08));
   const exit=clamp((t-.55)/.32,0,1);
   portalCopy.style.opacity=String(1-clamp((t-.09)/.49,0,1));
   portalCopy.style.transform=`translate(-50%,-50%) scale(${1+t*.8})`;
@@ -151,10 +151,12 @@ function animateUI(timestamp){
   // The SVG motion is lightweight, accessible, and stays sharp on retina displays.
   handoff.classList.toggle('handoff-active',t>.76);
   if(scene)scene.render(t,paused);
-  // Only unlock after the easing catches up and the *last frame* was held.
-  if(virtualPortal&&!introReleased&&target>=1&&t>=.997){
+  // The logo reveal plays while the portal finishes. A brief 300ms
+  // settle is enough for visual continuity—do not strand visitors on a
+  // motion-complete frame for nearly two extra seconds.
+  if(virtualPortal&&!introReleased&&target>=1&&t>=.99){
     if(!finalFrameStartedAt)finalFrameStartedAt=timestamp;
-    if(timestamp-finalFrameStartedAt>=1800)releaseIntro();
+    if(timestamp-finalFrameStartedAt>=300)releaseIntro();
   }else if(!introReleased){
     finalFrameStartedAt=0;
   }

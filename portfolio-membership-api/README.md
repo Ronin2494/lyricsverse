@@ -1,86 +1,68 @@
-# BadBunny Creative Access — CA$10/month
+# BadBunny Private Media Gallery and Creator Studio
 
-Production frontend: https://badbunny.work/#membership
-Render fallback: https://deepak-portfolio-819w.onrender.com/#membership
-Membership API: https://badbunny-membership-api.onrender.com
-Render API dashboard: https://dashboard.render.com/web/srv-dbbc8te7bikc7381a000
-Source branch: `portfolio-site` in `Ronin2494/lyricsverse`.
+## Live links
 
-## Features delivered
+- **Separate creator uploader**: https://badbunny.work/studio.html
+- **Public locked gallery**: https://badbunny.work/#membership
+- **API service**: https://badbunny-membership-api.onrender.com
+- **API Render dashboard**: https://dashboard.render.com/web/srv-dbbc8te7bikc7381a000
+- **Repository**: https://github.com/Ronin2494/lyricsverse/tree/portfolio-site
 
-- Public "SUBSCRIBE · CA$10" navigation and premium subscription landing section.
-- Email one-time-code sign-in; private session tokens (SHA-256 hashes stored in MongoDB).
-- Stripe Checkout for **CA$10 every month**, secure signed subscription webhooks, and Stripe billing portal for cancellation and card updates.
-- Owner-only upload form for JPG, PNG, WebP, GIF, MP4, WebM and MOV, capped at 100 MB per file.
-- MongoDB GridFS-backed private photo/video library with authenticated listing and ten-minute media access tickets.
-- Subscription access is granted **only after Stripe confirms an active or trialing subscription**. Successful checkout redirects alone do not grant access.
-- No paywall can be bypassed by editing HTML: authorizations occur in the API.
+The public website intentionally contains **no creator login or uploader**. Creator Studio is an unlisted separate page. URL secrecy is not authorization: every write request is verified again in the backend.
 
-## Required configuration (Render → badbunny-membership-api → Environment)
+## Studio functionality
 
-Set the variables in [the Render API dashboard](https://dashboard.render.com/web/srv-dbbc8te7bikc7381a000). **Never put their values in GitHub or ChatGPT messages.**
+1. Sign in with a one-time email verification code delivered through Resend. Only the exact `ADMIN_EMAIL` account is accepted.
+2. Choose a JPEG, PNG, WebP, GIF, MP4, WebM, or MOV (max 100 MB). A local preview displays the selected file.
+3. Set a title, optional description, and **per-file price in CAD (CA$1–CA$1,000)**.
+4. Set a PayPal Payment Link for that **specific item's price**. Default link: https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E. A custom price cannot reuse the default link through the studio form.
+5. Upload; the backend stores the original privately in MongoDB GridFS with title, description, price in cents, link, and publish state.
+6. Public `GET /api/gallery` returns metadata only (no private files, previews, or signed URLs). The site renders a locked media card showing its **price and matching PayPal payment link**.
+7. In Creator Studio, list published items, preview securely with time-limited signed tickets, edit title/description/price/link, or delete media.
 
-| Variable | Use |
-| --- | --- |
-| `MONGODB_URI` | MongoDB Atlas URI for an existing database user; enable access from Render's outbound network in Atlas. |
-| `MONGODB_DB` | Optional, defaults to `badbunny_membership`. |
-| `SESSION_SECRET` | A random high-entropy secret, at least 32 characters long. Generate privately with a password manager, `openssl rand -hex 32`, or equivalent. |
-| `ADMIN_EMAIL` | **Your verified personal email address** — this exact email signs in to the creator uploader (case-insensitive). |
-| `RESEND_API_KEY` | Server-side API key from Resend. |
-| `MAIL_FROM` | A sender verified in Resend, e.g. `BadBunny <members@badbunny.work>`. Verify sending domain and DNS records first. |
-| `STRIPE_SECRET_KEY` | Stripe secret API key. Use test credentials during testing; use live keys for accepting real payments. |
-| `STRIPE_WEBHOOK_SECRET` | Signing secret for the Stripe webhook endpoint below. |
-| `SITE_URL` | `https://badbunny.work` (already the default). |
-| `CORS_ORIGINS` | Defaults to `https://badbunny.work,https://www.badbunny.work,https://deepak-portfolio-819w.onrender.com`. |
+## Required Render environment setup
 
-### Stripe setup
+Visit the [API service's Environment tab](https://dashboard.render.com/web/srv-dbbc8te7bikc7381a000) and add:
 
-1. Create/activate a Stripe account in the country of your registered business or individual account. Complete required identity and banking verification.
-2. In Stripe **Developers → Webhooks**, register the endpoint:
-   `https://badbunny-membership-api.onrender.com/api/billing/webhook`
-3. Subscribe it to exactly these relevant events:
-   - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-4. Copy that webhook endpoint's signing secret to `STRIPE_WEBHOOK_SECRET` in Render. Test and live mode have different keys/secrets.
-5. Enable the **Stripe customer portal** (payment-method management and cancellation) in Stripe.
-6. Subscription amount is defined server-side as `currency: 'cad', unit_amount: 1000, recurring: { interval: 'month' }`. The browser does not control billing amounts.
+| Name | Purpose |
+|---|---|
+| `MONGODB_URI` | MongoDB Atlas driver connection string with a DB user allowed to read/write the database. |
+| `MONGODB_DB` | `badbunny_membership` |
+| `SESSION_SECRET` | Random secret of at least 32 characters used for signed private preview tickets and OTP hashes. |
+| `ADMIN_EMAIL` | Your exact creator email; only this identity can sign in and upload/edit/delete. |
+| `RESEND_API_KEY` | API key from Resend for sending six-digit OTP emails. |
+| `MAIL_FROM` | Sender address on a verified Resend sending domain (e.g. `BadBunny <members@badbunny.work>`). |
+| `CORS_ORIGINS` | `https://badbunny.work,https://www.badbunny.work,https://deepak-portfolio-819w.onrender.com` |
 
-### Email and MongoDB setup
+Create a database and user in MongoDB Atlas, configure its network allowlist for the Render backend, and verify the email sending domain in Resend. Save secrets **only** in Render. Trigger a deploy only if Render doesn't do so automatically.
 
-- Verify `badbunny.work` as a sending domain in Resend and set `MAIL_FROM` to an address authorized by that domain.
-- Create a dedicated Atlas database user with access only to the membership database where practical. Do not reuse admin/root credentials.
-- In Atlas network access, allow Render egress using the narrowest available configuration; if your Render plan does not have static outbound IPs, evaluate Atlas network rules carefully.
-- Set `ADMIN_EMAIL` to the email you actually control. Authentication of that address via Resend one-time codes is required before the owner upload interface appears.
+The studio HTML/CSS/JS and the API can be deployed before these credentials exist, but **login, publishing, and media previews will remain unavailable until MongoDB and Resend are ready**. The studio displays its configuration status.
 
-### Launch checklist
+## Payment correctness and limitations
 
-1. Verify `GET /api/health` returns `database: connected`.
-2. Verify `GET /api/config` returns `authEnabled: true` and `billingEnabled: true` when ready.
-3. Sign in with `ADMIN_EMAIL`; verify creator upload controls appear.
-4. Upload a small test photo/video. Check it is absent from the public page and unauthenticated media API.
-5. With a **different test email**, complete a Stripe test-mode checkout. Verify the signed webhook activates private access.
-6. Check the Stripe billing portal, subscription cancellation, email verification limits, and media ticket expiry.
-7. Swap to verified **live** Stripe credentials and live webhook secret, perform a small real payment/cancellation check, then announce subscriptions.
+A PayPal `/ncp/payment/...` Payment Link is a **one-time payment link**. Its amount is configured at PayPal; showing a price on our card cannot set/change the actual checkout price.
 
-Until these external credentials are configured, the API and public page remain available, but paid checkout is **safely disabled**. The site does not claim that a payment was accepted.
+- Set a **matching PayPal link** when publishing a product with a different price.
+- The public card explicitly notes that PayPal controls the amount charged and that access needs verification.
+- A redirect to PayPal or completion of the payment link **does not automatically unlock or release the original files**. Automated per-item fulfillment requires a PayPal merchant API/webhook integration with verified order details and item-level entitlements, which is not configured. Do not advertise instant access until that is implemented.
+- Stripe code and credentials have been removed from this creator-focused backend.
 
-## Operational notes
+## Security
 
-- Photo/video files are stored inside MongoDB GridFS, **not in the GitHub repository** or Render's ephemeral disk.
-- The initial uploader restricts individual files to 100 MB. For an extensive video library, move to an encrypted/private object store and CDN with expiring URLs before scaling.
-- Media URLs are short-lived bearer-style links, not DRM. Subscribers could capture media they legitimately watch; no web paywall can prevent screen recording.
-- Emails are verified with six-digit codes expiring after 10 minutes, with per-email and per-client rate limits.
-- Session token persists in the browser tab's session storage and is removed when the user signs out.
-- Reactivation/expiry follows Stripe subscription webhooks. If webhooks are misconfigured, newly paid access can remain locked; monitor webhook delivery.
+- Public catalog never returns image/video bytes or private GridFS identifiers beyond opaque IDs.
+- File upload, edit, deletion, private listing, and media ticket generation all require a valid session and server-side creator identity.
+- File retrieval checks the ticket HMAC/expiration and creator authorization.
+- File types and file sizes are server constrained; MongoDB GridFS media is not public.
+- OTPs expire after 10 minutes, with attempt and request limits; 30-day hashed sessions live in MongoDB.
+- The uploader page uses `noindex,nofollow` but relies on server authentication, not obscurity.
 
-## Maintenance
+## Smoke test after environment configuration
 
-```bash
-npm --prefix portfolio-membership-api install
-npm --prefix portfolio-membership-api run check
-npm --prefix portfolio-membership-api start
-```
-
-Static frontend lives in `portfolio-site/index.html`, `portfolio-site/membership.css`, and `portfolio-site/membership.js`. The API is in `portfolio-membership-api/server.js`. The API and static site both auto-deploy from the `portfolio-site` branch.
+1. Open https://badbunny.work/studio.html from your phone.
+2. Enter the `ADMIN_EMAIL` and the received six-digit code.
+3. Choose a small image or video, add a title, CA$10.00 and the correctly configured PayPal link; publish.
+4. Open https://badbunny.work/#membership in a separate tab. Confirm the locked card, title, type, price and button.
+5. Edit the price and update the PayPal link in Studio. Refresh the gallery, confirm both change.
+6. Preview the original from Studio; verify that opening its file URL without a signed ticket fails.
+7. Delete the test upload; verify it disappears from the public gallery.
+8. Test invalid prices, unsupported file types, oversize files, unauthenticated uploads and unauthorized accounts.

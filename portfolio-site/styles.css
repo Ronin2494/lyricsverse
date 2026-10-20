@@ -44,3 +44,40 @@
     overscroll-behavior-y:none;
   }
 }
+
+/* Cinematic brand logo handoff — reuses exact geometry from favicon.svg. */
+.portal-handoff{overflow:hidden;background:radial-gradient(ellipse at 50% 48%,#211d40 0%,#0b0e24 41%,#040711 82%);color:#f6f4ff;isolation:isolate;pointer-events:none}
+.portal-handoff::before{content:"";position:absolute;inset:0;opacity:.24;background-image:radial-gradient(#c6b7ff 1px,transparent 1px);background-size:35px 35px;mask-image:radial-gradient(circle at center,#000 13%,transparent 73%)}
+.portal-handoff::after{content:"";position:absolute;z-index:5;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 15%,#04051055 76%,#03040b 100%)}
+.handoff-aura{position:absolute;inset:5%;border-radius:50%;background:radial-gradient(ellipse at center,#b6a9ff40 0%,#7068dd18 18%,transparent 52%);filter:blur(21px);animation:handoff-aura-breathe 4s ease-in-out infinite alternate}
+.handoff-logo-scene{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:0;gap:0;transform:translateY(0);width:min(80vw,520px);aspect-ratio:1;perspective:950px}
+.handoff-brandmark{position:relative;z-index:3;width:clamp(145px,19vw,240px);height:auto;overflow:visible;filter:drop-shadow(0 0 30px #aea2ff56);animation:handoff-mark-float 4.5s ease-in-out infinite alternate}
+.handoff-mark-frame{stroke:#ada0f9;stroke-width:.55;animation:handoff-frame-glow 3.3s ease-in-out infinite alternate}
+.handoff-mark-ring{stroke-dasharray:140;stroke-dashoffset:140;animation:handoff-circle-draw 1.5s ease-out both}
+.handoff-mark-path{stroke-dasharray:100;stroke-dashoffset:100;animation:handoff-path-draw 1.4s .5s cubic-bezier(.2,.8,.2,1) both}
+.handoff-mark-spark{transform-origin:40px 38px;animation:handoff-spark 1s 1.35s ease-out both,handoff-spark-glow 2.7s 2.4s ease-in-out infinite alternate}
+.handoff-orbit{position:absolute;left:50%;top:40%;width:min(72vw,360px);height:min(72vw,360px);border-radius:50%;border:1px solid #aea3ff62;transform:translate(-50%,-50%);box-shadow:0 0 30px #988cff0c,inset 0 0 30px #bdb1ff0c}
+.handoff-orbit-a{animation:handoff-orbit-turn 15s linear infinite;border-style:dashed;border-width:1.5px}
+.handoff-orbit-b{width:min(92vw,460px);height:min(42vw,210px);border-color:#e9dcff49;transform:translate(-50%,-50%) rotate(-30deg);animation:handoff-orbit-tilt 10s linear infinite}
+.handoff-orbit-a::before{content:"";position:absolute;top:0;left:50%;width:8px;height:8px;background:#e3f892;border-radius:50%;box-shadow:0 0 20px #e3f892,0 0 43px #e3f89277;transform:translate(-50%,-50%)}
+.handoff-brand-name{position:absolute;z-index:4;top:calc(50% + clamp(76px,12vw,140px));width:100%;text-align:center;display:flex;flex-direction:column;gap:10px;text-shadow:0 4px 30px #030510b3;animation:handoff-name-reveal 1.3s .8s ease-out both}
+.handoff-brand-name>span{font:600 clamp(26px,4vw,45px)/1 'Space Grotesk',sans-serif;white-space:nowrap;letter-spacing:-.075em}
+.handoff-brand-name strong{font-weight:600;color:#c3b4ff}
+.handoff-brand-name small{font:600 clamp(8px,1.1vw,11px)/1.5 'Space Grotesk',sans-serif;letter-spacing:.23em;color:#c4c0d9}
+.handoff-brand-name b{font-weight:500;color:#e2f892;padding:0 5px}
+.handoff-light{position:absolute;z-index:1;width:70vw;height:1px;background:linear-gradient(90deg,transparent,#bbabff9c,transparent);left:15%;filter:blur(.5px);transform:rotate(-20deg)}
+.handoff-light-a{top:35%;animation:handoff-light-sweep 4.7s ease-in-out infinite alternate}
+.handoff-light-b{top:65%;transform:rotate(20deg);animation:handoff-light-sweep 5.7s 1s ease-in-out infinite alternate-reverse}
+@keyframes handoff-aura-breathe{from{opacity:.5;transform:scale(.87)}to{opacity:1;transform:scale(1.13)}}
+@keyframes handoff-mark-float{from{transform:translateY(6px) rotateY(-8deg) scale(.98)}to{transform:translateY(-10px) rotateY(9deg) scale(1.03)}}
+@keyframes handoff-frame-glow{from{stroke-opacity:.35}to{stroke-opacity:.85}}
+@keyframes handoff-circle-draw{to{stroke-dashoffset:0}}
+@keyframes handoff-path-draw{to{stroke-dashoffset:0}}
+@keyframes handoff-spark{0%{opacity:0;transform:scale(0)}65%{opacity:1;transform:scale(1.8)}100%{opacity:1;transform:scale(1)}}
+@keyframes handoff-spark-glow{from{filter:drop-shadow(0 0 0px #e3f892)}to{filter:drop-shadow(0 0 4px #e3f892)}}
+@keyframes handoff-orbit-turn{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes handoff-orbit-tilt{from{transform:translate(-50%,-50%) rotate(-30deg) rotateY(0deg)}to{transform:translate(-50%,-50%) rotate(-30deg) rotateY(360deg)}}
+@keyframes handoff-name-reveal{from{opacity:0;transform:translateY(18px);filter:blur(7px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes handoff-light-sweep{from{opacity:.1;translate:-6% 0}to{opacity:.75;translate:6% 0}}
+@media(max-width:700px){.handoff-logo-scene{width:100vw}.handoff-orbit{top:43%;width:70vw;height:70vw}.handoff-orbit-b{width:88vw;height:43vw}.handoff-brand-name{top:calc(50% + 76px)}.handoff-brand-name small{letter-spacing:.14em}.handoff-brandmark{width:135px}}
+@media(prefers-reduced-motion:reduce){.handoff-aura,.handoff-brandmark,.handoff-mark-frame,.handoff-mark-ring,.handoff-mark-path,.handoff-mark-spark,.handoff-orbit,.handoff-brand-name,.handoff-light{animation:none!important}.handoff-mark-ring,.handoff-mark-path{stroke-dashoffset:0}.handoff-brand-name,.handoff-mark-spark{opacity:1}}

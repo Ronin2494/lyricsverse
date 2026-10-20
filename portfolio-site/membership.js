@@ -69,8 +69,8 @@
     if (signedIn) {
       ui['member-email-display'].textContent = user.email;
       ui['member-status'].textContent = user.admin ? 'Creator account' : user.hasAccess ? 'Membership active' : 'Not subscribed';
-      hide(ui['member-checkout'], Boolean(user.hasAccess));
-      hide(ui['member-portal'], Boolean(user.admin) || !user.hasBillingAccount);
+      hide(ui['member-checkout'], true);
+      hide(ui['member-portal'], true);
       ui['member-checkout'].disabled = !config?.billingEnabled;
       ui['member-portal'].disabled = !config?.billingEnabled;
     }
@@ -280,7 +280,7 @@
     if(!config?.authEnabled) {
       setNotice('Membership checkout will open once account verification and billing are configured.','error');
     } else if (!user) ui['member-email-input'].focus();
-    else if(!user.hasAccess) ui['member-checkout'].focus();
+    else if(!user.hasAccess) ui['member-gallery'].scrollIntoView({behavior:'smooth',block:'start'});
     else ui['member-gallery'].scrollIntoView({behavior:'smooth',block:'start'});
   });
   ui['member-upload-form'].addEventListener('submit',async(event)=>{

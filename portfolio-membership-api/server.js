@@ -22,6 +22,16 @@ const PAYPAL_MODE = process.env.PAYPAL_MODE === 'live' ? 'live' : 'sandbox';
 const PAYPAL_CLIENT_ID = process.env['PAYPAL_'+PAYPAL_MODE.toUpperCase()+'_CLIENT_ID'] || '';
 const PAYPAL_CLIENT_SECRET = process.env['PAYPAL_'+PAYPAL_MODE.toUpperCase()+'_CLIENT_SECRET'] || '';
 const PAYPAL_READY = Boolean(PAYPAL_CLIENT_ID && PAYPAL_CLIENT_SECRET);
+// Payment creation and capture are explicitly disabled unless opted in.
+// Real payments also require a second, independent live-approval switch.
+const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED === 'true';
+const LIVE_PAYMENTS_APPROVED = process.env.PAYPAL_LIVE_APPROVED === 'true';
+const checkoutEnabled = () => PAYMENTS_ENABLED && PAYPAL_READY &&
+  dbStatus === 'connected' && (PAYPAL_MODE === 'sandbox' || LIVE_PAYMENTS_APPROVED);
+function requireCheckoutEnabled(_req,res,next){
+  if(!checkoutEnabled())return res.status(503).json({error:'Checkout is disabled while payment testing is being configured.'});
+  next();
+}
 const PAYPAL_API = PAYPAL_MODE === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
 const SITE_URL = 'https://badbunny.work';
 const PRICE_CURRENCY = 'CAD';
@@ -85,7 +95,7 @@ async function hasAccess(user,mediaId){
   if(!user?.email||PAYPAL_MODE!=='live')return false;
   return Boolean(await orders.findOne({mediaId,buyerEmail:user.email,status:'COMPLETED',mode:'live'}));
 }
-const profile = user => ({ email:user.email, admin:isAdmin(user), hasAccess:hasAccess(user) });
+const profile = user => ({ email:user.email, admin:isAdmin(user), hasAccess:isAdmin(user) });
 const asyncRoute = fn => (req,res,next) => Promise.resolve(fn(req,res,next)).catch(next);
 
 app.use((req,res,next) => {
@@ -102,10 +112,10 @@ app.use((req,res,next) => {
 app.use(express.json({limit:'64kb'}));
 app.get('/api/health',(_req,res)=>res.json({ok:true,service:'portfolio-membership',database:dbStatus}));
 app.get('/api/config',(_req,res)=>res.json({
-  currency:PRICE_CURRENCY,paymentMode:'paypal-orders-v2',paypalConfigured:PAYPAL_READY&&dbStatus==='connected',
+  currency:PRICE_CURRENCY,paymentMode:'paypal-orders-v2',paypalConfigured:PAYPAL_READY&&dbStatus==='connected',paymentsEnabled:PAYMENTS_ENABLED,checkoutEnabled:checkoutEnabled(),
   paypalMode:PAYPAL_MODE,authProvider:'firebase-email-link',firebaseProjectId:FIREBASE_PROJECT_ID,
   authEnabled:authConfigured&&dbStatus==='connected',uploadsEnabled:authConfigured&&dbStatus==='connected',
-  paymentVerificationEnabled:PAYPAL_READY&&dbStatus==='connected',
+  paymentVerificationEnabled:checkoutEnabled(),
   sandboxDoesNotUnlock:true
 }));
 function ready(_req,res,next){if(!authConfigured || dbStatus!=='connected') return res.status(503).json({error:'Membership setup is in progress.'});next();}
@@ -145,11 +155,13 @@ app.get('/api/me',ready,asyncRoute(authorized),(req,res)=>res.json({user:profile
 // Orders v2: prices are loaded only from published server-side media metadata.
 // Never trust a browser-supplied amount, item label, currency, or checkout URL.
 app.get('/api/paypal/health',asyncRoute(async(_req,res)=>{
-  if(!PAYPAL_READY||dbStatus!=='connected')return res.json({mode:PAYPAL_MODE,configured:PAYPAL_READY,database:dbStatus,connected:false});
-  try{await paypalAccessToken();res.json({mode:PAYPAL_MODE,configured:true,database:dbStatus,connected:true});}
-  catch(error){res.json({mode:PAYPAL_MODE,configured:true,database:dbStatus,connected:false,error:'PayPal credentials or network could not be verified.'});}
+  const summary={mode:PAYPAL_MODE,configured:PAYPAL_READY,database:dbStatus,
+    paymentsEnabled:PAYMENTS_ENABLED,enabled:checkoutEnabled()};
+  if(!PAYPAL_READY||dbStatus!=='connected')return res.json({...summary,connected:false});
+  try{await paypalAccessToken();res.json({...summary,connected:true});}
+  catch(error){res.json({...summary,connected:false,error:'PayPal credentials or network could not be verified.'});}
 }));
-app.post('/api/paypal/orders',ready,limitCheckout,asyncRoute(async(req,res)=>{
+app.post('/api/paypal/orders',ready,requireCheckoutEnabled,limitCheckout,asyncRoute(async(req,res)=>{
   if(!PAYPAL_READY)return res.status(503).json({error:'PayPal checkout is not configured yet.'});
   const mediaId=typeof req.body?.mediaId==='string'?req.body.mediaId:'';
   if(!ObjectId.isValid(mediaId))return res.status(400).json({error:'Invalid gallery item.'});
@@ -181,7 +193,7 @@ app.post('/api/paypal/orders',ready,limitCheckout,asyncRoute(async(req,res)=>{
   res.status(201).json({orderId:order.id,approvalUrl:url.href,mode:PAYPAL_MODE,
     amount:{currency:'CAD',value:centsToPrice(priceCents)}});
 }));
-app.post('/api/paypal/orders/:orderId/capture',ready,limitCheckout,asyncRoute(async(req,res)=>{
+app.post('/api/paypal/orders/:orderId/capture',ready,requireCheckoutEnabled,limitCheckout,asyncRoute(async(req,res)=>{
   const orderId=req.params.orderId;
   if(!/^[A-Z0-9]{10,32}$/.test(orderId))return res.status(400).json({error:'Invalid PayPal order.'});
   const record=await orders.findOne({orderId,mode:PAYPAL_MODE});
@@ -344,5 +356,5 @@ async function connectDatabase(){
 }
 app.listen(PORT,'0.0.0.0',()=>console.log('Membership API listening:',PORT));
 await connectDatabase();
-console.log('Startup health:', {database:dbStatus, paypalMode:PAYPAL_MODE, configured:PAYPAL_READY});
+console.log('Startup health:', {database:dbStatus, paypalMode:PAYPAL_MODE, configured:PAYPAL_READY, paymentsEnabled:PAYMENTS_ENABLED, checkoutEnabled:checkoutEnabled()});
 if(PAYPAL_READY)paypalAccessToken().then(()=>console.log('PayPal API authenticated')).catch(error=>console.warn('PayPal API credential check failed:',error.message));

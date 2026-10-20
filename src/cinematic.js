@@ -42,6 +42,8 @@ export function mountCinematic(root, { win = window, doc = document } = {}) {
   const hero = root.querySelector?.('.neon-hero');
   const cosmos = hero?.querySelector?.('.neon-hero-cosmos');
   const cleanups = [];
+  root.classList?.add('lv-cinematic');
+  cleanups.push(() => root.classList?.remove('lv-cinematic'));
 
   // Deterministic, capped DOM stars replace a continually rendering canvas.
   if (cosmos && typeof doc.createElement === 'function') {

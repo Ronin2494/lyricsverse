@@ -160,6 +160,12 @@ app.post('/api/billing/portal',ready,asyncRoute(authorized),asyncRoute(async(req
   res.json({url:portal.url});
 }));
 
+// Public catalog exposes only safe labels, never media bytes or download URLs.
+app.get('/api/gallery',asyncRoute(async(_req,res)=>{
+  if(dbStatus!=='connected')return res.json({items:[],pending:true});
+  const docs=await files.find({'metadata.published':true}).project({contentType:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
+  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',type:f.contentType||'application/octet-stream'}))});
+}));
 app.get('/api/media',ready,asyncRoute(authorized),subscriberOnly,asyncRoute(async(_req,res)=>{
   const docs=await files.find({'metadata.published':true}).project({filename:1,contentType:1,length:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
   res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',type:f.contentType||'application/octet-stream',uploadedAt:f.uploadDate}))});

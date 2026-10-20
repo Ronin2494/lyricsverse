@@ -101,23 +101,36 @@
   }
 
   function makeCard(item,index){
-    const card=element('article','creative-card creative-video creative-'+item.kind);
+    const card=element('article','creative-card creative-inline-video video-'+item.kind);
     card.dataset.category='video '+item.cat;
-    const art=element('div','creative-art');
-    art.setAttribute('aria-hidden','true');
-    if(item.kind==='youtube')art.style.backgroundImage='linear-gradient(0deg, #080e23dd, transparent),url("https://i.ytimg.com/vi/'+item.id+'/hqdefault.jpg")';
-    const preview=element('button','creative-video-launch','▶');
-    preview.type='button';preview.setAttribute('aria-label','Play '+item.title);
-    preview.addEventListener('click',()=>showVideo(item));
-    const top=element('div','creative-top');
-    top.append(element('span','',String(index+7).padStart(2,'0')+' / '+item.kind.toUpperCase()+' VIDEO'),element('span','creative-external','↗'));
-    const copy=element('div','creative-copy');
-    copy.append(element('h3','',item.title));
-    if(item.description)copy.append(element('p','',item.description));
-    if(item.creator)copy.append(element('small','creative-video-by','By '+item.creator));
-    const link=element('a','creative-action','OPEN ORIGINAL ↗');
+    const stage=element('div','creative-inline-stage');
+    const backdrop=element('div','creative-inline-backdrop');
+    backdrop.style.backgroundImage=item.kind==='youtube'?
+      'url("https://i.ytimg.com/vi/'+item.id+'/hqdefault.jpg")':
+      'url("media/reels/'+item.id+'.jpg")';
+    const frame=element('div','creative-inline-frame');
+    const iframe=document.createElement('iframe');
+    iframe.src=item.embed;
+    iframe.loading='lazy';
+    iframe.title=item.kind==='instagram'?'Instagram Reel: '+item.title:'Video: '+item.title;
+    iframe.referrerPolicy='strict-origin-when-cross-origin';
+    iframe.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
+    iframe.setAttribute('allowfullscreen','');
+    frame.appendChild(iframe);
+    stage.append(backdrop,frame);
+    const info=element('div','creative-inline-info');
+    const top=element('div','creative-inline-top');
+    top.append(element('span','',String(index+1).padStart(2,'0')+' / '+item.kind.toUpperCase()),
+      element('span','creative-inline-type',item.cat.toUpperCase()));
+    const title=element('h3','',item.title);
+    const desc=element('p','',item.description);
+    const foot=element('div','creative-inline-foot');
+    foot.append(element('small','',item.creator||item.kind));
+    const link=element('a','creative-inline-original','VIEW ORIGINAL ↗');
     link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';
-    copy.append(link);card.append(art,top,preview,copy);
+    foot.appendChild(link);
+    info.append(top,title,desc,foot);
+    card.append(stage,info);
     return card;
   }
 

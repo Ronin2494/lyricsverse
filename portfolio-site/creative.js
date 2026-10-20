@@ -28,6 +28,17 @@
   }));
   refresh();
 
+  // Open the introductory film automatically, muted, as the gallery enters view.
+  const intro=document.getElementById('creative-intro-player');
+  if(intro){
+    const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const start=()=>{if(!intro.src||intro.src==='about:blank')intro.src=reduced?intro.dataset.src:intro.dataset.autoplaySrc;};
+    if('IntersectionObserver' in window){
+      const ob=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){start();ob.disconnect()}},{threshold:.3});
+      ob.observe(intro);
+    }else start();
+  }
+
   function readVideo(raw){
     if(!raw||typeof raw!=='object'||typeof raw.url!=='string'||typeof raw.title!=='string'||!raw.title.trim())return null;
     let url;

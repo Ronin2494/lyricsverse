@@ -2,7 +2,6 @@
 (() => {
   'use strict';
   const API = 'https://badbunny-membership-api.onrender.com';
-  const DEFAULT_PAYPAL = 'https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E';
   const FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCTMkSyone3pN9cO0swL9LXKXTjhp5nlWc',
     authDomain: 'portfolio-449e6.firebaseapp.com',
@@ -13,10 +12,10 @@
   const fields = [
     'status-banner','auth-panel','email-form','email','request-code','auth-notice',
     'workspace','creator-email','sign-out','upload-form','media-file','preview',
-    'file-summary','media-title','media-description','media-price','media-paypal',
+    'file-summary','media-title','media-description','media-price',
     'media-type','publish-button','upload-notice','progress-wrap','upload-progress',
     'reload-media','media-count','library-notice','media-list','edit-panel','edit-id',
-    'edit-form','edit-title-input','edit-description','edit-price','edit-paypal',
+    'edit-form','edit-title-input','edit-description','edit-price',
     'save-edit','edit-notice','close-edit'
   ];
   const ui = Object.fromEntries(fields.map(id => [id, document.getElementById(id)]));
@@ -199,12 +198,6 @@
     const amount=Number(value);
     return /^[0-9]{1,4}(?:[.][0-9]{1,2})?$/.test(String(value))&&Number.isFinite(amount)&&amount>=1&&amount<=1000?amount.toFixed(2):null;
   }
-  function checkLinkForPrice(price,link){
-    const paypal=/^https:\/\/www[.]paypal[.]com\/ncp\/payment\/[A-Za-z0-9]+\/?$/;
-    if(!paypal.test(link))return 'Enter a PayPal payment link in the format https://www.paypal.com/ncp/payment/...';
-    if(price!=='10.00'&&link===DEFAULT_PAYPAL)return 'For a custom price, paste a separate PayPal payment link set to that exact amount. The default link cannot adjust the amount automatically.';
-    return '';
-  }
   async function uploadMedia(formData,onProgress) {
     const headers=await authHeader();
     if(!headers.Authorization)throw new Error('Please sign in with your Firebase email link first.');
@@ -234,15 +227,11 @@
     if(file.size>100*1024*1024){notice(ui['upload-notice'],'File exceeds the 100 MB limit.','error');return;}
     const price=validPrice(ui['media-price'].value);
     if(!price){notice(ui['upload-notice'],'Set a valid CAD price between 1.00 and 1000.00 with two decimal places.','error');return;}
-    const paypalUrl=ui['media-paypal'].value.trim();
-    const linkError=checkLinkForPrice(price,paypalUrl);
-    if(linkError){notice(ui['upload-notice'],linkError,'error');return;}
     const body=new FormData();
     body.set('file',file);
     body.set('title',ui['media-title'].value.trim());
     body.set('description',ui['media-description'].value.trim());
     body.set('price',price);
-    body.set('paypalUrl',paypalUrl);
     busy(ui['publish-button'],true,'PUBLISHING…');
     show(ui['progress-wrap'],true);
     ui['upload-progress'].value=0;
@@ -251,7 +240,6 @@
       await uploadMedia(body,p=>ui['upload-progress'].value=p);
       ui['upload-form'].reset();
       ui['media-price'].value='10.00';
-      ui['media-paypal'].value=DEFAULT_PAYPAL;
       resetPreview();
       notice(ui['upload-notice'],'Published! Your item and price now appear in the public gallery.','success');
       notice(ui['status-banner'],'Latest upload published. Check the public gallery to review the locked card.','success');
@@ -287,7 +275,6 @@
     ui['edit-title-input'].value=item.title||'';
     ui['edit-description'].value=item.description||'';
     ui['edit-price'].value=((item.priceCents||1000)/100).toFixed(2);
-    ui['edit-paypal'].value=item.paypalUrl||DEFAULT_PAYPAL;
     notice(ui['edit-notice'],'');
     show(ui['edit-panel'],true);
     ui['edit-panel'].scrollIntoView({behavior:'smooth',block:'start'});
@@ -352,9 +339,6 @@
     if(!creator?.admin)return;
     const price=validPrice(ui['edit-price'].value);
     if(!price){notice(ui['edit-notice'],'Enter a valid price with two decimals.','error');return;}
-    const paypalUrl=ui['edit-paypal'].value.trim();
-    const linkError=checkLinkForPrice(price,paypalUrl);
-    if(linkError){notice(ui['edit-notice'],linkError,'error');return;}
     busy(ui['save-edit'],true,'SAVING…');
     try{
       await call('/api/admin/media/'+encodeURIComponent(ui['edit-id'].value),{
@@ -362,7 +346,7 @@
         body:JSON.stringify({
           title:ui['edit-title-input'].value.trim(),
           description:ui['edit-description'].value.trim(),
-          price,paypalUrl
+          price
         })
       });
       show(ui['edit-panel'],false);

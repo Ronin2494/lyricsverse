@@ -27,3 +27,20 @@
 @media(prefers-reduced-motion:reduce){.brand-wordmark-wrap,.running-child,.kid-front-leg,.kid-back-leg,.kid-front-arm,.kid-back-arm,.kid-motion-lines{animation:none!important}}
 /* Creative library nav responsiveness */
 @media(max-width:1000px){.site-nav .nav-creative{display:none}}
+
+/* Desktop cinematic scroll gate: JS scrubs the whole motion before the site moves. */
+@media(min-width:800px) and (hover:hover) and (pointer:fine){
+  html.portal-virtual-scroll .portal-journey{
+    height:100vh;
+    height:100svh;
+  }
+  html.portal-virtual-scroll .portal-stage{
+    position:relative;
+    top:auto;
+  }
+  html.portal-scroll-locked,
+  html.portal-scroll-locked body{
+    overflow-y:hidden!important;
+    overscroll-behavior-y:none;
+  }
+}

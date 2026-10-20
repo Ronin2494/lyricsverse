@@ -140,7 +140,7 @@
       if(!manifest||!Array.isArray(manifest.items))return;
       manifest.items.slice(0,24).forEach((raw,index)=>{
         const item=readVideo(raw);
-        if(item)grid.append(makeCard(item,index));
+        if(item && index>0)grid.insertBefore(makeCard(item,index),grid.querySelector('.creative-essay'));
       });
       refresh();
     })

@@ -71,7 +71,7 @@
       ui['member-email-display'].textContent = user.email;
       ui['member-status'].textContent = user.admin ? 'Creator account' : user.hasAccess ? 'Membership active' : 'Not subscribed';
       hide(ui['member-checkout'], Boolean(user.hasAccess));
-      hide(ui['member-portal'], Boolean(user.admin));
+      hide(ui['member-portal'], Boolean(user.admin) || !user.hasBillingAccount);
       ui['member-checkout'].disabled = !config?.billingEnabled;
       ui['member-portal'].disabled = !config?.billingEnabled;
     }

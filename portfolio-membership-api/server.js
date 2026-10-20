@@ -1,7 +1,7 @@
 import express from 'express';
 import Busboy from 'busboy';
 import { MongoClient, GridFSBucket, ObjectId } from 'mongodb';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { pipeline } from 'node:stream/promises';
 
@@ -18,27 +18,73 @@ const authConfigured = Boolean(process.env.MONGODB_URI && SECRET.length >= 32 &&
 // No service-account key is needed on Render. Firebase login links are sent client-side.
 const firebaseKeys = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 const MAX_UPLOAD = 100 * 1024 * 1024;
-const DEFAULT_PAYPAL_URL = 'https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E';
+const PAYPAL_MODE = process.env.PAYPAL_MODE === 'live' ? 'live' : 'sandbox';
+const PAYPAL_CLIENT_ID = process.env['PAYPAL_'+PAYPAL_MODE.toUpperCase()+'_CLIENT_ID'] || '';
+const PAYPAL_CLIENT_SECRET = process.env['PAYPAL_'+PAYPAL_MODE.toUpperCase()+'_CLIENT_SECRET'] || '';
+const PAYPAL_READY = Boolean(PAYPAL_CLIENT_ID && PAYPAL_CLIENT_SECRET);
+const PAYPAL_API = PAYPAL_MODE === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+const SITE_URL = 'https://badbunny.work';
+const PRICE_CURRENCY = 'CAD';
+const centsToPrice = cents => (cents/100).toFixed(2);
+let paypalTokenCache = {token:'',until:0};
+async function paypalAccessToken(){
+  if(!PAYPAL_READY)throw new Error('PayPal Sandbox credentials are not yet configured.');
+  if(paypalTokenCache.token && paypalTokenCache.until>Date.now()+30000)return paypalTokenCache.token;
+  const auth=Buffer.from(PAYPAL_CLIENT_ID+':'+PAYPAL_CLIENT_SECRET).toString('base64');
+  const response=await fetch(PAYPAL_API+'/v1/oauth2/token',{
+    method:'POST',headers:{Authorization:'Basic '+auth,'Content-Type':'application/x-www-form-urlencoded'},
+    body:'grant_type=client_credentials',signal:AbortSignal.timeout(14000)
+  });
+  if(!response.ok)throw new Error('PayPal rejected this '+PAYPAL_MODE+' app configuration ('+response.status+').');
+  const data=await response.json();
+  if(!data.access_token)throw new Error('PayPal did not issue an API access token.');
+  paypalTokenCache={token:data.access_token,until:Date.now()+Math.max(60,Number(data.expires_in)||300)*1000};
+  return data.access_token;
+}
+async function paypalAPI(method,path,body,idempotencyKey){
+  const token=await paypalAccessToken();
+  const headers={Authorization:'Bearer '+token,Accept:'application/json',Prefer:'return=representation'};
+  if(body!==undefined)headers['Content-Type']='application/json';
+  if(idempotencyKey)headers['PayPal-Request-Id']=idempotencyKey;
+  const response=await fetch(PAYPAL_API+path,{
+    method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(20000)
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){
+    const error=new Error('PayPal '+method+' request failed ('+response.status+').');
+    error.status=response.status;
+    error.paypalName=typeof data.name==='string'?data.name:'';
+    throw error;
+  }
+  return data;
+}
+const checkoutRates=new Map();
+function limitCheckout(req,res,next){
+  const ip=req.ip || 'unknown',now=Date.now();
+  const item=checkoutRates.get(ip);
+  const nextItem=!item||item.until<now?{n:1,until:now+600000}:{n:item.n+1,until:item.until};
+  checkoutRates.set(ip,nextItem);
+  if(checkoutRates.size>2500)for(const [key,val] of checkoutRates)if(val.until<now)checkoutRates.delete(key);
+  if(nextItem.n>12)return res.status(429).json({error:'Too many checkout requests. Please wait ten minutes.'});
+  next();
+}
+
 function parsePrice(raw){
   const normalized=String(raw ?? '');
   if(!/^(?:[1-9][0-9]{0,3}|0)[.][0-9]{2}$/.test(normalized)) return null;
   const cents=Math.round(Number(normalized)*100);
   return Number.isSafeInteger(cents)&&cents>=100&&cents<=100000?cents:null;
 }
-function paypalLink(raw){
-  const value=String(raw||DEFAULT_PAYPAL_URL).trim();
-  try{
-    const url=new URL(value);
-    if(url.protocol!=='https:'||url.hostname!=='www.paypal.com'||!/^\/ncp\/payment\/[A-Za-z0-9]+\/?$/.test(url.pathname)||url.search||url.hash)return null;
-    return url.href;
-  }catch{return null;}
-}
-let dbStatus = 'connecting', users, bucket, files;
+let dbStatus = 'connecting', users, bucket, files, orders;
 const sign = value => createHmac('sha256', SECRET).update(value).digest('hex');
 const same = (a, b) => { const x = Buffer.from(a || ''); const y = Buffer.from(b || ''); return x.length === y.length && timingSafeEqual(x,y); };
 const text = (v, max) => typeof v === 'string' ? v.trim().replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0,max) : '';
 const isAdmin = user => Boolean(ADMIN_EMAIL && user?.email === ADMIN_EMAIL);
-const hasAccess = user => isAdmin(user);
+async function hasAccess(user,mediaId){
+  if(isAdmin(user))return true;
+  if(!user?.email||PAYPAL_MODE!=='live')return false;
+  return Boolean(await orders.findOne({mediaId,buyerEmail:user.email,status:'COMPLETED',mode:'live'}));
+}
 const profile = user => ({ email:user.email, admin:isAdmin(user), hasAccess:hasAccess(user) });
 const asyncRoute = fn => (req,res,next) => Promise.resolve(fn(req,res,next)).catch(next);
 
@@ -55,7 +101,13 @@ app.use((req,res,next) => {
 
 app.use(express.json({limit:'64kb'}));
 app.get('/api/health',(_req,res)=>res.json({ok:true,service:'portfolio-membership',database:dbStatus}));
-app.get('/api/config',(_req,res)=>res.json({currency:'CAD',paymentMode:'paypal-payment-links',authProvider:'firebase-email-link',firebaseProjectId:FIREBASE_PROJECT_ID,authEnabled:authConfigured&&dbStatus==='connected',uploadsEnabled:authConfigured&&dbStatus==='connected',paymentVerificationEnabled:false}));
+app.get('/api/config',(_req,res)=>res.json({
+  currency:PRICE_CURRENCY,paymentMode:'paypal-orders-v2',paypalConfigured:PAYPAL_READY&&dbStatus==='connected',
+  paypalMode:PAYPAL_MODE,authProvider:'firebase-email-link',firebaseProjectId:FIREBASE_PROJECT_ID,
+  authEnabled:authConfigured&&dbStatus==='connected',uploadsEnabled:authConfigured&&dbStatus==='connected',
+  paymentVerificationEnabled:PAYPAL_READY&&dbStatus==='connected',
+  sandboxDoesNotUnlock:true
+}));
 function ready(_req,res,next){if(!authConfigured || dbStatus!=='connected') return res.status(503).json({error:'Membership setup is in progress.'});next();}
 async function authorized(req,res,next){
   const header=req.get('authorization') || '';
@@ -68,8 +120,8 @@ async function authorized(req,res,next){
     });
     const now=Math.floor(Date.now()/1000);
     const email=typeof payload.email==='string'?payload.email.trim().toLowerCase():'';
-    if(payload.email_verified!==true||!email||email!==ADMIN_EMAIL||!payload.sub||typeof payload.sub!=='string'){
-      return res.status(403).json({error:'Only the verified creator email can access this studio.'});
+    if(payload.email_verified!==true||!email||!payload.sub||typeof payload.sub!=='string'){
+      return res.status(403).json({error:'A verified Firebase email account is required.'});
     }
     if(!Number.isInteger(payload.iat)||payload.iat>now+5||
        !Number.isInteger(payload.auth_time)||payload.auth_time>now+5){
@@ -90,21 +142,109 @@ function adminOnly(req,res,next){if(!isAdmin(req.user))return res.status(403).js
 
 app.get('/api/me',ready,asyncRoute(authorized),(req,res)=>res.json({user:profile(req.user)}));
 
+// Orders v2: prices are loaded only from published server-side media metadata.
+// Never trust a browser-supplied amount, item label, currency, or checkout URL.
+app.get('/api/paypal/health',asyncRoute(async(_req,res)=>{
+  if(!PAYPAL_READY||dbStatus!=='connected')return res.json({mode:PAYPAL_MODE,configured:PAYPAL_READY,database:dbStatus,connected:false});
+  try{await paypalAccessToken();res.json({mode:PAYPAL_MODE,configured:true,database:dbStatus,connected:true});}
+  catch(error){res.json({mode:PAYPAL_MODE,configured:true,database:dbStatus,connected:false,error:'PayPal credentials or network could not be verified.'});}
+}));
+app.post('/api/paypal/orders',ready,limitCheckout,asyncRoute(async(req,res)=>{
+  if(!PAYPAL_READY)return res.status(503).json({error:'PayPal checkout is not configured yet.'});
+  const mediaId=typeof req.body?.mediaId==='string'?req.body.mediaId:'';
+  if(!ObjectId.isValid(mediaId))return res.status(400).json({error:'Invalid gallery item.'});
+  const file=await files.findOne({_id:new ObjectId(mediaId),'metadata.published':true});
+  if(!file)return res.status(404).json({error:'This gallery item is unavailable.'});
+  const priceCents=Number.isInteger(file.metadata?.priceCents)?file.metadata.priceCents:null;
+  if(!Number.isSafeInteger(priceCents)||priceCents<100||priceCents>100000)return res.status(422).json({error:'This gallery item does not have a valid price.'});
+  const order=await paypalAPI('POST','/v2/checkout/orders',{
+    intent:'CAPTURE',
+    purchase_units:[{
+      reference_id:mediaId,custom_id:mediaId,description:text(file.metadata?.title,100)||'Exclusive media',
+      amount:{currency_code:PRICE_CURRENCY,value:centsToPrice(priceCents)}
+    }],
+    payment_source:{paypal:{experience_context:{
+      brand_name:'BadBunny',user_action:'PAY_NOW',shipping_preference:'NO_SHIPPING',
+      return_url:SITE_URL+'/checkout.html',cancel_url:SITE_URL+'/checkout.html?cancel=1'
+    }}}
+  },'create-'+randomUUID());
+  const approve=order.links?.find(link=>link.rel==='payer-action'||link.rel==='approve');
+  let url;
+  try{url=new URL(approve?.href);}catch{}
+  if(!order.id||!url||url.protocol!=='https:'||!['www.paypal.com','www.sandbox.paypal.com'].includes(url.hostname)){
+    return res.status(502).json({error:'PayPal did not return a valid approval page.'});
+  }
+  await orders.insertOne({
+    orderId:order.id,mediaId,priceCents,currency:PRICE_CURRENCY,mode:PAYPAL_MODE,
+    status:'CREATED',createdAt:new Date(),updatedAt:new Date(),title:text(file.metadata?.title,100)
+  });
+  res.status(201).json({orderId:order.id,approvalUrl:url.href,mode:PAYPAL_MODE,
+    amount:{currency:'CAD',value:centsToPrice(priceCents)}});
+}));
+app.post('/api/paypal/orders/:orderId/capture',ready,limitCheckout,asyncRoute(async(req,res)=>{
+  const orderId=req.params.orderId;
+  if(!/^[A-Z0-9]{10,32}$/.test(orderId))return res.status(400).json({error:'Invalid PayPal order.'});
+  const record=await orders.findOne({orderId,mode:PAYPAL_MODE});
+  if(!record)return res.status(404).json({error:'Order was not created by this gallery.'});
+  if(record.status==='COMPLETED'){
+    return res.json({ok:true,status:'COMPLETED',mode:record.mode,title:record.title,
+      amount:centsToPrice(record.priceCents),accessAvailable:record.mode==='live'&&Boolean(record.buyerEmail)});
+  }
+  if(!PAYPAL_READY)return res.status(503).json({error:'PayPal checkout is unavailable.'});
+  let capture;
+  try{
+    capture=await paypalAPI('POST','/v2/checkout/orders/'+orderId+'/capture',{},'capture-'+orderId);
+  }catch(error){
+    // If the first capture succeeded but the response was lost, GET the order
+    // from PayPal and reconcile. Never claim success just from the return URL.
+    if(error.status===422)capture=await paypalAPI('GET','/v2/checkout/orders/'+orderId);
+    else throw error;
+  }
+  const unit=capture.purchase_units?.[0];
+  const paid=unit?.payments?.captures?.find(item=>item.status==='COMPLETED');
+  const payerEmail=(capture.payment_source?.paypal?.email_address||
+     capture.payer?.email_address||'').toString().trim().toLowerCase();
+  if(capture.id!==orderId||capture.status!=='COMPLETED'||!paid||
+    paid.amount?.currency_code!==record.currency||
+    paid.amount?.value!==centsToPrice(record.priceCents)||
+    unit?.custom_id!==record.mediaId||!paid.id){
+    return res.status(409).json({error:'Payment has not been verified as completed for this media item.'});
+  }
+  // Store the PayPal-verified capture only once, with its buyer identity.
+  await orders.updateOne({orderId,mode:PAYPAL_MODE},{$set:{
+    status:'COMPLETED',captureId:paid.id,buyerEmail:payerEmail,updatedAt:new Date(),paidAt:new Date()
+  }});
+  res.json({ok:true,status:'COMPLETED',mode:PAYPAL_MODE,title:record.title,
+    amount:centsToPrice(record.priceCents),
+    accessAvailable:PAYPAL_MODE==='live'&&Boolean(payerEmail)});
+}));
+app.get('/api/purchases',ready,asyncRoute(authorized),asyncRoute(async(req,res)=>{
+  // Sandbox purchases can be inspected as tests but NEVER unlock paid files.
+  const purchases=await orders.find({buyerEmail:req.user.email,status:'COMPLETED'})
+    .sort({paidAt:-1}).limit(100).toArray();
+  res.json({items:purchases.map(order=>({
+    mediaId:order.mediaId,title:order.title,priceCents:order.priceCents,
+    currency:order.currency,mode:order.mode,purchasedAt:order.paidAt,
+    accessible:order.mode==='live'&&PAYPAL_MODE==='live'
+  }))});
+}));
+
 // Public catalog exposes only safe labels, never media bytes or download URLs.
 app.get('/api/gallery',asyncRoute(async(_req,res)=>{
   if(dbStatus!=='connected')return res.json({items:[],pending:true});
   const docs=await files.find({'metadata.published':true}).project({contentType:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
-  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',paypalUrl:paypalLink(f.metadata?.paypalUrl)||DEFAULT_PAYPAL_URL,type:f.contentType||'application/octet-stream'}))});
+  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',type:f.contentType||'application/octet-stream'}))});
 }));
 app.get('/api/media',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(_req,res)=>{
   const docs=await files.find({'metadata.published':true}).project({filename:1,contentType:1,length:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
-  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',paypalUrl:paypalLink(f.metadata?.paypalUrl)||DEFAULT_PAYPAL_URL,type:f.contentType||'application/octet-stream',uploadedAt:f.uploadDate}))});
+  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',type:f.contentType||'application/octet-stream',uploadedAt:f.uploadDate}))});
 }));
 const mediaSign=(id,user,exp)=>sign(id+':'+user+':'+exp);
-app.post('/api/media/:id/ticket',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
+app.post('/api/media/:id/ticket',ready,asyncRoute(authorized),asyncRoute(async(req,res)=>{
   if(!ObjectId.isValid(req.params.id))return res.sendStatus(404);
   const file=await files.findOne({_id:new ObjectId(req.params.id),'metadata.published':true});
   if(!file)return res.sendStatus(404);
+  if(!await hasAccess(req.user,req.params.id))return res.status(403).json({error:'You do not have access to this item.'});
   const user=req.user._id.toHexString(),expires=Date.now()+600000;
   const ticket=user+'.'+expires+'.'+mediaSign(req.params.id,user,expires);
   res.json({url:req.protocol+'://'+req.get('host')+'/api/media/'+req.params.id+'/file?ticket='+encodeURIComponent(ticket)});
@@ -116,7 +256,7 @@ app.get('/api/media/:id/file',ready,asyncRoute(async(req,res)=>{
   const exp=Number(expRaw);
   if(!ObjectId.isValid(uid||'')||!Number.isSafeInteger(exp)||exp<Date.now()||exp>Date.now()+610000||!same(signature,mediaSign(id,uid,exp)))return res.sendStatus(401);
   const [user,file]=await Promise.all([users.findOne({_id:new ObjectId(uid)}),files.findOne({_id:new ObjectId(id),'metadata.published':true})]);
-  if(!hasAccess(user))return res.sendStatus(403);
+  if(!await hasAccess(user,id))return res.sendStatus(403);
   if(!file)return res.sendStatus(404);
   const length=file.length,range=req.headers.range;
   let start=0,end=length-1;
@@ -135,7 +275,7 @@ app.get('/api/media/:id/file',ready,asyncRoute(async(req,res)=>{
 
 app.post('/api/admin/upload',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
   if(!String(req.headers['content-type']||'').startsWith('multipart/form-data;'))return res.status(415).json({error:'Choose a file.'});
-  const form=Busboy({headers:req.headers,limits:{fileSize:MAX_UPLOAD,files:1,fields:5,fieldSize:1000}});
+  const form=Busboy({headers:req.headers,limits:{fileSize:MAX_UPLOAD,files:1,fields:4,fieldSize:1000}});
   const fields={};
   let uploadId=null,uploadTask=null,error=null,count=0;
   form.on('field',(name,value)=>{fields[name]=value;});
@@ -160,23 +300,19 @@ app.post('/api/admin/upload',ready,asyncRoute(authorized),adminOnly,asyncRoute(a
   const title=text(fields.title,100);
   const priceRaw=String(fields.price||'');
   const priceCents=parsePrice(priceRaw);
-  const checkoutUrl=paypalLink(fields.paypalUrl);
   if(!Number.isSafeInteger(priceCents)||priceCents<100||priceCents>100000){await bucket.delete(uploadId);return res.status(400).json({error:'Enter a price between CA$1.00 and CA$1000.00.'});}
   if(!title){await bucket.delete(uploadId);return res.status(400).json({error:'A title is required.'});}
-  if(!checkoutUrl){await bucket.delete(uploadId);return res.status(400).json({error:'Enter a valid https://www.paypal.com/ncp/payment/... payment link.'});}
-  await files.updateOne({_id:uploadId},{$set:{metadata:{title,description:text(fields.description,500),priceCents,paypalUrl:checkoutUrl,published:true,uploadedBy:req.user._id.toHexString()}}});
+  await files.updateOne({_id:uploadId},{$set:{metadata:{title,description:text(fields.description,500),priceCents,published:true,uploadedBy:req.user._id.toHexString()}}});
   res.status(201).json({ok:true,id:uploadId.toHexString()});
 }));
 app.patch('/api/admin/media/:id',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
   if(!ObjectId.isValid(req.params.id))return res.sendStatus(404);
   const title=text(req.body?.title,100),description=text(req.body?.description,500);
   const priceCents=parsePrice(req.body?.price);
-  const checkoutUrl=paypalLink(req.body?.paypalUrl);
   if(!title)return res.status(400).json({error:'A title is required.'});
   if(priceCents===null)return res.status(400).json({error:'Enter a price from CA$1.00 to CA$1000.00, with two decimals.'});
-  if(!checkoutUrl)return res.status(400).json({error:'Enter a valid PayPal payment link.'});
   const changed=await files.updateOne({_id:new ObjectId(req.params.id),'metadata.published':true},{$set:{
-    'metadata.title':title,'metadata.description':description,'metadata.priceCents':priceCents,'metadata.paypalUrl':checkoutUrl
+    'metadata.title':title,'metadata.description':description,'metadata.priceCents':priceCents
   }});
   if(!changed.matchedCount)return res.sendStatus(404);
   res.json({ok:true});
@@ -197,10 +333,11 @@ async function connectDatabase(){
     const connection=new MongoClient(process.env.MONGODB_URI,{serverSelectionTimeoutMS:7000,maxPoolSize:10});
     await connection.connect();
     const db=connection.db(process.env.MONGODB_DB||'badbunny_membership');
-    users=db.collection('members');
+    users=db.collection('members');orders=db.collection('paypal_orders');
     bucket=new GridFSBucket(db,{bucketName:'media'});files=db.collection('media.files');
     await Promise.all([
-      users.createIndex({email:1},{unique:true})
+      users.createIndex({email:1},{unique:true}),
+      orders.createIndex({orderId:1},{unique:true}),orders.createIndex({buyerEmail:1,mode:1,status:1,mediaId:1})
     ]);
     dbStatus='connected';
   }catch(e){dbStatus='unavailable';console.error('MongoDB setup:',e.message);}

@@ -17,6 +17,24 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
 const authConfigured = Boolean(process.env.MONGODB_URI && SECRET.length >= 32 && process.env.RESEND_API_KEY && process.env.MAIL_FROM);
 const billingConfigured = Boolean(stripe && process.env.STRIPE_WEBHOOK_SECRET && authConfigured);
 const MAX_UPLOAD = 100 * 1024 * 1024;
+const verificationRates = new Map();
+function limitEmailRequests(req, res, next) {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  let entry = verificationRates.get(ip);
+  if (!entry || entry.until < now) {
+    entry = { count: 0, until: now + 15 * 60 * 1000 };
+    verificationRates.set(ip, entry);
+  }
+  if (entry.count >= 10) return res.status(429).json({ error: 'Too many sign-in requests. Try again in 15 minutes.' });
+  entry.count++;
+  if (verificationRates.size > 2000) {
+    for (const [address, item] of verificationRates) {
+      if (item.until < now) verificationRates.delete(address);
+    }
+  }
+  next();
+}
 let dbStatus = 'connecting', users, codes, sessions, bucket, files;
 const digest = v => createHash('sha256').update(v).digest('hex');
 const sign = v => createHmac('sha256', SECRET).update(v).digest('hex');
@@ -25,7 +43,7 @@ const text = (v, max) => typeof v === 'string' ? v.trim().replace(/[\u0000-\u001
 const validEmail = s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 250;
 const isAdmin = user => Boolean(ADMIN_EMAIL && user?.email === ADMIN_EMAIL);
 const hasAccess = user => isAdmin(user) || ['active','trialing'].includes(user?.subscriptionStatus);
-const profile = user => ({ email:user.email, admin:isAdmin(user), status:user.subscriptionStatus || 'none', hasAccess:hasAccess(user) });
+const profile = user => ({ email:user.email, admin:isAdmin(user), status:user.subscriptionStatus || 'none', hasAccess:hasAccess(user), hasBillingAccount:Boolean(user.stripeCustomerId) });
 const asyncRoute = fn => (req,res,next) => Promise.resolve(fn(req,res,next)).catch(next);
 
 app.use((req,res,next) => {
@@ -77,7 +95,7 @@ async function authorized(req,res,next){
 function adminOnly(req,res,next){if(!isAdmin(req.user))return res.status(403).json({error:'Owner access only.'});next();}
 function subscriberOnly(req,res,next){if(!hasAccess(req.user))return res.status(403).json({error:'An active membership is required.'});next();}
 
-app.post('/api/auth/request',ready,asyncRoute(async(req,res)=>{
+app.post('/api/auth/request',ready,limitEmailRequests,asyncRoute(async(req,res)=>{
   const email=text(req.body?.email,250).toLowerCase();
   if(!validEmail(email))return res.status(400).json({error:'Enter a valid email address.'});
   const existing=await codes.findOne({email});

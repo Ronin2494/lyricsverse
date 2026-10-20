@@ -1,0 +1,27 @@
+/* The Creative Wall: four compact cinematic picture frames, no autoplay clutter. */
+.creative-wall{padding:clamp(24px,4vw,54px);border-radius:30px}
+.creative-wall .creative-heading{margin-bottom:38px}
+.creative-wall-grid{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,3.4vw,48px);padding:clamp(12px,2.5vw,32px);background:radial-gradient(ellipse at 55% 10%,rgba(155,130,248,.16),transparent 54%),linear-gradient(120deg,#0c1027b8,#1a1530b0);border:1px solid #ded2ff15;border-radius:25px;isolation:isolate}
+.creative-wall-grid:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;opacity:.25;background-image:radial-gradient(#9b92cd38 1px,transparent 1px);background-size:16px 16px}
+.creative-wall-card{--angle:-1deg;position:relative;min-width:0;transform:rotate(var(--angle));transform-origin:top center;background:linear-gradient(145deg,#21243c,#0e1125);padding:9px 9px 0;border-radius:13px;border:1px solid #d7c3ff30;box-shadow:0 20px 27px #0008,0 2px 1px #030510a8,inset 0 0 0 1px #ffffff14;transition:transform .3s ease,box-shadow .3s ease}
+.creative-wall-card:nth-child(2){--angle:1.4deg}
+.creative-wall-card:nth-child(3){--angle:1.1deg}
+.creative-wall-card:nth-child(4){--angle:-1.4deg}
+.creative-wall-card:hover,.creative-wall-card:focus-within{transform:translateY(-6px) rotate(0deg);z-index:2;box-shadow:0 28px 40px #000b,0 0 35px #a18eff20}
+.creative-wall-card:before{content:"";position:absolute;left:50%;top:-14px;z-index:5;width:15px;height:15px;border-radius:50%;transform:translateX(-50%);border:2px solid #e1d3fd;background:radial-gradient(circle at 33% 27%,#fff5fb,#8f7db4 55%,#3d3159 80%);box-shadow:0 4px 11px #000d}
+.creative-wall-card:after{content:"";position:absolute;left:50%;top:-21px;z-index:-1;height:25px;width:1px;background:#d0bbf150}
+.creative-wall-frame{position:relative;background:#050913;aspect-ratio:16/9;overflow:hidden;border-radius:7px;border:1px solid #ffffff24}
+.creative-wall-frame iframe{display:block;width:100%;height:100%;border:0;background:#11182e}
+.creative-wall-label{position:absolute;z-index:4;top:11px;left:11px;padding:7px 11px;border-radius:100px;pointer-events:none;background:#080c20c9;border:1px solid #ffffff37;backdrop-filter:blur(9px);font:700 9px/1.2 'Space Grotesk',sans-serif;letter-spacing:.12em;color:#fff}
+.creative-wall-featured{border-color:#dbc6ff8a;box-shadow:0 15px 45px #6b60de33,0 18px 30px #0007}
+.creative-wall-featured .creative-wall-frame{box-shadow:0 0 0 1px #d4bfff55}
+.creative-wall-featured .creative-wall-label{background:#a08efa;color:#13132c;border:0}
+.creative-wall-info{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:17px 12px 17px;min-height:91px}
+.creative-wall-info h3{color:#f7f5fe;font:600 clamp(1.12rem,2vw,1.65rem)/1.15 'Space Grotesk',sans-serif;letter-spacing:-.045em;margin:0 0 6px}
+.creative-wall-info p{color:#aaaac4;font:400 11px/1.6 'DM Sans',sans-serif;margin:0;max-width:290px}
+.creative-wall-info>a{flex:none;white-space:nowrap;color:#e5ddff;font:700 9px/1.2 'Space Grotesk',sans-serif;letter-spacing:.08em;text-decoration:underline;text-decoration-color:#ab9dc488;text-underline-offset:5px;padding-bottom:4px}
+.creative-wall-info>a:hover{color:white}
+.creative-wall .creative-bottom{padding-top:28px}
+@media(min-width:1200px){.creative-wall-grid{gap:40px;padding:26px 40px}.creative-wall-card{max-width:520px}.creative-wall-card:nth-child(odd){justify-self:end}.creative-wall-card:nth-child(even){justify-self:start}}
+@media(max-width:700px){.creative-wall{padding:23px 19px}.creative-wall .creative-heading{margin-bottom:28px}.creative-wall-grid{grid-template-columns:minmax(0,1fr);gap:33px;padding:24px 17px}.creative-wall-card{transform:rotate(0deg);width:100%}.creative-wall-card:nth-child(2){transform:rotate(.7deg)}.creative-wall-card:nth-child(3){transform:rotate(-.7deg)}.creative-wall-card:nth-child(4){transform:rotate(.6deg)}.creative-wall-info{padding:15px 9px;min-height:auto}.creative-wall-info h3{font-size:1.25rem}.creative-wall-info p{font-size:10.5px}.creative-wall-info>a{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.creative-wall-card{transition:none!important;transform:none!important}.creative-wall-card:hover{transform:none!important}}

@@ -61,7 +61,7 @@
     note.className = 'member-pay-note';
     note.textContent = checkoutReady ?
       (checkoutMode==='sandbox' ? 'SANDBOX TEST — no real charge or content unlock' : 'Secure one-time PayPal checkout · CAD') :
-      'Secure PayPal checkout is being configured';
+      'PayPal checkout is currently disabled; browse the gallery while testing is completed';
     const actions = document.createElement('div');
     actions.className = 'member-media-tools';
     actions.append(pay, note);
@@ -74,7 +74,7 @@
       const check = await fetch(API+'/api/paypal/health', {headers:{Accept:'application/json'},signal:AbortSignal.timeout(15000)});
       if (check.ok) {
         const result = await check.json();
-        checkoutReady = result.connected===true;
+        checkoutReady = result.connected===true && result.enabled===true;
         checkoutMode = result.mode==='live'?'live':'sandbox';
       }
     } catch { checkoutReady = false; }

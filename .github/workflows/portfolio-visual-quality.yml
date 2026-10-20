@@ -22,4 +22,4 @@ jobs:
       - name: JavaScript syntax
         run: node --check portfolio-site/work-showcase.js
       - name: Showcase interaction, links and accessibility tests
-        run: node --test portfolio-site/tests/work-showcase.test.mjs
+        run: node --test portfolio-site/tests/*.test.mjs

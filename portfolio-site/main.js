@@ -91,11 +91,14 @@ function animateUI(timestamp){
   stage.querySelector('.portal-frame').style.opacity=String(1-t*.95);
   handoff.style.opacity=String(clamp((t-.76)/.16,0,1));
   handoff.style.transform=`scale(${1.35-.35*exit})`;
+  // Start the branded handoff only when it actually enters the viewport.
+  // The SVG motion is lightweight, accessible, and stays sharp on retina displays.
+  handoff.classList.toggle('handoff-active',t>.76);
   if(scene)scene.render(t,paused);
   // Only unlock after the easing catches up and the *last frame* was held.
   if(virtualPortal&&!introReleased&&target>=1&&t>=.997){
     if(!finalFrameStartedAt)finalFrameStartedAt=timestamp;
-    if(timestamp-finalFrameStartedAt>=380)releaseIntro();
+    if(timestamp-finalFrameStartedAt>=1800)releaseIntro();
   }else if(!introReleased){
     finalFrameStartedAt=0;
   }

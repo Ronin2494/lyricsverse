@@ -39,3 +39,30 @@
 
 /* Per-upload price is visibly separate from the linked PayPal checkout. */
 .member-item-price{font:700 clamp(15px,2vw,20px)/1.3 'Space Grotesk',sans-serif;color:#e4d8ff;letter-spacing:-.03em;margin:3px 2px 12px;padding:10px 13px;background:#b9a6ff15;border:1px solid #c8baff30;border-radius:10px}
+
+
+/* 2026 gallery refinement — cinematic depth, accessibility and payment clarity */
+.membership-section{isolation:isolate}
+.membership-section::after{content:"";position:absolute;z-index:0;pointer-events:none;width:min(65vw,690px);aspect-ratio:1;right:-26%;top:-55%;border:1px solid rgba(200,182,255,.13);border-radius:50%;box-shadow:0 0 0 65px rgba(200,182,255,.035),0 0 0 145px rgba(200,182,255,.025);transform:rotate(-20deg)}
+.membership-intro,.membership-gallery{z-index:1}
+.member-price{position:relative;overflow:hidden;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:border-color .25s ease,box-shadow .25s ease}
+.member-price::after{content:"";position:absolute;pointer-events:none;inset:0;background:linear-gradient(120deg,transparent 25%,rgba(230,220,255,.08) 48%,transparent 70%);transform:translateX(-110%);transition:transform .75s ease}
+.member-price:hover::after{transform:translateX(110%)}
+.member-gallery-grid{align-items:stretch}
+.member-media-card{isolation:isolate;border-color:rgba(198,180,253,.26);box-shadow:0 18px 42px rgba(2,4,18,.24),inset 0 1px rgba(255,255,255,.04);transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .28s,box-shadow .28s}
+.member-media-card::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(145deg,rgba(231,220,255,.075),transparent 40%,rgba(134,130,255,.025));opacity:.6;transition:opacity .3s}
+.member-media-card:hover{transform:translateY(-6px);border-color:rgba(215,195,255,.68);box-shadow:0 25px 58px rgba(3,4,20,.48),0 0 35px rgba(171,146,255,.11)}
+.member-media-card:hover::before{opacity:1}
+.member-media-stage{position:relative;transition:background .35s}
+.member-media-stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(145deg,rgba(255,255,255,.08),transparent 42%,rgba(6,8,28,.2));mix-blend-mode:screen}
+.member-media-lock-label{position:relative;z-index:1;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 35px rgba(3,4,18,.5),inset 0 1px rgba(255,255,255,.1)}
+.member-item-price{font-variant-numeric:tabular-nums;background:linear-gradient(100deg,rgba(194,171,255,.13),rgba(194,171,255,.035));border-color:rgba(209,187,255,.34)}
+.member-cta{position:relative;overflow:hidden;transition:transform .22s ease,background .22s ease,box-shadow .22s ease}
+.member-cta:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 28px rgba(179,151,255,.38);background:#e0d7ff}
+.member-cta:active:not(:disabled){transform:translateY(0) scale(.99)}
+.member-cta:disabled{cursor:not-allowed;opacity:.62;background:#857b9e;color:#171524;border-color:#9a90b0;box-shadow:none}
+.member-cta:focus-visible,.nav-membership:focus-visible{outline:3px solid #f1e7ff;outline-offset:4px}
+.member-pay-note{min-height:1.5em}
+@media(hover:none){.member-media-card:hover{transform:none}.member-price:hover::after{transform:translateX(-110%)}}
+@media(max-width:680px){.membership-section::after{right:-75%;top:-20%;width:120vw}.member-media-card{padding:13px}.member-media-stage{aspect-ratio:16/11}.member-cta{min-height:48px}}
+@media(prefers-reduced-motion:reduce){.member-price::after,.member-media-card,.member-media-card::before,.member-cta{transition:none!important;animation:none!important}.member-media-card:hover,.member-cta:hover:not(:disabled){transform:none}}

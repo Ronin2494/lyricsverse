@@ -15,66 +15,122 @@ const ease=(a,b,t)=>a+(b-a)*t;
 const virtualPortal=!coarse&&!reduceMotion.matches&&window.matchMedia('(min-width: 800px) and (hover: hover) and (pointer: fine)').matches;
 const htmlRoot=document.documentElement;
 let introReleased=false, finalFrameStartedAt=0;
+let lastScrollY=window.scrollY;
+const portalHeight=()=>Math.max(1,journey.offsetHeight);
+const isPortalStartHash=()=>location.hash==='#portal-journey'||location.hash==='#universe';
 if(virtualPortal){
   htmlRoot.classList.add('portal-virtual-scroll');
-  const directLink=location.hash&&location.hash!=='#portal-journey'&&location.hash!=='#universe';
+  const directLink=location.hash&&!isPortalStartHash();
   if(directLink||window.scrollY>2){
     introReleased=true;target=progress=1;
   }else{
     htmlRoot.classList.add('portal-scroll-locked');
   }
 }
+function advanceIntro(delta){
+  // A trackpad fling or a large wheel notch must not skip the cinematic frames.
+  const travel=Math.max(1800,window.innerHeight*2.25);
+  target=clamp(target+clamp(delta,-170,170)/travel,0,1);
+  if(target<1)finalFrameStartedAt=0;
+}
+function reenterIntro(delta=0, reset=false){
+  if(!virtualPortal)return;
+  // Returning from the work area makes the same 3D timeline reversible.
+  // Start at the completed frame and scrub backward with the user's gesture.
+  introReleased=false;
+  finalFrameStartedAt=0;
+  target=progress=reset?0:1;
+  htmlRoot.classList.add('portal-scroll-locked');
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+  lastScrollY=0;
+  if(delta)advanceIntro(delta);
+}
 function releaseIntro(skip=false){
   if(!virtualPortal||introReleased)return;
   introReleased=true;
+  finalFrameStartedAt=0;
   target=1;
   if(skip)progress=1;
   htmlRoot.classList.remove('portal-scroll-locked');
   if(!skip){
-    // The completed handoff has been on screen before any work can appear.
+    // Wait until the full handoff animation has been rendered, then enter work.
     requestAnimationFrame(()=>{
       document.getElementById('work')?.scrollIntoView({behavior:'smooth',block:'start'});
     });
   }
 }
 function updateScroll(){
-  if(virtualPortal)return;
-  const distance=Math.max(1,journey.offsetHeight-window.innerHeight);
-  target=clamp(-journey.getBoundingClientRect().top/distance,0,1);
-}
-function advanceIntro(delta){
-  // Cap every input event: neither a trackpad fling nor one wheel notch can
-  // leap beyond the ending. Reverse scrolling scrubs backwards.
-  const travel=Math.max(1800,window.innerHeight*2.25);
-  target=clamp(target+clamp(delta,-170,170)/travel,0,1);
+  if(!virtualPortal){
+    const distance=Math.max(1,journey.offsetHeight-window.innerHeight);
+    target=clamp(-journey.getBoundingClientRect().top/distance,0,1);
+    return;
+  }
+  const y=window.scrollY;
+  // Wheel momentum, keyboard navigation and browser scrollbars can cross the
+  // work/portal boundary without another wheel event. Catch that boundary.
+  if(introReleased&&y<lastScrollY-1&&y<portalHeight()-3){
+    reenterIntro();
+    return;
+  }
+  lastScrollY=y;
 }
 if(virtualPortal){
   document.addEventListener('wheel',event=>{
-    if(introReleased||event.ctrlKey||event.metaKey)return;
-    event.preventDefault();
+    if(event.ctrlKey||event.metaKey)return; // preserve pinch-to-zoom
     const pixels=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?window.innerHeight:1);
+    if(introReleased){
+      // Native page scrolling is allowed, except at the top edge of work.
+      // An upward wheel gesture at the boundary re-enters the last frame.
+      if(pixels>=0||window.scrollY>portalHeight()+4)return;
+      event.preventDefault();
+      reenterIntro(pixels);
+      return;
+    }
+    event.preventDefault();
     advanceIntro(pixels);
   },{passive:false,capture:true});
   document.addEventListener('keydown',event=>{
-    if(introReleased||event.altKey||event.ctrlKey||event.metaKey||event.defaultPrevented)return;
+    if(event.altKey||event.ctrlKey||event.metaKey||event.defaultPrevented)return;
     if(event.target?.closest?.('a,button,input,textarea,select,[contenteditable="true"]'))return;
     const moves={'ArrowDown':96,'PageDown':460,' ':460,'ArrowUp':-96,'PageUp':-460};
-    if(Object.prototype.hasOwnProperty.call(moves,event.key)){
-      event.preventDefault();advanceIntro(moves[event.key]);
-    }else if(event.key==='End'||event.key==='Home'){
-      event.preventDefault();target=event.key==='End'?1:0;
+    const key=event.key;
+    if(introReleased){
+      if((key==='ArrowUp'||key==='PageUp'||(key===' '&&event.shiftKey))&&window.scrollY<=portalHeight()+4){
+        event.preventDefault();
+        reenterIntro(key==='ArrowUp'?-96:-460);
+      }else if(key==='Home'&&window.scrollY<=portalHeight()+4){
+        event.preventDefault();
+        reenterIntro(0,true);
+      }
+      return;
+    }
+    if(Object.prototype.hasOwnProperty.call(moves,key)){
+      event.preventDefault();
+      advanceIntro(key===' '&&event.shiftKey?-460:moves[key]);
+    }else if(key==='End'||key==='Home'){
+      event.preventDefault();
+      target=key==='End'?1:0;
+      finalFrameStartedAt=0;
     }
   },{capture:true});
-  // An explicit navigation click is a deliberate skip, unlike scrolling.
   document.addEventListener('click',event=>{
     const link=event.target?.closest?.('a[href^="#"]');
-    if(link&&link.hash&&link.hash!=='#portal-journey'&&link.hash!=='#universe')releaseIntro(true);
+    if(!link||!link.hash)return;
+    if(link.hash==='#portal-journey'||link.hash==='#universe'){
+      reenterIntro(0,true); // "Back to the universe" restarts the opening
+    }else{
+      releaseIntro(true); // "Enter the Work" and other links still skip it
+    }
   },{capture:true});
   window.addEventListener('hashchange',()=>{
-    if(location.hash&&location.hash!=='#portal-journey'&&location.hash!=='#universe')releaseIntro(true);
+    if(isPortalStartHash()){
+      reenterIntro(0,true);
+    }else if(location.hash){
+      releaseIntro(true);
+    }
   });
   window.addEventListener('pageshow',()=>{
-    if(window.scrollY>2)releaseIntro(true);
+    if(window.scrollY>2&&window.scrollY>=portalHeight()-3)releaseIntro(true);
   });
 }
 window.addEventListener('scroll',updateScroll,{passive:true});

@@ -3,22 +3,27 @@
   'use strict';
   const API = 'https://badbunny-membership-api.onrender.com';
   const DEFAULT_PAYPAL = 'https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E';
-  const STORAGE_KEY = 'badbunny-studio-token';
+  const FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyCTMkSyone3pN9cO0swL9LXKXTjhp5nlWc',
+    authDomain: 'portfolio-449e6.firebaseapp.com',
+    projectId: 'portfolio-449e6',
+    appId: '1:958447333550:web:aa82806a3d43833d927d3f'
+  };
+  const EMAIL_KEY = 'badbunny-studio-link-email';
   const fields = [
-    'status-banner','auth-panel','email-form','email','request-code','code-form','code-destination',
-    'code','verify-code','change-email','auth-notice','workspace','creator-email','sign-out',
-    'upload-form','media-file','preview','file-summary','media-title','media-description',
-    'media-price','media-paypal','media-type','publish-button','upload-notice','progress-wrap',
-    'upload-progress','reload-media','media-count','library-notice','media-list','edit-panel',
-    'edit-id','edit-form','edit-title-input','edit-description','edit-price','edit-paypal',
+    'status-banner','auth-panel','email-form','email','request-code','auth-notice',
+    'workspace','creator-email','sign-out','upload-form','media-file','preview',
+    'file-summary','media-title','media-description','media-price','media-paypal',
+    'media-type','publish-button','upload-notice','progress-wrap','upload-progress',
+    'reload-media','media-count','library-notice','media-list','edit-panel','edit-id',
+    'edit-form','edit-title-input','edit-description','edit-price','edit-paypal',
     'save-edit','edit-notice','close-edit'
   ];
   const ui = Object.fromEntries(fields.map(id => [id, document.getElementById(id)]));
   if (!ui['auth-panel']) return;
-  let token = '';
-  try { token = sessionStorage.getItem(STORAGE_KEY) || ''; } catch {}
+  let firebaseAuth = null;
+  let firebaseMethods = null;
   let creator = null;
-  let pendingEmail = '';
   let fileObjectURL = null;
   let uploads = [];
   const money = cents => new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(cents/100);
@@ -29,65 +34,63 @@
   };
   const busy = (element,enabled,label='Working…') => {
     element.disabled = enabled;
-    if(enabled) {
+    if(enabled){
       element.dataset.savedLabel = element.textContent;
       element.textContent = label;
-    } else if(element.dataset.savedLabel) {
+    }else if(element.dataset.savedLabel){
       element.textContent = element.dataset.savedLabel;
       delete element.dataset.savedLabel;
     }
   };
-  const authHeader = () => token ? {Authorization:'Bearer '+token} : {};
-  function saveToken(value) {
-    token = value || '';
-    try {
-      if(token) sessionStorage.setItem(STORAGE_KEY,token);
-      else sessionStorage.removeItem(STORAGE_KEY);
-    } catch {}
+  function firebaseError(error){
+    const code=String(error?.code||'');
+    if(code==='auth/unauthorized-domain')return 'This site is not an authorized Firebase domain. Add badbunny.work under Firebase Authentication → Settings → Authorized domains.';
+    if(code==='auth/operation-not-allowed')return 'Enable Email/Password and Email link sign-in in Firebase Authentication → Sign-in method.';
+    if(code==='auth/invalid-email')return 'Enter a valid creator email address.';
+    if(code==='auth/invalid-action-code'||code==='auth/expired-action-code')return 'This sign-in link expired or was already used. Request another link.';
+    if(code==='auth/too-many-requests')return 'Too many requests. Try again later.';
+    if(code==='auth/network-request-failed')return 'Unable to reach Firebase. Check your connection and try again.';
+    return error?.message||'Firebase sign-in failed. Please try again.';
   }
-  async function call(path,options={}) {
+  async function authHeader(){
+    if(!firebaseAuth?.currentUser)return {};
+    return {Authorization:'Bearer '+await firebaseAuth.currentUser.getIdToken()};
+  }
+  async function call(path,options={}){
     let response;
-    try {
-      const headers = {Accept:'application/json',...authHeader(),...options.headers};
-      if(options.body && !(options.body instanceof FormData)) headers['Content-Type']='application/json';
-      response = await fetch(API+path,{
-        ...options,headers,
-        signal:AbortSignal.timeout(30000)
-      });
-    } catch { throw new Error('Cannot connect to the creator service. Check its Render deployment and try again.'); }
-    const result = (response.headers.get('content-type')||'').includes('application/json') ? await response.json() : {};
-    if(!response.ok) throw new Error(result.error || 'Request failed. Please try again.');
+    try{
+      const headers={Accept:'application/json',...await authHeader(),...options.headers};
+      if(options.body && !(options.body instanceof FormData))headers['Content-Type']='application/json';
+      response=await fetch(API+path,{...options,headers,signal:AbortSignal.timeout(30000)});
+    }catch{throw new Error('Cannot connect to the creator API. Check its Render deployment and try again.');}
+    const result=(response.headers.get('content-type')||'').includes('application/json')?await response.json():{};
+    if(!response.ok)throw new Error(result.error||'Request failed. Please try again.');
     return result;
   }
-  function resetPreview() {
-    if(fileObjectURL) URL.revokeObjectURL(fileObjectURL);
+  function resetPreview(){
+    if(fileObjectURL)URL.revokeObjectURL(fileObjectURL);
     fileObjectURL=null;
     ui['preview'].replaceChildren();
     show(ui['preview'],false);
     ui['media-type'].textContent='SELECT MEDIA';
     ui['file-summary'].textContent='Select your media to preview it here before publishing.';
   }
-  function renderFilePreview() {
+  function renderFilePreview(){
     resetPreview();
     const file=ui['media-file'].files?.[0];
     if(!file)return;
     const isVideo=file.type.startsWith('video/');
-    if(!file.type.startsWith('image/')&&!isVideo) {
-      notice(ui['upload-notice'],'Choose a supported photo or video file.','error');
-      return;
+    if(!file.type.startsWith('image/')&&!isVideo){
+      notice(ui['upload-notice'],'Choose a supported photo or video file.','error');return;
     }
-    if(file.size>100*1024*1024) {
-      notice(ui['upload-notice'],'The file exceeds the 100 MB limit.','error');
-      return;
+    if(file.size>100*1024*1024){
+      notice(ui['upload-notice'],'The file exceeds the 100 MB limit.','error');return;
     }
     fileObjectURL=URL.createObjectURL(file);
     const media=document.createElement(isVideo?'video':'img');
     media.src=fileObjectURL;
-    if(isVideo) {
-      media.controls=true;
-      media.playsInline=true;
-      media.preload='metadata';
-    } else media.alt='Local preview for '+file.name;
+    if(isVideo){media.controls=true;media.playsInline=true;media.preload='metadata';}
+    else media.alt='Local preview for '+file.name;
     ui['preview'].append(media);
     show(ui['preview'],true);
     ui['media-type'].textContent=isVideo?'VIDEO':'PHOTO';
@@ -99,87 +102,95 @@
     show(ui['auth-panel'],false);
     show(ui['workspace'],true);
     ui['creator-email'].textContent='✦ VERIFIED CREATOR · '+user.email;
-    notice(ui['status-banner'],'Creator access verified. Your uploads publish to the public locked gallery.','success');
+    notice(ui['status-banner'],'Firebase sign-in verified. You can now upload photos and videos.','success');
     void loadLibrary();
   }
   function closeWorkspace(){
     creator=null;
-    saveToken('');
-    pendingEmail='';
     show(ui['workspace'],false);
     show(ui['auth-panel'],true);
-    show(ui['email-form'],true);
-    show(ui['code-form'],false);
-    ui['code'].value='';
     uploads=[];
     ui['media-list'].replaceChildren();
   }
   async function restoreSession(){
-    if(!token)return;
+    if(!firebaseAuth?.currentUser){closeWorkspace();return;}
     try{
-      const result=await call('/api/me');
-      if(!result.user?.admin)throw new Error('This account is not authorized as the creator.');
-      openWorkspace(result.user);
-    }catch{
+      const data=await call('/api/me');
+      if(!data.user?.admin)throw new Error('This Firebase account is not authorized as the creator.');
+      openWorkspace(data.user);
+    }catch(error){
       closeWorkspace();
+      notice(ui['auth-notice'],error.message,'error');
+      await firebaseMethods.signOut(firebaseAuth);
     }
   }
-  async function init(){
+  async function completeEmailLink(){
+    if(!firebaseMethods.isSignInWithEmailLink(firebaseAuth,window.location.href))return false;
+    let email='';
+    try{email=window.localStorage.getItem(EMAIL_KEY)||'';}catch{}
+    if(!email)email=window.prompt('Enter the email address you used to request this sign-in link:')||'';
+    email=email.trim().toLowerCase();
+    if(!email){
+      notice(ui['auth-notice'],'Enter the same email you used to request your link, then reopen it.','error');
+      return true;
+    }
+    notice(ui['status-banner'],'Verifying your Firebase email link…');
     try{
-      const config=await call('/api/config');
+      await firebaseMethods.signInWithEmailLink(firebaseAuth,email,window.location.href);
+      try{window.localStorage.removeItem(EMAIL_KEY);}catch{}
+      history.replaceState(null,'',window.location.pathname);
+      notice(ui['auth-notice'],'Email verified. Checking creator access…','success');
+      await restoreSession();
+    }catch(error){
+      notice(ui['auth-notice'],firebaseError(error),'error');
+      notice(ui['status-banner'],'Email-link verification failed. Request a new link if needed.','error');
+    }
+    return true;
+  }
+  async function init(){
+    ui['request-code'].disabled=true;
+    try{
+      const [firebaseApp,firebaseAuthSDK,config]=await Promise.all([
+        import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js'),
+        call('/api/config')
+      ]);
+      firebaseMethods=firebaseAuthSDK;
+      firebaseAuth=firebaseAuthSDK.getAuth(firebaseApp.initializeApp(FIREBASE_CONFIG));
+      await firebaseAuthSDK.setPersistence(firebaseAuth,firebaseAuthSDK.browserLocalPersistence);
+      await firebaseAuthSDK.authStateReady(firebaseAuth);
       if(!config.authEnabled){
-        notice(ui['status-banner'],'The uploader page is deployed. To publish real files, configure the membership API with MongoDB, SESSION_SECRET, ADMIN_EMAIL and verified Resend email settings in Render.','error');
-        ui['request-code'].disabled=true;
+        notice(ui['status-banner'],'Firebase is connected. Creator API is waiting for MongoDB, SESSION_SECRET, ADMIN_EMAIL or FIREBASE_PROJECT_ID in Render.','error');
         return;
       }
-      notice(ui['status-banner'],'Creator login is available. Sign in using the authorized email address.','success');
-      await restoreSession();
-    }catch(err){
-      notice(ui['status-banner'],err.message,'error');
+      if(await completeEmailLink())return;
+      if(firebaseAuth.currentUser){await restoreSession();}
+      else notice(ui['status-banner'],'Ready to send a Firebase email sign-in link. Enter your creator email below.','success');
+      ui['request-code'].disabled=false;
+    }catch(error){
+      notice(ui['status-banner'],'Firebase setup or API error: '+firebaseError(error),'error');
       ui['request-code'].disabled=true;
     }
   }
   ui['email-form'].addEventListener('submit',async event=>{
     event.preventDefault();
+    if(!firebaseAuth)return;
     const email=ui['email'].value.trim().toLowerCase();
     if(!email)return;
-    busy(ui['request-code'],true,'SENDING…');
+    busy(ui['request-code'],true,'SENDING LINK…');
     try{
-      await call('/api/auth/request',{method:'POST',body:JSON.stringify({email})});
-      pendingEmail=email;
-      ui['code-destination'].textContent='Code sent to '+email+'. Expires in 10 minutes.';
-      show(ui['email-form'],false);
-      show(ui['code-form'],true);
-      ui['code'].focus();
-      notice(ui['auth-notice'],'Check your email for the six-digit code.','success');
-    }catch(err){notice(ui['auth-notice'],err.message,'error');}
+      await firebaseMethods.sendSignInLinkToEmail(firebaseAuth,email,{
+        url:window.location.origin+'/studio.html',
+        handleCodeInApp:true
+      });
+      try{window.localStorage.setItem(EMAIL_KEY,email);}catch{}
+      notice(ui['auth-notice'],'Verification link sent to '+email+'. Open the email and click the sign-in link.','success');
+      notice(ui['status-banner'],'Check your inbox for the Firebase sign-in link.','success');
+    }catch(error){notice(ui['auth-notice'],firebaseError(error),'error');}
     finally{busy(ui['request-code'],false);}
   });
-  ui['change-email'].addEventListener('click',()=>{
-    pendingEmail='';
-    show(ui['email-form'],true);
-    show(ui['code-form'],false);
-    ui['code'].value='';
-    notice(ui['auth-notice'],'');
-  });
-  ui['code-form'].addEventListener('submit',async event=>{
-    event.preventDefault();
-    busy(ui['verify-code'],true,'VERIFYING…');
-    try{
-      const result=await call('/api/auth/verify',{method:'POST',body:JSON.stringify({email:pendingEmail,code:ui['code'].value.trim()})});
-      if(!result.user?.admin){
-        notice(ui['auth-notice'],'This email is verified but is not authorized to manage creator uploads. Use the email configured as ADMIN_EMAIL.','error');
-        return;
-      }
-      saveToken(result.token);
-      pendingEmail='';
-      ui['code'].value='';
-      openWorkspace(result.user);
-    }catch(err){notice(ui['auth-notice'],err.message,'error');}
-    finally{busy(ui['verify-code'],false);}
-  });
   ui['sign-out'].addEventListener('click',async()=>{
-    try{await call('/api/auth/logout',{method:'POST'});}catch{}
+    try{if(firebaseAuth)await firebaseMethods.signOut(firebaseAuth);}catch{}
     closeWorkspace();
     notice(ui['status-banner'],'Signed out of Creator Studio.','success');
   });
@@ -194,11 +205,13 @@
     if(price!=='10.00'&&link===DEFAULT_PAYPAL)return 'For a custom price, paste a separate PayPal payment link set to that exact amount. The default link cannot adjust the amount automatically.';
     return '';
   }
-  function uploadMedia(formData,onProgress) {
+  async function uploadMedia(formData,onProgress) {
+    const headers=await authHeader();
+    if(!headers.Authorization)throw new Error('Please sign in with your Firebase email link first.');
     return new Promise((resolve,reject)=>{
       const xhr=new XMLHttpRequest();
       xhr.open('POST',API+'/api/admin/upload');
-      xhr.setRequestHeader('Authorization','Bearer '+token);
+      xhr.setRequestHeader('Authorization',headers.Authorization);
       xhr.setRequestHeader('Accept','application/json');
       xhr.timeout=180000;
       xhr.upload.onprogress=e=>{if(e.lengthComputable)onProgress(Math.round(e.loaded/e.total*100));};

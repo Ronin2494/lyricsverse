@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="studio.css?v=1">
-<script src="studio.js?v=firebase-link-1" defer></script>
+<script src="studio.js?v=paypal-automatic-1" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to studio</a>
@@ -66,9 +66,7 @@
             </div>
             <div><label for="media-type">File type</label><div class="read-only" id="media-type">SELECT MEDIA</div></div>
           </div>
-          <label for="media-paypal">PayPal payment link</label>
-          <input id="media-paypal" type="url" value="https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E" required maxlength="500" spellcheck="false">
-          <p class="small-muted">Use a PayPal link configured for this item's price. The website's price label does not change the amount charged by PayPal.</p>
+          <p class="small-muted">The PayPal checkout amount is automatically calculated from the price above. No manual PayPal buttons or links are needed.</p>
           <div id="progress-wrap" class="progress-wrap" hidden><label for="upload-progress">Uploading your media…</label><progress id="upload-progress" value="0" max="100"></progress></div>
           <button id="publish-button" type="submit" class="button primary wide">PUBLISH TO GALLERY <span aria-hidden="true">↗</span></button>
           <p id="upload-notice" class="feedback" role="status" aria-live="polite"></p>
@@ -77,7 +75,7 @@
     </section>
     <section class="panel published-panel" aria-labelledby="published-title">
       <div class="panel-heading"><div><span class="section-index">02 / PUBLISHED</span><h2 id="published-title">Your gallery drops <span class="count" id="media-count">0</span></h2></div><button id="reload-media" class="button quiet" type="button">REFRESH ↻</button></div>
-      <p class="muted">Each published item appears on your public site with a locked preview, the price you set, and the linked PayPal payment button. Changes here update the listing.</p>
+      <p class="muted">Each published item appears on your public site with a locked preview, the price you set, and an automatically priced PayPal checkout button. Changes here update the listing.</p>
       <p id="library-notice" class="small-muted" role="status" aria-live="polite">Loading uploads…</p>
       <div id="media-list" class="media-list"></div>
     </section>
@@ -88,7 +86,6 @@
         <label for="edit-title-input">Title</label><input id="edit-title-input" maxlength="100" required>
         <label for="edit-description">Description</label><textarea id="edit-description" rows="3" maxlength="500"></textarea>
         <label for="edit-price">Price (CAD)</label><div class="money-field"><span>CA$</span><input id="edit-price" type="number" min="1" max="1000" step="0.01" required></div>
-        <label for="edit-paypal">PayPal link</label><input id="edit-paypal" type="url" required maxlength="500">
         <button class="button primary" id="save-edit" type="submit">SAVE LISTING ↗</button>
         <p id="edit-notice" class="feedback" role="status" aria-live="polite"></p>
       </form>

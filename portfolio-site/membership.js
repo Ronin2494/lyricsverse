@@ -91,8 +91,8 @@
     pendingEmail = '';
     ui['member-email-input'].value = '';
     ui['member-code-input'].value = '';
-    ui['member-gallery-grid'].replaceChildren();
     update();
+    void loadGallery();
   }
   async function refreshAccount() {
     if (!token) return;
@@ -100,7 +100,7 @@
       const result = await api('/api/me');
       user = result.user;
       update();
-      if (user.hasAccess) await loadGallery();
+      await loadGallery();
     } catch (err) {
       clearSession();
       setNotice(err.message, 'error');
@@ -178,7 +178,15 @@
           }
         });
         if (user?.hasAccess) tools.append(loadButton);
-        if (user.admin) {
+        const payButton = document.createElement('a');
+        payButton.className = 'member-cta member-media-pay';
+        payButton.href = 'https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E';
+        payButton.target = '_blank';
+        payButton.rel = 'noopener noreferrer';
+        payButton.textContent = 'PAY WITH PAYPAL ↗';
+        payButton.setAttribute('aria-label','Pay for ' + item.title + ' through PayPal (one-time payment)');
+        tools.append(payButton);
+        if (user?.admin) {
           const remove = document.createElement('button');
           remove.type = 'button';
           remove.className = 'member-action';

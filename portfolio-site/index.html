@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="creative-inline.css" />
 <link rel="stylesheet" href="creative-wall.css" />
 <link rel="stylesheet" href="membership.css?v=gallery-refinement-20261020" />
+<link rel="stylesheet" href="work-showcase.css?v=1" />
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4702288635921911" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -78,7 +79,18 @@
       <div class="scene-bottom-note" aria-hidden="true"><span>RUDRANSH6619 // STORY IN MOTION</span><span>SCROLL TO EXPLORE ↓</span></div>
     </section>    <section class="intro section-reveal" aria-labelledby="intro-title"><div class="eyebrow"><span class="tiny-star">✳</span> THE HUMAN BEHIND THE IDEAS <span class="eyebrow-line"></span> TORONTO, CANADA</div><div class="intro-grid"><div><h2 id="intro-title">I turn <span class="word-gradient">what if</span><br />into <span class="underline-sketch">what's next.</span></h2><p class="intro-sub">I'm Deepak — a product-minded builder connecting technology, strategy, creativity, and the human experience.</p><div class="intro-actions"><a href="#projects" class="primary-button">Explore selected work <span aria-hidden="true">↗</span></a><a href="https://www.linkedin.com/in/deepak-s-b099186b" class="text-button" target="_blank" rel="noopener noreferrer">Get to know me <span aria-hidden="true">↗</span></a></div></div><div class="intro-orbit" aria-hidden="true"><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div><div class="orbit-sun">D<span>·</span>S</div><span class="orbit-label orbit-label-1">CREATE</span><span class="orbit-label orbit-label-2">EXPLORE</span><span class="orbit-label orbit-label-3">EVOLVE</span></div></div></section>
     <section id="projects" class="projects" aria-labelledby="projects-title"><div class="section-heading section-reveal"><div><p class="kicker">01 / SELECTED WORK</p><h2 id="projects-title">Things I've put<br /><span>into motion.</span></h2></div><p>Independent products, real problems, and experiments in making everyday experiences better.</p></div>
-      <div class="bento">
+      <div class="work-toolbar" id="work-toolbar" hidden aria-label="Explore selected work">
+        <div class="work-toolbar-info">
+          <span class="work-toolbar-title">EXPLORE THE COLLECTION</span>
+          <span class="work-toolbar-count" id="work-visible-count" role="status" aria-live="polite">06 PROJECTS IN VIEW</span>
+        </div>
+        <div class="work-filters" role="group" aria-label="Filter projects by status">
+          <button class="work-filter" type="button" data-work-filter="all" aria-pressed="true" aria-controls="project-grid">All work <span class="filter-number" aria-hidden="true">06</span></button>
+          <button class="work-filter" type="button" data-work-filter="live" aria-pressed="false" aria-controls="project-grid">Live <span class="filter-number" aria-hidden="true">04</span></button>
+          <button class="work-filter" type="button" data-work-filter="building" aria-pressed="false" aria-controls="project-grid">In progress <span class="filter-number" aria-hidden="true">02</span></button>
+        </div>
+      </div>
+      <div class="bento" id="project-grid">
         <article class="tile tile-footnow tile-wide section-reveal"><div class="tile-top"><span class="tile-index">01 / SPORTS + MEDIA</span><span class="status status-live"><span></span> LIVE PRODUCT</span></div><div class="tile-art foot-art" aria-hidden="true"><div class="foot-ball"><span></span><i></i></div><div class="foot-track foot-track-a"></div><div class="foot-track foot-track-b"></div><div class="foot-stat">90:00 <b>THE WORLD'S GAME</b></div></div><div class="tile-content"><div class="tile-text"><h3>FootNow<span>↗</span></h3><p>Football, without the noise. Scores, stories, video, and a daily editorial experience in one destination.</p><div class="tags"><span>Sports tech</span><span>News & editorial</span><span>Live data</span></div></div><a class="round-link" href="https://footnow.onrender.com" target="_blank" rel="noopener noreferrer" aria-label="Visit FootNow live website">↗</a></div></article>
         <article class="tile tile-lyrics section-reveal"><div class="tile-top"><span class="tile-index">02 / MUSIC + COMMUNITY</span><span class="status status-live"><span></span> LIVE PRODUCT</span></div><div class="tile-art lyrics-art" aria-hidden="true"><div class="record"><div class="record-center">LV</div></div><div class="sound-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div><div class="tile-content"><div class="tile-text"><h3>LyricsVerse<span>↗</span></h3><p>A home for discovering lyrics, listening previews, and celebrating original voices.</p><div class="tags"><span>Music</span><span>Discovery</span></div></div><a class="round-link" href="https://lyricsverse.onrender.com" target="_blank" rel="noopener noreferrer" aria-label="Visit LyricsVerse live website">↗</a></div></article>
         <article class="tile tile-seatpath section-reveal"><div class="tile-top"><span class="tile-index">03 / MOBILITY</span><span class="status status-live"><span></span> LIVE PROTOTYPE</span></div><div class="tile-art seat-art" aria-hidden="true"><svg viewBox="0 0 400 180" role="img" aria-label="Stylized road route"><path d="M-30 160C95 185 70 35 180 62S270 164 434-22"/><path d="M-30 160C95 185 70 35 180 62S270 164 434-22" stroke-dasharray="5 18"/><circle cx="176" cy="62" r="20"/><circle cx="176" cy="62" r="6"/></svg><span class="route-chip">SMART BOOKING <b>02:00</b></span></div><div class="tile-content"><div class="tile-text"><h3>SeatPath<span>↗</span></h3><p>Intercity ridesharing with a smarter booking flow and timely driver responses.</p><div class="tags"><span>Mobility</span><span>UX strategy</span></div></div><a class="round-link" href="https://seatpath.onrender.com" target="_blank" rel="noopener noreferrer" aria-label="Visit SeatPath live prototype">↗</a></div></article>
@@ -155,6 +167,7 @@
 <script src="evidence-wall.js" defer></script>
 <script src="membership.js?v=payments-gated-2" defer></script>
 
+<script src="work-showcase.js?v=1" defer></script>
 <script type="module" src="main.js?v=portal-handoff-fast-2"></script>
 </body>
 </html>

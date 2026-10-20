@@ -164,7 +164,7 @@ app.post('/api/billing/portal',ready,asyncRoute(authorized),asyncRoute(async(req
 app.get('/api/gallery',asyncRoute(async(_req,res)=>{
   if(dbStatus!=='connected')return res.json({items:[],pending:true});
   const docs=await files.find({'metadata.published':true}).project({contentType:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
-  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',type:f.contentType||'application/octet-stream'}))});
+  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',type:f.contentType||'application/octet-stream'}))});
 }));
 app.get('/api/media',ready,asyncRoute(authorized),subscriberOnly,asyncRoute(async(_req,res)=>{
   const docs=await files.find({'metadata.published':true}).project({filename:1,contentType:1,length:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
@@ -205,7 +205,7 @@ app.get('/api/media/:id/file',ready,asyncRoute(async(req,res)=>{
 
 app.post('/api/admin/upload',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
   if(!String(req.headers['content-type']||'').startsWith('multipart/form-data;'))return res.status(415).json({error:'Choose a file.'});
-  const form=Busboy({headers:req.headers,limits:{fileSize:MAX_UPLOAD,files:1,fields:3,fieldSize:1000}});
+  const form=Busboy({headers:req.headers,limits:{fileSize:MAX_UPLOAD,files:1,fields:4,fieldSize:1000}});
   const fields={};
   let uploadId=null,uploadTask=null,error=null,count=0;
   form.on('field',(name,value)=>{fields[name]=value;});
@@ -228,8 +228,12 @@ app.post('/api/admin/upload',ready,asyncRoute(authorized),adminOnly,asyncRoute(a
     return res.status(400).json({error:error||'No file provided.'});
   }
   const title=text(fields.title,100);
+  const priceRaw=String(fields.price||'');
+  const priceValid=/^(?:[1-9]\\d{0,3}|0)\\.\\d{2}$/.test(priceRaw);
+  const priceCents=priceValid?Math.round(Number(priceRaw)*100):NaN;
+  if(!Number.isSafeInteger(priceCents)||priceCents<100||priceCents>100000){await bucket.delete(uploadId);return res.status(400).json({error:'Enter a price between CA$1.00 and CA$1000.00.'});}
   if(!title){await bucket.delete(uploadId);return res.status(400).json({error:'A title is required.'});}
-  await files.updateOne({_id:uploadId},{$set:{metadata:{title,description:text(fields.description,500),published:true,uploadedBy:req.user._id.toHexString()}}});
+  await files.updateOne({_id:uploadId},{$set:{metadata:{title,description:text(fields.description,500),priceCents,published:true,uploadedBy:req.user._id.toHexString()}}});
   res.status(201).json({ok:true,id:uploadId.toHexString()});
 }));
 app.delete('/api/admin/media/:id',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{

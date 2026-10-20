@@ -357,4 +357,16 @@ async function connectDatabase(){
 app.listen(PORT,'0.0.0.0',()=>console.log('Membership API listening:',PORT));
 await connectDatabase();
 console.log('Startup health:', {database:dbStatus, paypalMode:PAYPAL_MODE, configured:PAYPAL_READY, paymentsEnabled:PAYMENTS_ENABLED, checkoutEnabled:checkoutEnabled()});
+// Log only environment VARIABLE NAMES and Boolean presence, NEVER credential values.
+// Useful to identify a wrong Render service or mismatched key names.
+console.log('PayPal env diagnostics:',JSON.stringify({
+  service:'badbunny-membership-api',
+  expected:{
+    PAYPAL_MODE:PAYPAL_MODE,
+    PAYPAL_SANDBOX_CLIENT_ID:Boolean(process.env.PAYPAL_SANDBOX_CLIENT_ID?.trim()),
+    PAYPAL_SANDBOX_CLIENT_SECRET:Boolean(process.env.PAYPAL_SANDBOX_CLIENT_SECRET?.trim()),
+    PAYMENTS_ENABLED:process.env.PAYMENTS_ENABLED||'(unset)'
+  },
+  existingKeys:Object.keys(process.env).filter(key=>/^(?:PAYPAL|PAYMENT)/i.test(key)).sort()
+}));
 if(PAYPAL_READY)paypalAccessToken().then(()=>console.log('PayPal API authenticated')).catch(error=>console.warn('PayPal API credential check failed:',error.message));

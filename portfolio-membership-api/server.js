@@ -1,7 +1,8 @@
 import express from 'express';
 import Busboy from 'busboy';
 import { MongoClient, GridFSBucket, ObjectId } from 'mongodb';
-import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { pipeline } from 'node:stream/promises';
 
 const app = express();
@@ -11,7 +12,11 @@ const PORT = Number(process.env.PORT || 10000);
 const allowedOrigins = new Set((process.env.CORS_ORIGINS || 'https://badbunny.work,https://www.badbunny.work,https://deepak-portfolio-819w.onrender.com').split(',').map(s => s.trim()));
 const SECRET = process.env.SESSION_SECRET || '';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
-const authConfigured = Boolean(process.env.MONGODB_URI && SECRET.length >= 32 && ADMIN_EMAIL && process.env.RESEND_API_KEY && process.env.MAIL_FROM);
+const FIREBASE_PROJECT_ID = (process.env.FIREBASE_PROJECT_ID || '').trim();
+const authConfigured = Boolean(process.env.MONGODB_URI && SECRET.length >= 32 && ADMIN_EMAIL && /^[a-z0-9-]{6,40}$/.test(FIREBASE_PROJECT_ID));
+// The public Google Secure Token JWK set verifies Firebase ID tokens by signature.
+// No service-account key is needed on Render. Firebase login links are sent client-side.
+const firebaseKeys = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 const MAX_UPLOAD = 100 * 1024 * 1024;
 const DEFAULT_PAYPAL_URL = 'https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E';
 function parsePrice(raw){
@@ -28,30 +33,10 @@ function paypalLink(raw){
     return url.href;
   }catch{return null;}
 }
-const verificationRates = new Map();
-function limitEmailRequests(req, res, next) {
-  const ip = req.ip || req.socket.remoteAddress || 'unknown';
-  const now = Date.now();
-  let entry = verificationRates.get(ip);
-  if (!entry || entry.until < now) {
-    entry = { count: 0, until: now + 15 * 60 * 1000 };
-    verificationRates.set(ip, entry);
-  }
-  if (entry.count >= 10) return res.status(429).json({ error: 'Too many sign-in requests. Try again in 15 minutes.' });
-  entry.count++;
-  if (verificationRates.size > 2000) {
-    for (const [address, item] of verificationRates) {
-      if (item.until < now) verificationRates.delete(address);
-    }
-  }
-  next();
-}
-let dbStatus = 'connecting', users, codes, sessions, bucket, files;
-const digest = v => createHash('sha256').update(v).digest('hex');
-const sign = v => createHmac('sha256', SECRET).update(v).digest('hex');
+let dbStatus = 'connecting', users, bucket, files;
+const sign = value => createHmac('sha256', SECRET).update(value).digest('hex');
 const same = (a, b) => { const x = Buffer.from(a || ''); const y = Buffer.from(b || ''); return x.length === y.length && timingSafeEqual(x,y); };
 const text = (v, max) => typeof v === 'string' ? v.trim().replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0,max) : '';
-const validEmail = s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 250;
 const isAdmin = user => Boolean(ADMIN_EMAIL && user?.email === ADMIN_EMAIL);
 const hasAccess = user => isAdmin(user);
 const profile = user => ({ email:user.email, admin:isAdmin(user), hasAccess:hasAccess(user) });
@@ -70,64 +55,40 @@ app.use((req,res,next) => {
 
 app.use(express.json({limit:'64kb'}));
 app.get('/api/health',(_req,res)=>res.json({ok:true,service:'portfolio-membership',database:dbStatus}));
-app.get('/api/config',(_req,res)=>res.json({currency:'CAD',paymentMode:'paypal-payment-links',authEnabled:authConfigured&&dbStatus==='connected',uploadsEnabled:authConfigured&&dbStatus==='connected',paymentVerificationEnabled:false}));
+app.get('/api/config',(_req,res)=>res.json({currency:'CAD',paymentMode:'paypal-payment-links',authProvider:'firebase-email-link',firebaseProjectId:FIREBASE_PROJECT_ID,authEnabled:authConfigured&&dbStatus==='connected',uploadsEnabled:authConfigured&&dbStatus==='connected',paymentVerificationEnabled:false}));
 function ready(_req,res,next){if(!authConfigured || dbStatus!=='connected') return res.status(503).json({error:'Membership setup is in progress.'});next();}
 async function authorized(req,res,next){
   const header=req.get('authorization') || '';
-  if(!/^Bearer [a-f0-9]{64}$/.test(header))return res.status(401).json({error:'Please sign in.'});
-  const tokenHash=digest(header.slice(7));
-  const session=await sessions.findOne({tokenHash,expiresAt:{$gt:new Date()}});
-  if(!session)return res.status(401).json({error:'Your session expired. Please sign in again.'});
-  const user=await users.findOne({_id:session.userId});
-  if(!user)return res.sendStatus(401);
-  req.user=user;req.sessionHash=tokenHash;next();
+  const match=/^Bearer ([A-Za-z0-9_-]+[.][A-Za-z0-9_-]+[.][A-Za-z0-9_-]+)$/.exec(header);
+  if(!match||match[1].length>10000)return res.status(401).json({error:'Sign in to Creator Studio using your email link.'});
+  try{
+    const {payload}=await jwtVerify(match[1],firebaseKeys,{
+      issuer:'https://securetoken.google.com/'+FIREBASE_PROJECT_ID,
+      audience:FIREBASE_PROJECT_ID,algorithms:['RS256'],clockTolerance:5
+    });
+    const now=Math.floor(Date.now()/1000);
+    const email=typeof payload.email==='string'?payload.email.trim().toLowerCase():'';
+    if(payload.email_verified!==true||!email||email!==ADMIN_EMAIL||!payload.sub||typeof payload.sub!=='string'){
+      return res.status(403).json({error:'Only the verified creator email can access this studio.'});
+    }
+    if(!Number.isInteger(payload.iat)||payload.iat>now+5||
+       !Number.isInteger(payload.auth_time)||payload.auth_time>now+5){
+      return res.status(401).json({error:'Invalid or expired Firebase sign-in.'});
+    }
+    await users.updateOne({email},{$set:{firebaseUid:payload.sub,verifiedAt:new Date()},$setOnInsert:{createdAt:new Date()}},{upsert:true});
+    req.user=await users.findOne({email});
+    if(!req.user)return res.status(401).json({error:'Creator session unavailable.'});
+    next();
+  }catch(error){
+    if(error?.code==='ERR_JWKS_TIMEOUT'||error?.code==='ERR_JWKS_NO_MATCHING_KEY'){
+      console.warn('Firebase token verification:',error.code);
+    }
+    res.status(401).json({error:'Firebase sign-in expired or could not be verified. Please sign in again.'});
+  }
 }
 function adminOnly(req,res,next){if(!isAdmin(req.user))return res.status(403).json({error:'Owner access only.'});next();}
 
-app.post('/api/auth/request',ready,limitEmailRequests,asyncRoute(async(req,res)=>{
-  const email=text(req.body?.email,250).toLowerCase();
-  if(!validEmail(email))return res.status(400).json({error:'Enter a valid email address.'});
-  if(email!==ADMIN_EMAIL)return res.status(403).json({error:'Use the authorized creator email address.'});
-  const existing=await codes.findOne({email});
-  if(existing?.nextAllowedAt>new Date())return res.status(429).json({error:'Wait a minute before requesting another code.'});
-  const otp=String(randomInt(0,1000000)).padStart(6,'0');
-  const hash=sign(email+':'+otp);
-  await codes.updateOne({email},{$set:{email,codeHash:hash,expiresAt:new Date(Date.now()+600000),nextAllowedAt:new Date(Date.now()+60000),attempts:0}},{upsert:true});
-  let delivered=false;
-  try{
-    const result=await fetch('https://api.resend.com/emails',{
-      method:'POST',headers:{'Authorization':'Bearer '+process.env.RESEND_API_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({from:process.env.MAIL_FROM,to:[email],subject:'Your BadBunny sign-in code',text:'Your sign-in code: '+otp+'. Expires in 10 minutes. If you did not request it, ignore this email.'}),
-      signal:AbortSignal.timeout(12000)
-    });
-    delivered=result.ok;
-  }catch {}
-  if(!delivered){
-    await codes.deleteOne({email,codeHash:hash});
-    return res.status(503).json({error:'Email delivery is unavailable. Please try again.'});
-  }
-  res.json({ok:true});
-}));
-app.post('/api/auth/verify',ready,asyncRoute(async(req,res)=>{
-  const email=text(req.body?.email,250).toLowerCase(),code=text(req.body?.code,10);
-  if(!validEmail(email)||!/^\d{6}$/.test(code))return res.status(400).json({error:'Enter a valid email and six-digit code.'});
-  const record=await codes.findOne({email,expiresAt:{$gt:new Date()}});
-  if(!record||record.attempts>=5)return res.status(401).json({error:'Invalid or expired code.'});
-  if(!same(record.codeHash,sign(email+':'+code))){
-    await codes.updateOne({_id:record._id},{$inc:{attempts:1}});
-    return res.status(401).json({error:'Invalid or expired code.'});
-  }
-  const consumed=await codes.deleteOne({_id:record._id,attempts:{$lt:5},codeHash:record.codeHash});
-  if(!consumed.deletedCount)return res.sendStatus(401);
-  if(email!==ADMIN_EMAIL)return res.status(403).json({error:'Creator access only.'});
-  await users.updateOne({email},{$setOnInsert:{createdAt:new Date()},$set:{verifiedAt:new Date()}},{upsert:true});
-  const user=await users.findOne({email});
-  const token=randomBytes(32).toString('hex');
-  await sessions.insertOne({userId:user._id,tokenHash:digest(token),expiresAt:new Date(Date.now()+30*86400000),createdAt:new Date()});
-  res.json({token,user:profile(user)});
-}));
 app.get('/api/me',ready,asyncRoute(authorized),(req,res)=>res.json({user:profile(req.user)}));
-app.post('/api/auth/logout',ready,asyncRoute(authorized),asyncRoute(async(req,res)=>{await sessions.deleteOne({tokenHash:req.sessionHash});res.json({ok:true});}));
 
 // Public catalog exposes only safe labels, never media bytes or download URLs.
 app.get('/api/gallery',asyncRoute(async(_req,res)=>{
@@ -236,12 +197,10 @@ async function connectDatabase(){
     const connection=new MongoClient(process.env.MONGODB_URI,{serverSelectionTimeoutMS:7000,maxPoolSize:10});
     await connection.connect();
     const db=connection.db(process.env.MONGODB_DB||'badbunny_membership');
-    users=db.collection('members');codes=db.collection('login_codes');sessions=db.collection('sessions');
+    users=db.collection('members');
     bucket=new GridFSBucket(db,{bucketName:'media'});files=db.collection('media.files');
     await Promise.all([
-      users.createIndex({email:1},{unique:true}),
-      codes.createIndex({email:1},{unique:true}),codes.createIndex({expiresAt:1},{expireAfterSeconds:0}),
-      sessions.createIndex({tokenHash:1},{unique:true}),sessions.createIndex({expiresAt:1},{expireAfterSeconds:0})
+      users.createIndex({email:1},{unique:true})
     ]);
     dbStatus='connected';
   }catch(e){dbStatus='unavailable';console.error('MongoDB setup:',e.message);}

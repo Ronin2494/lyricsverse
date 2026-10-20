@@ -177,6 +177,7 @@ app.post('/api/paypal/orders',ready,requireCheckoutEnabled,limitCheckout,asyncRo
     }],
     payment_source:{paypal:{experience_context:{
       brand_name:'BadBunny',user_action:'PAY_NOW',shipping_preference:'NO_SHIPPING',
+      landing_page:PAYPAL_MODE==='sandbox'?'LOGIN':'NO_PREFERENCE',
       return_url:SITE_URL+'/checkout.html',cancel_url:SITE_URL+'/checkout.html?cancel=1'
     }}}
   },'create-'+randomUUID());

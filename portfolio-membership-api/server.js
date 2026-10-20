@@ -1,7 +1,6 @@
 import express from 'express';
 import Busboy from 'busboy';
 import { MongoClient, GridFSBucket, ObjectId } from 'mongodb';
-import Stripe from 'stripe';
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 
@@ -9,13 +8,10 @@ const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 const PORT = Number(process.env.PORT || 10000);
-const SITE_URL = process.env.SITE_URL || 'https://badbunny.work';
 const allowedOrigins = new Set((process.env.CORS_ORIGINS || 'https://badbunny.work,https://www.badbunny.work,https://deepak-portfolio-819w.onrender.com').split(',').map(s => s.trim()));
 const SECRET = process.env.SESSION_SECRET || '';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
-const authConfigured = Boolean(process.env.MONGODB_URI && SECRET.length >= 32 && process.env.RESEND_API_KEY && process.env.MAIL_FROM);
-const billingConfigured = Boolean(stripe && process.env.STRIPE_WEBHOOK_SECRET && authConfigured);
+const authConfigured = Boolean(process.env.MONGODB_URI && SECRET.length >= 32 && ADMIN_EMAIL && process.env.RESEND_API_KEY && process.env.MAIL_FROM);
 const MAX_UPLOAD = 100 * 1024 * 1024;
 const DEFAULT_PAYPAL_URL = 'https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E';
 function parsePrice(raw){
@@ -57,8 +53,8 @@ const same = (a, b) => { const x = Buffer.from(a || ''); const y = Buffer.from(b
 const text = (v, max) => typeof v === 'string' ? v.trim().replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0,max) : '';
 const validEmail = s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 250;
 const isAdmin = user => Boolean(ADMIN_EMAIL && user?.email === ADMIN_EMAIL);
-const hasAccess = user => isAdmin(user) || ['active','trialing'].includes(user?.subscriptionStatus);
-const profile = user => ({ email:user.email, admin:isAdmin(user), status:user.subscriptionStatus || 'none', hasAccess:hasAccess(user), hasBillingAccount:Boolean(user.stripeCustomerId) });
+const hasAccess = user => isAdmin(user);
+const profile = user => ({ email:user.email, admin:isAdmin(user), hasAccess:hasAccess(user) });
 const asyncRoute = fn => (req,res,next) => Promise.resolve(fn(req,res,next)).catch(next);
 
 app.use((req,res,next) => {
@@ -72,30 +68,9 @@ app.use((req,res,next) => {
   next();
 });
 
-// The webhook must receive raw, unmodified JSON.
-app.post('/api/billing/webhook',express.raw({type:'application/json',limit:'1mb'}),asyncRoute(async(req,res)=>{
-  if (!billingConfigured || !users) return res.status(503).send('Billing unavailable.');
-  let event;
-  try { event=stripe.webhooks.constructEvent(req.body,req.headers['stripe-signature'],process.env.STRIPE_WEBHOOK_SECRET); }
-  catch { return res.status(400).send('Invalid signature.'); }
-  const record=event.data.object;
-  if (event.type==='checkout.session.completed' && record.mode==='subscription' && ObjectId.isValid(record.client_reference_id || '')) {
-    const userId=new ObjectId(record.client_reference_id);
-    await users.updateOne({_id:userId},{$set:{stripeCustomerId:String(record.customer),stripeSubscriptionId:String(record.subscription)}});
-    if(record.subscription) await syncSubscription(await stripe.subscriptions.retrieve(record.subscription));
-  }
-  if(['customer.subscription.created','customer.subscription.updated','customer.subscription.deleted'].includes(event.type)) await syncSubscription(record);
-  res.json({received:true});
-}));
-async function syncSubscription(sub){
-  if(!sub?.id) return;
-  const patch={stripeCustomerId:String(sub.customer),stripeSubscriptionId:sub.id,subscriptionStatus:sub.status || 'none',subscriptionUpdatedAt:new Date()};
-  let result=await users.updateOne({stripeCustomerId:String(sub.customer)},{$set:patch});
-  if(!result.matchedCount && ObjectId.isValid(sub.metadata?.userId || '')) await users.updateOne({_id:new ObjectId(sub.metadata.userId)},{$set:patch});
-}
 app.use(express.json({limit:'64kb'}));
 app.get('/api/health',(_req,res)=>res.json({ok:true,service:'portfolio-membership',database:dbStatus}));
-app.get('/api/config',(_req,res)=>res.json({currency:'CAD',amount:1000,interval:'month',authEnabled:authConfigured&&dbStatus==='connected',billingEnabled:billingConfigured&&dbStatus==='connected'}));
+app.get('/api/config',(_req,res)=>res.json({currency:'CAD',paymentMode:'paypal-payment-links',authEnabled:authConfigured&&dbStatus==='connected',uploadsEnabled:authConfigured&&dbStatus==='connected',paymentVerificationEnabled:false}));
 function ready(_req,res,next){if(!authConfigured || dbStatus!=='connected') return res.status(503).json({error:'Membership setup is in progress.'});next();}
 async function authorized(req,res,next){
   const header=req.get('authorization') || '';
@@ -108,11 +83,11 @@ async function authorized(req,res,next){
   req.user=user;req.sessionHash=tokenHash;next();
 }
 function adminOnly(req,res,next){if(!isAdmin(req.user))return res.status(403).json({error:'Owner access only.'});next();}
-function subscriberOnly(req,res,next){if(!hasAccess(req.user))return res.status(403).json({error:'An active membership is required.'});next();}
 
 app.post('/api/auth/request',ready,limitEmailRequests,asyncRoute(async(req,res)=>{
   const email=text(req.body?.email,250).toLowerCase();
   if(!validEmail(email))return res.status(400).json({error:'Enter a valid email address.'});
+  if(email!==ADMIN_EMAIL)return res.status(403).json({error:'Use the authorized creator email address.'});
   const existing=await codes.findOne({email});
   if(existing?.nextAllowedAt>new Date())return res.status(429).json({error:'Wait a minute before requesting another code.'});
   const otp=String(randomInt(0,1000000)).padStart(6,'0');
@@ -144,7 +119,8 @@ app.post('/api/auth/verify',ready,asyncRoute(async(req,res)=>{
   }
   const consumed=await codes.deleteOne({_id:record._id,attempts:{$lt:5},codeHash:record.codeHash});
   if(!consumed.deletedCount)return res.sendStatus(401);
-  await users.updateOne({email},{$setOnInsert:{createdAt:new Date(),subscriptionStatus:'none'},$set:{verifiedAt:new Date()}},{upsert:true});
+  if(email!==ADMIN_EMAIL)return res.status(403).json({error:'Creator access only.'});
+  await users.updateOne({email},{$setOnInsert:{createdAt:new Date()},$set:{verifiedAt:new Date()}},{upsert:true});
   const user=await users.findOne({email});
   const token=randomBytes(32).toString('hex');
   await sessions.insertOne({userId:user._id,tokenHash:digest(token),expiresAt:new Date(Date.now()+30*86400000),createdAt:new Date()});
@@ -153,40 +129,18 @@ app.post('/api/auth/verify',ready,asyncRoute(async(req,res)=>{
 app.get('/api/me',ready,asyncRoute(authorized),(req,res)=>res.json({user:profile(req.user)}));
 app.post('/api/auth/logout',ready,asyncRoute(authorized),asyncRoute(async(req,res)=>{await sessions.deleteOne({tokenHash:req.sessionHash});res.json({ok:true});}));
 
-app.post('/api/billing/checkout',ready,asyncRoute(authorized),asyncRoute(async(req,res)=>{
-  if(!billingConfigured)return res.status(503).json({error:'Payments are not configured yet.'});
-  if(hasAccess(req.user))return res.status(409).json({error:'Your membership is active.'});
-  const id=req.user._id.toHexString();
-  const session=await stripe.checkout.sessions.create({
-    mode:'subscription',client_reference_id:id,
-    success_url:SITE_URL+'/?membership=success#membership',
-    cancel_url:SITE_URL+'/#membership',
-    customer:req.user.stripeCustomerId||undefined,
-    customer_email:req.user.stripeCustomerId?undefined:req.user.email,
-    line_items:[{quantity:1,price_data:{currency:'cad',unit_amount:1000,recurring:{interval:'month'},product_data:{name:'BadBunny Creative Access',description:'Exclusive creator photos and videos. Cancel anytime.'}}}],
-    subscription_data:{metadata:{userId:id}},metadata:{userId:id}
-  },{idempotencyKey:'membership-'+id+'-'+Math.floor(Date.now()/60000)});
-  res.json({url:session.url});
-}));
-app.post('/api/billing/portal',ready,asyncRoute(authorized),asyncRoute(async(req,res)=>{
-  if(!billingConfigured)return res.status(503).json({error:'Payments are not configured yet.'});
-  if(!req.user.stripeCustomerId)return res.sendStatus(404);
-  const portal=await stripe.billingPortal.sessions.create({customer:req.user.stripeCustomerId,return_url:SITE_URL+'/#membership'});
-  res.json({url:portal.url});
-}));
-
 // Public catalog exposes only safe labels, never media bytes or download URLs.
 app.get('/api/gallery',asyncRoute(async(_req,res)=>{
   if(dbStatus!=='connected')return res.json({items:[],pending:true});
   const docs=await files.find({'metadata.published':true}).project({contentType:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
   res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',paypalUrl:paypalLink(f.metadata?.paypalUrl)||DEFAULT_PAYPAL_URL,type:f.contentType||'application/octet-stream'}))});
 }));
-app.get('/api/media',ready,asyncRoute(authorized),subscriberOnly,asyncRoute(async(_req,res)=>{
+app.get('/api/media',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(_req,res)=>{
   const docs=await files.find({'metadata.published':true}).project({filename:1,contentType:1,length:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
   res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',paypalUrl:paypalLink(f.metadata?.paypalUrl)||DEFAULT_PAYPAL_URL,type:f.contentType||'application/octet-stream',uploadedAt:f.uploadDate}))});
 }));
 const mediaSign=(id,user,exp)=>sign(id+':'+user+':'+exp);
-app.post('/api/media/:id/ticket',ready,asyncRoute(authorized),subscriberOnly,asyncRoute(async(req,res)=>{
+app.post('/api/media/:id/ticket',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
   if(!ObjectId.isValid(req.params.id))return res.sendStatus(404);
   const file=await files.findOne({_id:new ObjectId(req.params.id),'metadata.published':true});
   if(!file)return res.sendStatus(404);
@@ -285,7 +239,7 @@ async function connectDatabase(){
     users=db.collection('members');codes=db.collection('login_codes');sessions=db.collection('sessions');
     bucket=new GridFSBucket(db,{bucketName:'media'});files=db.collection('media.files');
     await Promise.all([
-      users.createIndex({email:1},{unique:true}),users.createIndex({stripeCustomerId:1},{sparse:true}),
+      users.createIndex({email:1},{unique:true}),
       codes.createIndex({email:1},{unique:true}),codes.createIndex({expiresAt:1},{expireAfterSeconds:0}),
       sessions.createIndex({tokenHash:1},{unique:true}),sessions.createIndex({expiresAt:1},{expireAfterSeconds:0})
     ]);

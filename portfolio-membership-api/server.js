@@ -344,3 +344,5 @@ async function connectDatabase(){
 }
 app.listen(PORT,'0.0.0.0',()=>console.log('Membership API listening:',PORT));
 await connectDatabase();
+console.log('Startup health:', {database:dbStatus, paypalMode:PAYPAL_MODE, configured:PAYPAL_READY});
+if(PAYPAL_READY)paypalAccessToken().then(()=>console.log('PayPal API authenticated')).catch(error=>console.warn('PayPal API credential check failed:',error.message));

@@ -158,7 +158,7 @@
       firebaseMethods=firebaseAuthSDK;
       firebaseAuth=firebaseAuthSDK.getAuth(firebaseApp.initializeApp(FIREBASE_CONFIG));
       await firebaseAuthSDK.setPersistence(firebaseAuth,firebaseAuthSDK.browserLocalPersistence);
-      await firebaseAuthSDK.authStateReady(firebaseAuth);
+      await firebaseAuth.authStateReady();
       if(!config.authEnabled){
         notice(ui['status-banner'],'Firebase is connected. Creator API is waiting for MongoDB, SESSION_SECRET, ADMIN_EMAIL or FIREBASE_PROJECT_ID in Render.','error');
         return;

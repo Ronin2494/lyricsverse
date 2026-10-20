@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="studio.css?v=1">
-<script src="studio.js?v=1" defer></script>
+<script src="studio.js?v=firebase-link-1" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to studio</a>
@@ -28,18 +28,11 @@
   <div id="status-banner" class="notice" role="status" aria-live="polite">Connecting to your creator service…</div>
   <section class="panel auth-panel" id="auth-panel" aria-labelledby="auth-title">
     <div class="panel-heading"><div><span class="section-index">01 / ACCESS</span><h2 id="auth-title">Sign in as the creator</h2></div><span class="ornament" aria-hidden="true">✳</span></div>
-    <p class="muted">Only the creator email configured on the server can publish. You'll receive a six-digit verification code.</p>
+    <p class="muted">Only your verified creator email can publish. We'll email you a secure, one-time sign-in link through Firebase Authentication. No password or six-digit code required.</p>
     <form id="email-form" class="form-fields">
       <label for="email">Creator email</label>
       <input id="email" type="email" autocomplete="email" placeholder="you@domain.com" maxlength="250" required>
-      <button id="request-code" class="button primary" type="submit">SEND SIGN-IN CODE <span aria-hidden="true">→</span></button>
-    </form>
-    <form id="code-form" class="form-fields" hidden>
-      <p id="code-destination" class="muted"></p>
-      <label for="code">Six-digit code</label>
-      <input id="code" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" minlength="6" maxlength="6" placeholder="000000" required>
-      <button id="verify-code" class="button primary" type="submit">VERIFY AND OPEN STUDIO <span aria-hidden="true">→</span></button>
-      <button id="change-email" class="button quiet" type="button">USE DIFFERENT EMAIL</button>
+      <button id="request-code" class="button primary" type="submit">SEND VERIFICATION LINK <span aria-hidden="true">→</span></button>
     </form>
     <p id="auth-notice" class="feedback" role="status" aria-live="polite"></p>
   </section>

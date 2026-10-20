@@ -9,12 +9,98 @@ const coarse=window.matchMedia('(pointer: coarse)').matches;
 let progress=0, target=0, paused=false, scene=null;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const ease=(a,b,t)=>a+(b-a)*t;
-function updateScroll(){const d=Math.max(1,journey.offsetHeight-window.innerHeight);target=clamp(-journey.getBoundingClientRect().top/d,0,1)}
-window.addEventListener('scroll',updateScroll,{passive:true});window.addEventListener('resize',updateScroll);updateScroll();
+
+// Desktop scroll scrubbing: keep the opening fixed until its last frame has
+// been rendered. Mobile/touch and reduced-motion users keep native scrolling.
+const virtualPortal=!coarse&&!reduceMotion.matches&&window.matchMedia('(min-width: 800px) and (hover: hover) and (pointer: fine)').matches;
+const htmlRoot=document.documentElement;
+let introReleased=false, finalFrameStartedAt=0;
+if(virtualPortal){
+  htmlRoot.classList.add('portal-virtual-scroll');
+  const directLink=location.hash&&location.hash!=='#portal-journey'&&location.hash!=='#universe';
+  if(directLink||window.scrollY>2){
+    introReleased=true;target=progress=1;
+  }else{
+    htmlRoot.classList.add('portal-scroll-locked');
+  }
+}
+function releaseIntro(skip=false){
+  if(!virtualPortal||introReleased)return;
+  introReleased=true;
+  target=1;
+  if(skip)progress=1;
+  htmlRoot.classList.remove('portal-scroll-locked');
+  if(!skip){
+    // The completed handoff has been on screen before any work can appear.
+    requestAnimationFrame(()=>{
+      document.getElementById('work')?.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  }
+}
+function updateScroll(){
+  if(virtualPortal)return;
+  const distance=Math.max(1,journey.offsetHeight-window.innerHeight);
+  target=clamp(-journey.getBoundingClientRect().top/distance,0,1);
+}
+function advanceIntro(delta){
+  // Cap every input event: neither a trackpad fling nor one wheel notch can
+  // leap beyond the ending. Reverse scrolling scrubs backwards.
+  const travel=Math.max(1800,window.innerHeight*2.25);
+  target=clamp(target+clamp(delta,-170,170)/travel,0,1);
+}
+if(virtualPortal){
+  document.addEventListener('wheel',event=>{
+    if(introReleased||event.ctrlKey||event.metaKey)return;
+    event.preventDefault();
+    const pixels=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?window.innerHeight:1);
+    advanceIntro(pixels);
+  },{passive:false,capture:true});
+  document.addEventListener('keydown',event=>{
+    if(introReleased||event.altKey||event.ctrlKey||event.metaKey||event.defaultPrevented)return;
+    if(event.target?.closest?.('a,button,input,textarea,select,[contenteditable="true"]'))return;
+    const moves={'ArrowDown':96,'PageDown':460,' ':460,'ArrowUp':-96,'PageUp':-460};
+    if(Object.prototype.hasOwnProperty.call(moves,event.key)){
+      event.preventDefault();advanceIntro(moves[event.key]);
+    }else if(event.key==='End'||event.key==='Home'){
+      event.preventDefault();target=event.key==='End'?1:0;
+    }
+  },{capture:true});
+  // An explicit navigation click is a deliberate skip, unlike scrolling.
+  document.addEventListener('click',event=>{
+    const link=event.target?.closest?.('a[href^="#"]');
+    if(link&&link.hash&&link.hash!=='#portal-journey'&&link.hash!=='#universe')releaseIntro(true);
+  },{capture:true});
+  window.addEventListener('hashchange',()=>{
+    if(location.hash&&location.hash!=='#portal-journey'&&location.hash!=='#universe')releaseIntro(true);
+  });
+  window.addEventListener('pageshow',()=>{
+    if(window.scrollY>2)releaseIntro(true);
+  });
+}
+window.addEventListener('scroll',updateScroll,{passive:true});
+window.addEventListener('resize',updateScroll,{passive:true});
+updateScroll();
 function initVisibility(){let els=[...document.querySelectorAll('.section-reveal')];if(!('IntersectionObserver'in window)){els.forEach(e=>e.classList.add('is-visible'));return}let obs=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){e.target.classList.add('is-visible');obs.unobserve(e.target)}},{threshold:.08,rootMargin:'0px 0px -30px 0px'});els.forEach(e=>obs.observe(e))}
 initVisibility();document.getElementById('year').textContent=new Date().getFullYear();
 motionButton.addEventListener('click',()=>{paused=!paused;motionButton.innerHTML=paused?'RESUME MOTION <span aria-hidden="true">▶</span>':'PAUSE MOTION <span aria-hidden="true">Ⅱ</span>';motionButton.setAttribute('aria-label',paused?'Resume portal animation':'Pause portal animation');motionButton.setAttribute('aria-pressed',String(paused))});
-function animateUI(){const t=reduceMotion.matches?Math.max(target,.01):(progress=ease(progress,target,.08));const exit=clamp((t-.55)/.32,0,1);portalCopy.style.opacity=String(1-clamp((t-.09)/.49,0,1));portalCopy.style.transform=`translate(-50%,-50%) scale(${1+t*.8})`;stage.querySelector('.portal-frame').style.opacity=String(1-t*.95);handoff.style.opacity=String(clamp((t-.76)/.16,0,1));handoff.style.transform=`scale(${1.35-.35*exit})`;if(scene)scene.render(t,paused);requestAnimationFrame(animateUI)}
+function animateUI(timestamp){
+  const t=reduceMotion.matches?Math.max(target,.01):(progress=ease(progress,target,.08));
+  const exit=clamp((t-.55)/.32,0,1);
+  portalCopy.style.opacity=String(1-clamp((t-.09)/.49,0,1));
+  portalCopy.style.transform=`translate(-50%,-50%) scale(${1+t*.8})`;
+  stage.querySelector('.portal-frame').style.opacity=String(1-t*.95);
+  handoff.style.opacity=String(clamp((t-.76)/.16,0,1));
+  handoff.style.transform=`scale(${1.35-.35*exit})`;
+  if(scene)scene.render(t,paused);
+  // Only unlock after the easing catches up and the *last frame* was held.
+  if(virtualPortal&&!introReleased&&target>=1&&t>=.997){
+    if(!finalFrameStartedAt)finalFrameStartedAt=timestamp;
+    if(timestamp-finalFrameStartedAt>=380)releaseIntro();
+  }else if(!introReleased){
+    finalFrameStartedAt=0;
+  }
+  requestAnimationFrame(animateUI);
+}
 function canvasFallback(){const c=canvas.getContext('2d');if(!c)return {render:()=>{}};let stars=[];let W=0,H=0;function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);W=canvas.clientWidth;H=canvas.clientHeight;canvas.width=W*dpr;canvas.height=H*dpr;c.setTransform(dpr,0,0,dpr,0,0);stars=Array.from({length:coarse?1700:3200},(_,i)=>{const rad=Math.sqrt((i+.5)/ (coarse?1700:3200))*Math.min(W,H)*.65;const ang=i*2.39996;return {a:ang,r:rad,sz:(Math.random()*.85+.3),color:i%7===0?'#e2f89f':i%5===0?'#91a9fe':'#ded4ff'}})}resize();window.addEventListener('resize',resize);let frame=0;return {render(p,halt){c.clearRect(0,0,W,H);if(!halt&&!reduceMotion.matches)frame+=.002;let f=1+p*7;for(let i=0;i<stars.length;i++){const s=stars[i],a=s.a+frame+s.r*.004+p*5,x=W/2+Math.cos(a)*s.r*f,y=H/2+Math.sin(a)*s.r*f*.56;if(x<0||x>W||y<0||y>H)continue;c.globalAlpha=clamp(1-s.r/(Math.min(W,H)*.8),.12,.85)*(1-p*.55);c.fillStyle=s.color;c.beginPath();c.arc(x,y,s.sz*(.8+p),0,6.29);c.fill()}c.globalAlpha=1;const grd=c.createRadialGradient(W/2,H/2,1,W/2,H/2,Math.min(W,H)*(.22+p*.5));grd.addColorStop(0,'#edf9ef66');grd.addColorStop(.1,'#bcb0ff44');grd.addColorStop(.5,'#7355ba17');grd.addColorStop(1,'#00000000');c.fillStyle=grd;c.fillRect(0,0,W,H)}}}
 async function setupWebGL(){try{const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js');if(!canvas.isConnected)return null;const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:!coarse,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio,coarse?1.5:2));renderer.setSize(canvas.clientWidth,canvas.clientHeight);renderer.setClearColor(0x000000,0);const universe=new THREE.Scene();const cam=new THREE.PerspectiveCamera(65,canvas.clientWidth/canvas.clientHeight,.1,600);cam.position.set(0,7,62);cam.lookAt(0,0,0);
 const count=coarse?7000:15000;const pos=new Float32Array(count*3),col=new Float32Array(count*3),sizes=new Float32Array(count);const hues=[new THREE.Color('#cbc6ff'),new THREE.Color('#8c83ef'),new THREE.Color('#f6e7c5'),new THREE.Color('#91ccff'),new THREE.Color('#e1f8a8')];for(let i=0;i<count;i++){const arm=i%5;const norm=Math.pow(Math.random(),.68);const radius=2+norm*57;const ang=arm*Math.PI*2/5+radius*.23+(Math.random()-.5)*(.35+radius*.03);const spread=(Math.random()-.5)*(.7+radius*.08);pos[i*3]=Math.cos(ang)*radius+Math.cos(ang+Math.PI/2)*spread;pos[i*3+1]=(Math.random()-.5)*(.4+radius*.105);pos[i*3+2]=Math.sin(ang)*radius+Math.sin(ang+Math.PI/2)*spread;const color=hues[(arm+(i%13===0?2:0))%hues.length].clone().lerp(new THREE.Color('#ffffff'),Math.random()*.38);col[i*3]=color.r;col[i*3+1]=color.g;col[i*3+2]=color.b;sizes[i]=Math.random()*.7+.35}const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('color',new THREE.BufferAttribute(col,3));const mat=new THREE.PointsMaterial({size:coarse?.19:.22,sizeAttenuation:true,vertexColors:true,transparent:true,opacity:.88,depthWrite:false,blending:THREE.AdditiveBlending});const gal=new THREE.Points(geo,mat);gal.rotation.x=-.33;universe.add(gal);

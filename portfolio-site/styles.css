@@ -81,3 +81,14 @@
 @keyframes handoff-light-sweep{from{opacity:.1;translate:-6% 0}to{opacity:.75;translate:6% 0}}
 @media(max-width:700px){.handoff-logo-scene{width:100vw}.handoff-orbit{top:43%;width:70vw;height:70vw}.handoff-orbit-b{width:88vw;height:43vw}.handoff-brand-name{top:calc(50% + 76px)}.handoff-brand-name small{letter-spacing:.14em}.handoff-brandmark{width:135px}}
 @media(prefers-reduced-motion:reduce){.handoff-aura,.handoff-brandmark,.handoff-mark-frame,.handoff-mark-ring,.handoff-mark-path,.handoff-mark-spark,.handoff-orbit,.handoff-brand-name,.handoff-light{animation:none!important}.handoff-mark-ring,.handoff-mark-path{stroke-dashoffset:0}.handoff-brand-name,.handoff-mark-spark{opacity:1}}
+
+/* Hold logo motion until the handoff becomes visible, so the reveal never plays off-screen. */
+.portal-handoff:not(.handoff-active) .handoff-aura,
+.portal-handoff:not(.handoff-active) .handoff-brandmark,
+.portal-handoff:not(.handoff-active) .handoff-mark-frame,
+.portal-handoff:not(.handoff-active) .handoff-mark-ring,
+.portal-handoff:not(.handoff-active) .handoff-mark-path,
+.portal-handoff:not(.handoff-active) .handoff-mark-spark,
+.portal-handoff:not(.handoff-active) .handoff-orbit,
+.portal-handoff:not(.handoff-active) .handoff-brand-name,
+.portal-handoff:not(.handoff-active) .handoff-light{animation-play-state:paused}

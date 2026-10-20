@@ -17,6 +17,21 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
 const authConfigured = Boolean(process.env.MONGODB_URI && SECRET.length >= 32 && process.env.RESEND_API_KEY && process.env.MAIL_FROM);
 const billingConfigured = Boolean(stripe && process.env.STRIPE_WEBHOOK_SECRET && authConfigured);
 const MAX_UPLOAD = 100 * 1024 * 1024;
+const DEFAULT_PAYPAL_URL = 'https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E';
+function parsePrice(raw){
+  const normalized=String(raw ?? '');
+  if(!/^(?:[1-9][0-9]{0,3}|0)[.][0-9]{2}$/.test(normalized)) return null;
+  const cents=Math.round(Number(normalized)*100);
+  return Number.isSafeInteger(cents)&&cents>=100&&cents<=100000?cents:null;
+}
+function paypalLink(raw){
+  const value=String(raw||DEFAULT_PAYPAL_URL).trim();
+  try{
+    const url=new URL(value);
+    if(url.protocol!=='https:'||url.hostname!=='www.paypal.com'||!/^\/ncp\/payment\/[A-Za-z0-9]+\/?$/.test(url.pathname)||url.search||url.hash)return null;
+    return url.href;
+  }catch{return null;}
+}
 const verificationRates = new Map();
 function limitEmailRequests(req, res, next) {
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
@@ -50,7 +65,7 @@ app.use((req,res,next) => {
   res.set({'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cache-Control':'no-store','X-Frame-Options':'DENY'});
   const origin = req.headers.origin;
   if (origin && allowedOrigins.has(origin)) {
-    res.set({'Access-Control-Allow-Origin':origin,'Vary':'Origin','Access-Control-Allow-Methods':'GET,POST,DELETE,OPTIONS','Access-Control-Allow-Headers':'Authorization,Content-Type'});
+    res.set({'Access-Control-Allow-Origin':origin,'Vary':'Origin','Access-Control-Allow-Methods':'GET,POST,DELETE,PATCH,OPTIONS','Access-Control-Allow-Headers':'Authorization,Content-Type'});
   }
   if (req.method === 'OPTIONS') return res.sendStatus(origin && !allowedOrigins.has(origin) ? 403 : 204);
   if (origin && !allowedOrigins.has(origin)) return res.status(403).json({error:'Origin not permitted.'});
@@ -164,11 +179,11 @@ app.post('/api/billing/portal',ready,asyncRoute(authorized),asyncRoute(async(req
 app.get('/api/gallery',asyncRoute(async(_req,res)=>{
   if(dbStatus!=='connected')return res.json({items:[],pending:true});
   const docs=await files.find({'metadata.published':true}).project({contentType:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
-  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',type:f.contentType||'application/octet-stream'}))});
+  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',paypalUrl:paypalLink(f.metadata?.paypalUrl)||DEFAULT_PAYPAL_URL,type:f.contentType||'application/octet-stream'}))});
 }));
 app.get('/api/media',ready,asyncRoute(authorized),subscriberOnly,asyncRoute(async(_req,res)=>{
   const docs=await files.find({'metadata.published':true}).project({filename:1,contentType:1,length:1,metadata:1,uploadDate:1}).sort({uploadDate:-1}).limit(100).toArray();
-  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',type:f.contentType||'application/octet-stream',uploadedAt:f.uploadDate}))});
+  res.json({items:docs.map(f=>({id:f._id.toHexString(),title:f.metadata?.title||'Untitled',description:f.metadata?.description||'',priceCents:Number.isInteger(f.metadata?.priceCents)?f.metadata.priceCents:1000,currency:'CAD',paypalUrl:paypalLink(f.metadata?.paypalUrl)||DEFAULT_PAYPAL_URL,type:f.contentType||'application/octet-stream',uploadedAt:f.uploadDate}))});
 }));
 const mediaSign=(id,user,exp)=>sign(id+':'+user+':'+exp);
 app.post('/api/media/:id/ticket',ready,asyncRoute(authorized),subscriberOnly,asyncRoute(async(req,res)=>{
@@ -205,7 +220,7 @@ app.get('/api/media/:id/file',ready,asyncRoute(async(req,res)=>{
 
 app.post('/api/admin/upload',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
   if(!String(req.headers['content-type']||'').startsWith('multipart/form-data;'))return res.status(415).json({error:'Choose a file.'});
-  const form=Busboy({headers:req.headers,limits:{fileSize:MAX_UPLOAD,files:1,fields:4,fieldSize:1000}});
+  const form=Busboy({headers:req.headers,limits:{fileSize:MAX_UPLOAD,files:1,fields:5,fieldSize:1000}});
   const fields={};
   let uploadId=null,uploadTask=null,error=null,count=0;
   form.on('field',(name,value)=>{fields[name]=value;});
@@ -229,12 +244,27 @@ app.post('/api/admin/upload',ready,asyncRoute(authorized),adminOnly,asyncRoute(a
   }
   const title=text(fields.title,100);
   const priceRaw=String(fields.price||'');
-  const priceValid=/^(?:[1-9]\\d{0,3}|0)\\.\\d{2}$/.test(priceRaw);
-  const priceCents=priceValid?Math.round(Number(priceRaw)*100):NaN;
+  const priceCents=parsePrice(priceRaw);
+  const checkoutUrl=paypalLink(fields.paypalUrl);
   if(!Number.isSafeInteger(priceCents)||priceCents<100||priceCents>100000){await bucket.delete(uploadId);return res.status(400).json({error:'Enter a price between CA$1.00 and CA$1000.00.'});}
   if(!title){await bucket.delete(uploadId);return res.status(400).json({error:'A title is required.'});}
-  await files.updateOne({_id:uploadId},{$set:{metadata:{title,description:text(fields.description,500),priceCents,published:true,uploadedBy:req.user._id.toHexString()}}});
+  if(!checkoutUrl){await bucket.delete(uploadId);return res.status(400).json({error:'Enter a valid https://www.paypal.com/ncp/payment/... payment link.'});}
+  await files.updateOne({_id:uploadId},{$set:{metadata:{title,description:text(fields.description,500),priceCents,paypalUrl:checkoutUrl,published:true,uploadedBy:req.user._id.toHexString()}}});
   res.status(201).json({ok:true,id:uploadId.toHexString()});
+}));
+app.patch('/api/admin/media/:id',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
+  if(!ObjectId.isValid(req.params.id))return res.sendStatus(404);
+  const title=text(req.body?.title,100),description=text(req.body?.description,500);
+  const priceCents=parsePrice(req.body?.price);
+  const checkoutUrl=paypalLink(req.body?.paypalUrl);
+  if(!title)return res.status(400).json({error:'A title is required.'});
+  if(priceCents===null)return res.status(400).json({error:'Enter a price from CA$1.00 to CA$1000.00, with two decimals.'});
+  if(!checkoutUrl)return res.status(400).json({error:'Enter a valid PayPal payment link.'});
+  const changed=await files.updateOne({_id:new ObjectId(req.params.id),'metadata.published':true},{$set:{
+    'metadata.title':title,'metadata.description':description,'metadata.priceCents':priceCents,'metadata.paypalUrl':checkoutUrl
+  }});
+  if(!changed.matchedCount)return res.sendStatus(404);
+  res.json({ok:true});
 }));
 app.delete('/api/admin/media/:id',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
   if(!ObjectId.isValid(req.params.id))return res.sendStatus(404);

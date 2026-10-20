@@ -186,7 +186,7 @@
   ui['media-file'].addEventListener('change',renderFilePreview);
   function validPrice(value){
     const amount=Number(value);
-    return Number.isFinite(amount)&&amount>=1&&amount<=1000&&Math.round(amount*100)===amount*100?amount.toFixed(2):null;
+    return /^[0-9]{1,4}(?:[.][0-9]{1,2})?$/.test(String(value))&&Number.isFinite(amount)&&amount>=1&&amount<=1000?amount.toFixed(2):null;
   }
   function checkLinkForPrice(price,link){
     const paypal=/^https:\/\/www[.]paypal[.]com\/ncp\/payment\/[A-Za-z0-9]+\/?$/;

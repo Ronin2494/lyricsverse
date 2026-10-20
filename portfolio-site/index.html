@@ -111,30 +111,37 @@
         <div>
           <p class="kicker">05 / CREATIVE ACCESS</p>
           <h2 id="membership-title">Go behind<br/><em>the frame.</em></h2>
-          <p>An intimate creative archive — private photos, original videos, and stories I don't share everywhere. Made for people who want to see more.</p>
+          <p>A private gallery for original photos and videos. The collection grows as I publish new drops — preview the collection below and use the PayPal link on any locked item.</p>
         </div>
-        <div class="member-price" aria-label="Creative Access costs ten Canadian dollars per month">
-          <small>THE PRIVATE ARCHIVE</small>
-          <strong>CA$10</strong><span> / month</span>
-          <small>RENEWS MONTHLY · CANCEL ANYTIME</small>
+        <div class="member-price">
+          <small>PRIVATE CREATIVE ARCHIVE</small>
+          <strong>PHOTOS</strong><span> + VIDEOS</span>
+          <small>LOCKED UNTIL ACCESS IS VERIFIED</small>
         </div>
+      </div>
+      <div id="member-gallery" class="membership-gallery">
+        <div class="member-gallery-heading">
+          <div><p class="kicker">THE GALLERY</p><h3>Locked moments. Your choice to unlock.</h3></div>
+          <span class="member-status">PRIVATE PHOTO & VIDEO DROPS</span>
+        </div>
+        <p>Photos and videos remain hidden until access is verified. Use the PayPal button beneath a gallery item to make a payment. PayPal payments are one-time and do not automatically unlock content.</p>
+        <p id="member-empty" role="status" aria-live="polite">Loading gallery…</p>
+        <div id="member-gallery-grid" class="member-gallery-grid"></div>
       </div>
       <div class="membership-layout">
         <div class="member-benefits">
-          <h3>What's on the inside?</h3>
+          <h3>How the private gallery works</h3>
           <ul>
-            <li><span aria-hidden="true">✦</span> Exclusive photos and personal creative drops</li>
-            <li><span aria-hidden="true">◈</span> Member-only videos and behind-the-scenes moments</li>
-            <li><span aria-hidden="true">✧</span> One private gallery to watch and explore without leaving the portfolio</li>
+            <li><span aria-hidden="true">✦</span> I upload new photos and videos using my creator account.</li>
+            <li><span aria-hidden="true">◈</span> Each published item appears here with its content securely locked.</li>
+            <li><span aria-hidden="true">✧</span> Each locked gallery card has a PayPal payment button directly below it.</li>
           </ul>
-          <a class="member-cta" href="https://www.paypal.com/ncp/payment/3JZWWYUL6RF4E" target="_blank" rel="noopener noreferrer">PAY WITH PAYPAL ↗</a>
-          <p class="member-fine" style="margin-top:16px">This PayPal link processes a one-time payment, not an automatically renewing subscription. Paying through it does not automatically unlock the private gallery. For recurring access, use the member account checkout once activated.</p>
-          <button id="member-join-link" class="member-secondary" type="button" style="margin-top:15px">MONTHLY MEMBERSHIP SIGN-IN ↗</button>
-          <p class="member-fine" style="margin-top:12px">Monthly membership is CA$10 and renews only through an enabled recurring billing checkout. The one-time PayPal link is a separate payment option.</p>
+          <p class="member-fine">PayPal link payments are one-time, not automatically recurring. Access must be verified separately; paying does not instantly grant a media download or subscription.</p>
+          <button id="member-join-link" class="member-secondary" type="button" style="margin-top:18px">SIGN IN TO YOUR ACCOUNT ↗</button>
         </div>
         <div class="member-entry" id="member-entry">
-          <h3>Your member access</h3>
-          <p class="member-help">Sign in securely with a one-time code sent to your email. No password to remember.</p>
+          <h3>Sign in / Creator Studio</h3>
+          <p class="member-help">The creator can sign in here to upload new photos and videos. Verified members can view private content when their account has access.</p>
           <p id="member-config-note" class="member-help" role="status" aria-live="polite">Connecting to the membership service…</p>
           <form id="member-email-form" class="member-hidden">
             <label for="member-email-input">Email address</label>
@@ -150,19 +157,14 @@
           <div id="member-logged-in" class="member-hidden">
             <div class="member-account-bar"><strong id="member-email-display"></strong><span id="member-status" class="member-status">Checking membership…</span></div>
             <div class="member-account-actions">
-              <button id="member-checkout" class="member-cta" type="button">START CA$10 / MONTH SUBSCRIPTION</button>
-              <button id="member-portal" class="member-secondary" type="button">MANAGE BILLING</button>
+              <button id="member-checkout" class="member-hidden" type="button">Subscription checkout unavailable</button>
+              <button id="member-portal" class="member-hidden" type="button">Manage billing</button>
               <button id="member-refresh" class="member-action" type="button">REFRESH ACCESS</button>
               <button id="member-logout" class="member-action" type="button">SIGN OUT</button>
             </div>
           </div>
           <p id="member-notice" class="member-message" role="status" aria-live="polite"></p>
         </div>
-      </div>
-      <div id="member-gallery" class="membership-gallery member-hidden">
-        <h3>Inside the private archive</h3>
-        <p id="member-empty">Checking exclusive content…</p>
-        <div id="member-gallery-grid" class="member-gallery-grid"></div>
       </div>
       <div id="member-owner" class="member-owner member-hidden">
         <h3>Creator studio / private uploads</h3>

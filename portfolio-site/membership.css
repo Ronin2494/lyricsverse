@@ -1,97 +1,38 @@
-/* BadBunny Creative Access — quiet premium styling shared with the portfolio. */
+/* Portfolio: public private-media gallery. No sign-in or creator UI styles. */
 .membership-section{position:relative;overflow:hidden;margin-top:clamp(28px,5vw,70px);padding:clamp(26px,5vw,70px);background:radial-gradient(ellipse at 80% 15%,rgba(177,133,255,.2),transparent 54%),linear-gradient(135deg,#17152a 0%,#0b1124 76%);border:1px solid rgba(230,217,255,.14);border-radius:30px;box-shadow:0 25px 80px rgba(0,0,0,.26)}
 .membership-section::before{content:"";position:absolute;inset:0;background-image:radial-gradient(#e3d0ff23 .9px,transparent 1px);background-size:18px 18px;opacity:.4;pointer-events:none}
-.membership-intro,.membership-layout,.membership-gallery,.member-owner{position:relative;z-index:1}
+.membership-intro,.membership-gallery{position:relative;z-index:1}
 .membership-intro{display:flex;justify-content:space-between;align-items:center;gap:25px;flex-wrap:wrap}
 .membership-intro h2{font-family:'Space Grotesk',sans-serif;letter-spacing:-.06em;font-weight:600;font-size:clamp(2.35rem,5.8vw,5rem);line-height:1.04;margin:12px 0 14px}
 .membership-intro h2 em{font-style:normal;color:#bdb0ff}
 .membership-intro p:not(.kicker){max-width:490px;color:#bab8cf;line-height:1.7;margin:0}
 .member-price{flex:none;min-width:185px;border:1px solid #e1d6ff45;padding:20px 24px;background:#080c1f9c;border-radius:18px;box-shadow:0 12px 40px #0505124d}
-.member-price strong{font-size:clamp(2rem,4vw,3.2rem);font-weight:700;letter-spacing:-.07em;font-family:'Space Grotesk',sans-serif}
+.member-price strong{font-size:clamp(1.8rem,3vw,2.4rem);font-weight:700;letter-spacing:-.07em;font-family:'Space Grotesk',sans-serif}
 .member-price small{display:block;letter-spacing:.1em;font-size:10px;color:#aaa8c3}
 .member-price span{color:#c8c2db;font-size:.85rem}
-.membership-layout{margin-top:36px;display:grid;grid-template-columns:1.12fr .88fr;gap:clamp(18px,3vw,34px)}
-.member-benefits,.member-entry{background:#070b19b3;border:1px solid #d7ceff24;border-radius:20px;padding:clamp(22px,3vw,34px)}
-.member-benefits h3,.member-entry h3,.membership-gallery h3,.member-owner h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.035em;font-size:clamp(1.2rem,2vw,1.65rem);font-weight:600;margin:0 0 18px;color:#f8f7ff}
-.member-benefits ul{margin:0 0 26px;padding:0;list-style:none;display:grid;gap:19px}
-.member-benefits li{display:flex;align-items:start;gap:14px;color:#d3d2e1;font-size:.93rem;line-height:1.5}
-.member-benefits li span{font-size:1.2rem;color:#d9c7ff}
-.member-benefits .member-fine{color:#a2a2bd;font-size:12px;line-height:1.65;margin:0}
-.member-cta,.member-secondary,.member-action{display:inline-flex;justify-content:center;align-items:center;gap:10px;cursor:pointer;border-radius:100px;min-height:45px;padding:12px 20px;font:700 .79rem/1.2 'Space Grotesk',sans-serif;letter-spacing:.03em;transition:background .2s ease,transform .2s ease}
-.member-cta{border:1px solid #d4ceff;background:#c2b5ff;color:#151224;box-shadow:0 0 30px #a797ee33}
-.member-cta:hover:not(:disabled){transform:translateY(-2px);background:#e1d9ff}
-.member-secondary{border:1px solid #b4a5dd68;background:#1c1932;color:#faf8ff}
-.member-secondary:hover:not(:disabled){background:#292342}
-.member-action{border:1px solid #7e738fa1;background:transparent;color:#d4caee}
-.member-cta:disabled,.member-secondary:disabled,.member-action:disabled{opacity:.5;cursor:not-allowed}
-.member-entry form{display:grid;gap:12px}
-.member-entry label,.member-owner label{font:600 11px/1.5 'Space Grotesk',sans-serif;color:#c9c3df;letter-spacing:.08em;text-transform:uppercase}
-.member-entry input,.member-owner input:not([type=file]),.member-owner textarea{min-width:0;width:100%;background:#0a1023;border:1px solid #ccc4eb46;border-radius:11px;color:#fff;min-height:45px;padding:12px 14px;font:inherit}
-.member-entry input:focus,.member-owner input:focus,.member-owner textarea:focus{outline:2px solid #a999e8;outline-offset:2px}
-.member-entry .member-help{font-size:12px;line-height:1.6;color:#a9a6c0;margin:5px 0}
-.member-message{font:500 12px/1.6 'DM Sans',sans-serif;margin:13px 0 0;color:#c9d0dd;min-height:1.6em}
-.member-message[data-kind="error"]{color:#ffbbb4}
-.member-message[data-kind="success"]{color:#aee9cf}
-.member-hidden{display:none!important}
-.member-account-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-.member-account-bar strong{color:#e3dafb;font-size:13px;overflow-wrap:anywhere}
+.membership-gallery{margin-top:25px;padding:clamp(20px,3vw,30px);background:#090d1eb3;border:1px solid #e2d6f82b;border-radius:20px}
+.membership-gallery h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.035em;font-size:clamp(1.2rem,2vw,1.65rem);font-weight:600;margin:0;color:#f8f7ff}
+.membership-gallery>p{color:#b9b6ca;line-height:1.6;font-size:.85rem}
+.member-gallery-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:12px}
+.member-gallery-heading .kicker{margin:0 0 8px}
 .member-status{display:inline-block;border:1px solid #9f8ebd80;background:#221d3a;padding:6px 10px;border-radius:100px;color:#e0d6ff;font-size:11px}
-.member-account-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.membership-gallery,.member-owner{margin-top:25px;padding:clamp(20px,3vw,30px);background:#090d1eb3;border:1px solid #e2d6f82b;border-radius:20px}
-.membership-gallery>p,.member-owner>p{color:#b9b6ca;line-height:1.6;font-size:.85rem}
-.member-gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
-.member-media-card{background:#15162c;border:1px solid #afa4d333;border-radius:14px;padding:12px;min-width:0}
-.member-media-stage{width:100%;aspect-ratio:16/10;background:#090b15;border:1px solid #ffffff16;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.member-media-stage img,.member-media-stage video{display:block;object-fit:contain;width:100%;height:100%}
-.member-media-card h4{font-family:'Space Grotesk',sans-serif;font-size:1rem;margin:13px 3px 5px;overflow-wrap:anywhere}
-.member-media-card p{color:#a8a6bf;font-size:.78rem;line-height:1.55;margin:0 3px 12px}
-.member-media-tools{display:flex;gap:8px;flex-wrap:wrap}
-.member-media-tools button{font-size:.72rem;min-height:37px;padding:9px 12px}
-.member-owner form{display:grid;gap:13px;max-width:540px}
-.member-owner input[type=file]{color:#ddd5ef;font-size:12px}
-.member-owner textarea{resize:vertical;min-height:80px}
-.nav-membership{background:#bcb3ff!important;color:#161324!important;border:1px solid #e4dfff!important;border-radius:100px;padding:.55rem .85rem!important;font-weight:700!important;white-space:nowrap}
-@media(max-width:850px){.membership-layout{grid-template-columns:1fr}.member-price{min-width:155px}}
-@media(max-width:680px){.membership-section{padding:24px 17px;margin-top:28px;border-radius:22px}.membership-intro{gap:22px}.member-price{width:100%;min-width:0}.member-benefits,.member-entry{padding:20px}.member-account-actions{width:100%}.member-gallery-grid{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){.member-cta,.member-secondary,.member-action{transition:none!important;transform:none!important}}
-
-/* Locked-by-default storefront; no private thumbnail URLs are exposed. */
-.member-gallery-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:13px}
-.member-gallery-heading h3{margin-bottom:0}
-.member-gallery-heading .kicker{margin:0 0 8px}
-.member-media-card{padding:10px;background:linear-gradient(160deg,#1d1932,#0b1020);border-color:#c6b4fd38;box-shadow:0 12px 32px #0003}
-.member-media-stage{position:relative;isolation:isolate;aspect-ratio:4/3;border-radius:12px;background:radial-gradient(ellipse at 70% 20%,#6952a277,transparent 50%),radial-gradient(ellipse at 25% 78%,#334b7966,transparent 46%),linear-gradient(135deg,#171628,#080b17)}
-.member-media-locked:before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,#ffffff05 0,#ffffff05 1px,transparent 1px,transparent 9px);mask-image:linear-gradient(to bottom,#000,transparent)}
-.member-media-locked .member-status{position:relative;z-index:1;padding:12px 17px;letter-spacing:.13em;font-size:10px;font-weight:700;background:#0d0b1bbd;border-color:#e2d1ff73;backdrop-filter:blur(12px)}
-.member-media-pay{flex:1;min-width:0;font-size:.72rem;min-height:42px;padding:11px 15px;text-align:center;text-decoration:none}
-.member-media-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
-.member-media-tools .member-secondary{font-size:.72rem}
-.member-owner{background:#10152abb;border-color:#b6a5f944}
-.member-price strong{font-size:clamp(1.8rem,3vw,2.4rem)}
-@media(min-width:850px){.member-gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(min-width:650px) and (max-width:849px){.member-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:680px){.member-gallery-heading{align-items:flex-start}.member-media-stage{aspect-ratio:4/3}.member-gallery-grid{grid-template-columns:1fr}}
-
-/* Locked-gallery media cards: no private pixels are fetched without authorized access. */
-.member-gallery-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:10px}
-.member-gallery-heading .kicker{margin:0 0 8px}
-.member-gallery-heading h3{margin:0}
 .member-gallery-heading>.member-status{white-space:normal}
-.member-media-card{display:flex;flex-direction:column;position:relative;overflow:hidden;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.member-gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.member-media-card{display:flex;flex-direction:column;position:relative;min-width:0;overflow:hidden;padding:12px;border-radius:14px;background:linear-gradient(160deg,#1d1932,#0b1020);border:1px solid #c6b4fd38;box-shadow:0 12px 32px #0003;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
 .member-media-card:hover{transform:translateY(-3px);border-color:#c4b0ff77;box-shadow:0 16px 36px #05071288}
-.member-media-stage.member-media-locked{position:relative;isolation:isolate;background:radial-gradient(circle at 20% 28%,#493a6f 0,transparent 38%),radial-gradient(circle at 84% 73%,#3a527f 0,transparent 37%),linear-gradient(135deg,#171a32,#080d1a);border-color:#b5a3f73d}
-.member-media-stage.member-media-locked:before{content:'';position:absolute;inset:14% 12%;border-radius:13px;border:1px solid #e4ddff20;transform:rotate(-7deg);background:linear-gradient(135deg,#e7d3ff0a,#ffffff03);filter:blur(1px);z-index:-1}
-.member-media-stage.member-media-locked:after{content:'';position:absolute;inset:18% 15%;border:1px solid #e4ddff17;border-radius:12px;transform:rotate(8deg);z-index:-1}
+.member-media-stage{width:100%;aspect-ratio:4/3;border:1px solid #b5a3f73d;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 20% 28%,#493a6f 0,transparent 38%),radial-gradient(circle at 84% 73%,#3a527f 0,transparent 37%),linear-gradient(135deg,#171a32,#080d1a)}
+.member-media-locked{position:relative;isolation:isolate}
+.member-media-locked:before{content:"";position:absolute;inset:14% 12%;border-radius:13px;border:1px solid #e4ddff20;transform:rotate(-7deg);background:linear-gradient(135deg,#e7d3ff0a,#ffffff03);filter:blur(1px);z-index:-1}
+.member-media-locked:after{content:"";position:absolute;inset:18% 15%;border:1px solid #e4ddff17;border-radius:12px;transform:rotate(8deg);z-index:-1}
 .member-media-lock-label{padding:10px 15px;border-radius:100px;letter-spacing:.14em;font:700 10px/1.4 'Space Grotesk',sans-serif;color:#ebe4ff;border:1px solid #d4c9ff65;background:#080e22bb;box-shadow:0 8px 28px #04051599;text-align:center}
-.member-media-card h4{color:#f7f3ff}
-.member-media-card>p{flex:1}
-.member-media-tools{flex-direction:column;align-items:stretch;margin-top:auto}
-.member-media-tools .member-media-pay{display:flex;text-align:center;width:100%;font-size:12px;min-height:43px;text-decoration:none}
-.member-media-tools .member-secondary,.member-media-tools .member-action{width:100%}
+.member-media-card h4{font-family:'Space Grotesk',sans-serif;font-size:1rem;margin:13px 3px 5px;color:#f7f3ff;overflow-wrap:anywhere}
+.member-media-card>p{flex:1;color:#a8a6bf;font-size:.78rem;line-height:1.55;margin:0 3px 12px}
+.member-media-tools{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:auto}
+.member-cta{display:inline-flex;justify-content:center;align-items:center;gap:10px;cursor:pointer;border-radius:100px;min-height:45px;padding:12px 20px;font:700 .79rem/1.2 'Space Grotesk',sans-serif;letter-spacing:.03em;transition:background .2s ease,transform .2s ease;border:1px solid #d4ceff;background:#c2b5ff;color:#151224;box-shadow:0 0 30px #a797ee33}
+.member-cta:hover{transform:translateY(-2px);background:#e1d9ff}
+.member-media-pay{display:flex;width:100%;min-width:0;min-height:43px;padding:11px 15px;text-align:center;font-size:12px;text-decoration:none}
 .member-pay-note{display:block;font-size:10px;line-height:1.5;text-align:center;color:#aaa9c7;letter-spacing:.01em}
-.member-owner{margin-top:24px;border-style:dashed;border-color:#cfc0ff66}
-@media(max-width:680px){.member-gallery-heading>.member-status{font-size:9px}.member-media-card:hover{transform:none}}
-@media(prefers-reduced-motion:reduce){.member-media-card{transition:none!important}}
-
-/* Creator authentication is never presented in the public gallery. */
-#member-entry:not(.member-hidden){width:min(100%,600px);margin:24px auto 0}
+.nav-membership{background:#bcb3ff!important;color:#161324!important;border:1px solid #e4dfff!important;border-radius:100px;padding:.55rem .85rem!important;font-weight:700!important;white-space:nowrap}
+@media(max-width:850px){.member-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.member-price{min-width:155px}}
+@media(max-width:680px){.membership-section{padding:24px 17px;margin-top:28px;border-radius:22px}.membership-intro{gap:22px}.member-price{width:100%;min-width:0}.membership-gallery{padding:20px}.member-gallery-grid{grid-template-columns:1fr}.member-gallery-heading{align-items:flex-start}.member-gallery-heading>.member-status{font-size:9px}.member-media-card:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.member-media-card,.member-cta{transition:none!important;transform:none!important}}

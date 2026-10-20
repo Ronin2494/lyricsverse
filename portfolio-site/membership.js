@@ -68,7 +68,7 @@
     hide(ui['member-owner'], !signedIn || !user?.admin);
     if (signedIn) {
       ui['member-email-display'].textContent = user.email;
-      ui['member-status'].textContent = user.admin ? 'Creator account' : user.hasAccess ? 'Membership active' : 'Not subscribed';
+      ui['member-status'].textContent = user.admin ? 'Creator account' : user.hasAccess ? 'Media access active' : 'Media access pending';
       hide(ui['member-checkout'], true);
       hide(ui['member-portal'], true);
       ui['member-checkout'].disabled = !config?.billingEnabled;
@@ -80,9 +80,9 @@
         ? 'The member platform is being activated. Payments and sign-in are not yet available.'
         : 'Connecting to the membership service…';
     } else if (!config.billingEnabled) {
-      ui['member-config-note'].textContent = 'Email sign-in is available. Paid checkout is being activated.';
+      ui['member-config-note'].textContent = 'Email sign-in is available. PayPal payment links are under each gallery item.';
     } else {
-      ui['member-config-note'].textContent = 'Secure email sign-in and recurring billing are available.';
+      ui['member-config-note'].textContent = 'Secure account sign-in is available.';
     }
   }
   function clearSession() {
@@ -122,13 +122,13 @@
     }
   }
   async function loadGallery() {
-    ui['member-empty'].textContent = 'Loading exclusive content…';
+    ui['member-empty'].textContent = 'Loading gallery items…';
     try {
       const result = await api(user?.hasAccess ? '/api/media' : '/api/gallery');
       ui['member-gallery-grid'].replaceChildren();
       const items = result.items || [];
       if (!items.length) {
-        ui['member-empty'].textContent = 'The private archive is ready. New photos and videos will appear here when the creator publishes them.';
+        ui['member-empty'].textContent = result.pending ? 'Gallery uploads are not available until storage is connected.' : 'No photos or videos published yet. New gallery items will appear here after you upload them.';
         return;
       }
       ui['member-empty'].textContent = '';
@@ -136,9 +136,9 @@
         const card = document.createElement('article');
         card.className = 'member-media-card';
         const stage = document.createElement('div');
-        stage.className = 'member-media-stage';
+        stage.className = 'member-media-stage member-media-locked';
         const placeholder = document.createElement('span');
-        placeholder.textContent = item.type.startsWith('video/') ? 'PRIVATE VIDEO' : 'PRIVATE PHOTO';
+        placeholder.textContent = item.type.startsWith('video/') ? '🔒  VIDEO LOCKED' : '🔒  PHOTO LOCKED';
         placeholder.className = 'member-status';
         stage.append(placeholder);
         const heading = document.createElement('h4');
@@ -244,7 +244,7 @@
       pendingEmail='';
       ui['member-code-input'].value='';
       update();
-      setNotice(user.admin ? 'Welcome to your creator studio.' : user.hasAccess ? 'Welcome back! Your private archive is unlocked.' : 'Email verified. Subscribe for CA$10 per month to unlock the private archive.','success');
+      setNotice(user.admin ? 'Welcome to your creator studio.' : user.hasAccess ? 'Welcome back! Your media access is active.' : 'Email verified. Payments via PayPal require manual verification before access can be granted.','success');
       if(user.hasAccess) await loadGallery();
     } catch(err){setNotice(err.message,'error');}
     finally{setBusy(ui['member-code-submit'],false);}
@@ -297,7 +297,7 @@
     try {
       await api('/api/admin/upload',{method:'POST',body});
       ui['member-upload-form'].reset();
-      setNotice('Published privately for your subscribers.','success');
+      setNotice('Media published in the locked gallery, with a PayPal button beneath it.','success');
       await loadGallery();
     }catch(err){setNotice(err.message,'error');}
     finally{setBusy(ui['member-upload-submit'],false);}

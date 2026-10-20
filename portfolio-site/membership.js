@@ -4,6 +4,8 @@
   const apiOrigin = 'https://badbunny-membership-api.onrender.com';
   const root = document.getElementById('membership');
   if (!root) return;
+  // The creator portal is unlisted in the public gallery; actual access is enforced by the API.
+  const studioMode = new URLSearchParams(location.search).get('studio') === '1';
   const byId = id => document.getElementById(id);
   const ids = [
     'member-email-form','member-code-form','member-email-input','member-code-input',
@@ -12,7 +14,7 @@
     'member-checkout','member-portal','member-logout','member-refresh',
     'member-gallery','member-empty','member-gallery-grid','member-owner',
     'member-upload-form','member-upload-title','member-upload-description',
-    'member-upload-file','member-upload-submit','member-join-link'
+    'member-upload-file','member-upload-submit','member-entry'
   ];
   const ui = Object.fromEntries(ids.map(id => [id, byId(id)]));
   const tokenKey = 'badbunny-member-token';
@@ -65,7 +67,8 @@
     hide(ui['member-email-form'], signedIn || !ready || Boolean(pendingEmail));
     hide(ui['member-code-form'], signedIn || !ready || !pendingEmail);
     hide(ui['member-logged-in'], !signedIn);
-    hide(ui['member-owner'], !signedIn || !user?.admin);
+    hide(ui['member-entry'], !studioMode);
+    hide(ui['member-owner'], !studioMode || !signedIn || !user?.admin);
     if (signedIn) {
       ui['member-email-display'].textContent = user.email;
       ui['member-status'].textContent = user.admin ? 'Creator account' : user.hasAccess ? 'Media access active' : 'Media access pending';
@@ -275,13 +278,6 @@
     setBusy(ui['member-refresh'],true,'Refreshing…');
     await refreshAccount();
     setBusy(ui['member-refresh'],false);
-  });
-  ui['member-join-link'].addEventListener('click',()=>{
-    if(!config?.authEnabled) {
-      setNotice('Membership checkout will open once account verification and billing are configured.','error');
-    } else if (!user) ui['member-email-input'].focus();
-    else if(!user.hasAccess) ui['member-gallery'].scrollIntoView({behavior:'smooth',block:'start'});
-    else ui['member-gallery'].scrollIntoView({behavior:'smooth',block:'start'});
   });
   ui['member-upload-form'].addEventListener('submit',async(event)=>{
     event.preventDefault();

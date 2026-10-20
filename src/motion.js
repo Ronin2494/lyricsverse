@@ -1,3 +1,5 @@
+import { mountCinematic } from './cinematic.js';
+
 // Progressive motion layer: no runtime dependencies and no hidden content without JS.
 let cleanupActive = () => {};
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -31,6 +33,7 @@ export function mountMotion(root, { win = window, doc = document } = {}) {
   const onPreferenceChange = () => mountMotion(root, { win, doc });
   preference.addEventListener?.('change', onPreferenceChange);
   cleanups.push(() => preference.removeEventListener?.('change', onPreferenceChange));
+  cleanups.push(mountCinematic(root, { win, doc }));
   if (preference.matches) return;
 
   root.classList.add('motion-enabled');

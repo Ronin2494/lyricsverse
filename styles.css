@@ -917,3 +917,265 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
   .original-preview-actions .button{width:100%;justify-content:center}
   .neon-original-detail .youtube-preview-panel{padding:16px;border-radius:18px}
 }
+
+
+/* ==========================================================================
+   Portfolio-level cinematic finishing — LyricVerse / Neon Music Universe
+   Editorial hierarchy, studio reflections, restrained depth and optical light.
+   This layer intentionally preserves existing geometry, routes and content.
+   ========================================================================== */
+:root {
+  --lv-studio-edge: rgba(188, 187, 255, .24);
+  --lv-studio-sheen: rgba(222, 214, 255, .08);
+  --lv-studio-shadow: 0 22px 56px rgba(2, 5, 30, .26), inset 0 1px rgba(255, 255, 255, .08);
+  --lv-studio-ease: cubic-bezier(.2,.72,.22,1);
+}
+/* A starfield in the visual column, not under the interactive hero copy. */
+.lv-cinematic .lv-stardust {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+}
+.lv-cinematic .lv-stardust-point {
+  position: absolute;
+  display: block;
+  left: var(--lv-star-x);
+  top: var(--lv-star-y);
+  width: var(--lv-star-size);
+  height: var(--lv-star-size);
+  border-radius: 50%;
+  background: #cbeaff;
+  box-shadow: 0 0 6px rgba(128, 198, 255, .62);
+  opacity: var(--lv-star-opacity);
+}
+.lv-cinematic .lv-stardust-accent {
+  background: #e9c7ff;
+  box-shadow: 0 0 8px rgba(202, 136, 255, .68);
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes lv-stellar-glimmer {
+    0%, 100% { opacity: var(--lv-star-opacity); transform: scale(1); }
+    50% { opacity: .10; transform: scale(.75); }
+  }
+  .lv-stardust-playing .lv-stardust-twinkle {
+    animation: lv-stellar-glimmer 6s ease-in-out infinite;
+    animation-delay: -2.5s;
+  }
+  .lv-stardust-playing .lv-stardust-twinkle:nth-child(odd) {
+    animation-delay: -4.3s;
+    animation-duration: 8s;
+  }
+}
+
+/* Studio optics: improve depth without moving or concealing functional UI. */
+.lv-cinematic .neon-home .neon-hero {
+  box-shadow:
+    0 32px 94px rgba(0, 3, 24, .43),
+    0 0 0 1px rgba(170, 143, 250, .12),
+    inset 0 1px rgba(239, 220, 255, .13),
+    inset 0 -1px rgba(112, 144, 255, .11);
+}
+.lv-cinematic .neon-hero .neon-vinyl {
+  filter: drop-shadow(0 23px 30px rgba(6, 4, 46, .55));
+}
+.lv-cinematic .neon-hero .universe-orbit {
+  border-color: rgba(186, 177, 255, .31);
+}
+.lv-cinematic .neon-hero .eyebrow {
+  text-shadow: 0 0 22px rgba(130, 194, 255, .19);
+}
+.lv-cinematic .neon-hero .hero-headline-intro {
+  color: #d3daf3;
+  text-wrap: pretty;
+}
+.lv-cinematic .neon-hero .hero-cta {
+  box-shadow:
+    0 14px 34px rgba(106, 63, 229, .25),
+    0 0 24px rgba(169, 92, 242, .12),
+    inset 0 1px rgba(255, 255, 255, .35);
+}
+
+/* Portfolio-inspired optical sweep. Pseudo-elements never receive clicks. */
+.lv-cinematic :is(.song-card,.compact-lyric-card,.mood-card,.song-banner-slide,.neon-reader-hero,.neon-search-header) {
+  position: relative;
+  isolation: isolate;
+}
+.lv-cinematic :is(.song-card,.compact-lyric-card,.mood-card,.song-banner-slide,.neon-reader-hero,.neon-search-header)::after {
+  content: "";
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(
+      270px circle at var(--lv-light-x, 50%) var(--lv-light-y, 50%),
+      rgba(196, 176, 255, .16) 0,
+      rgba(90, 204, 255, .07) 30%,
+      transparent 73%
+    );
+  transition: opacity .3s var(--lv-studio-ease);
+}
+.lv-cinematic .lv-light-follow::after { opacity: 1; }
+.lv-cinematic .neon-home .song-card,
+.lv-cinematic .neon-home .mood-card,
+.lv-cinematic .search-page .compact-lyric-card {
+  border: 1px solid var(--lv-studio-edge);
+  box-shadow: var(--lv-studio-shadow);
+}
+.lv-cinematic .neon-home .song-card {
+  background: linear-gradient(155deg, rgba(35, 42, 89, .76), rgba(11, 19, 50, .95));
+}
+.lv-cinematic .neon-home .song-card .song-card-title {
+  color: #f8f8ff;
+  letter-spacing: -.018em;
+  text-wrap: balance;
+}
+.lv-cinematic .neon-home .song-card .song-card-artist {
+  color: #bfc9e2;
+}
+.lv-cinematic .neon-home .song-section .section-heading h2,
+.lv-cinematic .neon-home .moods-section h2 {
+  letter-spacing: -.044em;
+  text-wrap: balance;
+}
+.lv-cinematic .neon-home .song-section .section-heading a {
+  text-underline-offset: 5px;
+}
+.lv-cinematic .neon-home .song-section .section-heading a:hover {
+  text-decoration: underline;
+}
+.lv-cinematic .neon-home .song-section .section-heading::before {
+  content: "";
+  display: block;
+  width: 24px;
+  height: 2px;
+  flex: none;
+  align-self: center;
+  background: linear-gradient(90deg, #9b78ff, #75e6f7);
+  border-radius: 99px;
+}
+.lv-cinematic .neon-home .song-section .section-heading {
+  gap: 12px;
+}
+.lv-cinematic .neon-home .song-section .section-heading h2 {
+  margin-right: auto;
+}
+/* Preserve compact slider dimensions, tap targets and original song link. */
+.lv-cinematic .song-banner-slide {
+  border-color: rgba(188, 169, 255, .36);
+  box-shadow:
+    0 22px 55px rgba(0, 4, 29, .34),
+    inset 0 1px rgba(237, 226, 255, .09);
+}
+.lv-cinematic .song-banner-copy h3 {
+  letter-spacing: -.045em;
+  text-wrap: balance;
+}
+.lv-cinematic .song-banner-art {
+  box-shadow:
+    0 18px 40px rgba(0, 4, 31, .56),
+    0 0 0 1px rgba(224, 213, 255, .13),
+    0 0 30px rgba(158, 94, 255, .14);
+}
+.lv-cinematic .song-banner-link {
+  border-color: rgba(175, 163, 245, .64);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .09);
+}
+.lv-cinematic .song-banner-dots button[aria-current="true"] {
+  background: linear-gradient(90deg, #ac83ff, #8ddcf5);
+  box-shadow: 0 0 12px rgba(160, 120, 255, .33);
+}
+
+/* Consistent editorial glass on all interior pages. */
+.lv-cinematic :is(.neon-reader-hero,.neon-search-header,.neon-profile-hero,.profile-panel,.original-lyrics) {
+  border-color: rgba(183, 182, 255, .3);
+  box-shadow: var(--lv-studio-shadow);
+}
+.lv-cinematic :is(.neon-search-page,.neon-library,.neon-profile,.neon-reader) h1 {
+  letter-spacing: -.045em;
+  text-wrap: balance;
+}
+.lv-cinematic .neon-reader .neon-reader-columns > *,
+.lv-cinematic .neon-original-detail .original-lyrics {
+  border-color: rgba(159, 170, 255, .3);
+  box-shadow: 0 20px 48px rgba(0, 4, 31, .25), inset 0 1px rgba(255, 255, 255, .055);
+}
+.lv-cinematic .original-lyrics {
+  overflow-wrap: anywhere;
+}
+.lv-cinematic .original-reader .original-back:hover,
+.lv-cinematic .neon-reader a:hover {
+  text-underline-offset: 4px;
+}
+.lv-cinematic .neon-reader .lyrics-panel :is(p,li) {
+  text-wrap: pretty;
+}
+
+/* Quiet, navigable micro-interactions in the Portfolio spirit. */
+.lv-cinematic .site-nav {
+  border-bottom-color: rgba(170, 164, 240, .26);
+  box-shadow: 0 12px 40px rgba(0, 3, 30, .32), inset 0 -1px rgba(164, 201, 255, .045);
+}
+.lv-cinematic .desktop-links a {
+  position: relative;
+}
+.lv-cinematic .desktop-links a::after {
+  content: "";
+  position: absolute;
+  height: 2px;
+  bottom: -7px;
+  left: 14%;
+  right: 14%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #ae87fb, #82ddeb);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform .22s var(--lv-studio-ease);
+}
+.lv-cinematic .desktop-links a:is(:hover,:focus-visible,.active)::after {
+  transform: scaleX(1);
+}
+.lv-cinematic :is(a,button,input,select,textarea):focus-visible {
+  outline: 2px solid #99eaff;
+  outline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .lv-cinematic .song-banner-art {
+    transition: transform .45s var(--lv-studio-ease), box-shadow .45s var(--lv-studio-ease);
+  }
+  .lv-cinematic .song-banner-slide:hover .song-banner-art {
+    transform: rotate(1deg) translateY(-4px);
+    box-shadow: 0 25px 45px rgba(0, 4, 31, .58), 0 0 35px rgba(160, 109, 255, .19);
+  }
+  .lv-cinematic .neon-home .song-card:hover {
+    border-color: rgba(191, 175, 255, .57);
+    box-shadow: 0 23px 50px rgba(3, 5, 34, .43), 0 0 24px rgba(133, 105, 242, .12);
+  }
+  .lv-cinematic .song-banner-link:hover {
+    box-shadow: 0 7px 22px rgba(110, 90, 204, .24);
+  }
+}
+@media (max-width: 767px), (pointer: coarse) {
+  /* Native mobile scrolling, carousel swipes and links take precedence. */
+  .lv-cinematic :is(.song-card,.compact-lyric-card,.mood-card,.song-banner-slide,.neon-reader-hero,.neon-search-header)::after {
+    display: none;
+  }
+  .lv-cinematic .neon-home .song-section .section-heading::before { width: 14px; }
+  .lv-cinematic .neon-home .song-section .section-heading { gap: 9px; }
+  .lv-cinematic .song-banner-art { transform: rotate(4deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-cinematic .lv-stardust-point,
+  .lv-cinematic .song-banner-art,
+  .lv-cinematic .desktop-links a::after,
+  .lv-cinematic .lv-light-follow::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .lv-cinematic .lv-stardust-point { opacity: var(--lv-star-opacity); }
+}

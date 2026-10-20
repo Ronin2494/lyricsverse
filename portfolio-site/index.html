@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="creative.css" />
 <link rel="stylesheet" href="creative-inline.css" />
 <link rel="stylesheet" href="creative-wall.css" />
+<link rel="stylesheet" href="membership.css" />
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4702288635921911" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -39,7 +40,7 @@
 </div>
 <main id="work" tabindex="-1">
   <div class="site-shell">
-    <header class="site-nav" id="nav"><a href="#work" class="nav-mark" aria-label="Back to work intro"><span class="mark-box">DS<span>·</span></span><span>DEEPAK SHARMA<br><small>INDEPENDENT BUILDER</small></span></a><nav aria-label="Portfolio navigation"><a href="#projects">Projects</a><a href="#beyond">Beyond products</a><a class="nav-creative" href="#creative">Creative</a><a href="#connect" class="nav-contact">Let's connect <span aria-hidden="true">↗</span></a></nav></header>
+    <header class="site-nav" id="nav"><a href="#work" class="nav-mark" aria-label="Back to work intro"><span class="mark-box">DS<span>·</span></span><span>DEEPAK SHARMA<br><small>INDEPENDENT BUILDER</small></span></a><nav aria-label="Portfolio navigation"><a href="#projects">Projects</a><a href="#beyond">Beyond products</a><a class="nav-creative" href="#creative">Creative</a><a class="nav-membership" href="#membership">SUBSCRIBE · CA$10</a><a href="#connect" class="nav-contact">Let's connect <span aria-hidden="true">↗</span></a></nav></header>
     <section class="brand-showcase cinematic-scene section-reveal" aria-label="Rudransh6619 cinematic animated universe">
       <div class="scene-sky" aria-hidden="true">
         <div class="scene-artwork"></div>
@@ -105,12 +106,83 @@
       </div>
       <div class="creative-bottom"><span>FOUR FRAMES · WATCH HERE</span><a href="https://medium.com/@deepaksharma2494" target="_blank" rel="noopener noreferrer">EXPLORE MY WRITING ↗</a></div>
     </section>
-    <section id="connect" class="end-section section-reveal"><div class="end-orb" aria-hidden="true"></div><p class="kicker">05 / WHAT'S NEXT?</p><h2>Let's build<br /><em>something meaningful.</em></h2><p>Good ideas get better when different minds come together.</p><a href="https://www.linkedin.com/in/deepak-s-b099186b" class="end-cta" target="_blank" rel="noopener noreferrer">Start a conversation <span aria-hidden="true">↗</span></a></section>
+    <section id="membership" class="membership-section section-reveal" aria-labelledby="membership-title">
+      <div class="membership-intro">
+        <div>
+          <p class="kicker">05 / CREATIVE ACCESS</p>
+          <h2 id="membership-title">Go behind<br/><em>the frame.</em></h2>
+          <p>An intimate creative archive — private photos, original videos, and stories I don't share everywhere. Made for people who want to see more.</p>
+        </div>
+        <div class="member-price" aria-label="Creative Access costs ten Canadian dollars per month">
+          <small>THE PRIVATE ARCHIVE</small>
+          <strong>CA$10</strong><span> / month</span>
+          <small>RENEWS MONTHLY · CANCEL ANYTIME</small>
+        </div>
+      </div>
+      <div class="membership-layout">
+        <div class="member-benefits">
+          <h3>What's on the inside?</h3>
+          <ul>
+            <li><span aria-hidden="true">✦</span> Exclusive photos and personal creative drops</li>
+            <li><span aria-hidden="true">◈</span> Member-only videos and behind-the-scenes moments</li>
+            <li><span aria-hidden="true">✧</span> One private gallery to watch and explore without leaving the portfolio</li>
+          </ul>
+          <button id="member-join-link" class="member-cta" type="button">SUBSCRIBE FOR CA$10 / MONTH <span aria-hidden="true">↗</span></button>
+          <p class="member-fine" style="margin-top:16px">CA$10 per month, billed automatically until canceled. Any applicable taxes are shown at checkout. You can manage or cancel in billing settings. New media is added by the creator.</p>
+        </div>
+        <div class="member-entry" id="member-entry">
+          <h3>Your member access</h3>
+          <p class="member-help">Sign in securely with a one-time code sent to your email. No password to remember.</p>
+          <p id="member-config-note" class="member-help" role="status" aria-live="polite">Connecting to the membership service…</p>
+          <form id="member-email-form" class="member-hidden">
+            <label for="member-email-input">Email address</label>
+            <input id="member-email-input" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" maxlength="250" required />
+            <button id="member-email-submit" class="member-cta" type="submit">EMAIL ME A SIGN-IN CODE <span aria-hidden="true">↗</span></button>
+          </form>
+          <form id="member-code-form" class="member-hidden">
+            <label for="member-code-input">Six-digit verification code</label>
+            <input id="member-code-input" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" required />
+            <button id="member-code-submit" class="member-cta" type="submit">VERIFY EMAIL</button>
+            <button id="member-code-change" class="member-action" type="button">USE A DIFFERENT EMAIL</button>
+          </form>
+          <div id="member-logged-in" class="member-hidden">
+            <div class="member-account-bar"><strong id="member-email-display"></strong><span id="member-status" class="member-status">Checking membership…</span></div>
+            <div class="member-account-actions">
+              <button id="member-checkout" class="member-cta" type="button">START CA$10 / MONTH SUBSCRIPTION</button>
+              <button id="member-portal" class="member-secondary" type="button">MANAGE BILLING</button>
+              <button id="member-refresh" class="member-action" type="button">REFRESH ACCESS</button>
+              <button id="member-logout" class="member-action" type="button">SIGN OUT</button>
+            </div>
+          </div>
+          <p id="member-notice" class="member-message" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+      <div id="member-gallery" class="membership-gallery member-hidden">
+        <h3>Inside the private archive</h3>
+        <p id="member-empty">Checking exclusive content…</p>
+        <div id="member-gallery-grid" class="member-gallery-grid"></div>
+      </div>
+      <div id="member-owner" class="member-owner member-hidden">
+        <h3>Creator studio / private uploads</h3>
+        <p>Only your verified creator account can access this area. Files remain private and are delivered only to active subscribers.</p>
+        <form id="member-upload-form">
+          <label for="member-upload-title">Media title</label>
+          <input id="member-upload-title" type="text" maxlength="100" placeholder="Behind the scenes — episode 01" required />
+          <label for="member-upload-description">Description</label>
+          <textarea id="member-upload-description" maxlength="500" rows="3" placeholder="Add a short caption (optional)"></textarea>
+          <label for="member-upload-file">Exclusive photo or video (maximum 100 MB)</label>
+          <input id="member-upload-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" required />
+          <button id="member-upload-submit" class="member-cta" type="submit">PUBLISH FOR SUBSCRIBERS <span aria-hidden="true">↗</span></button>
+        </form>
+      </div>
+    </section>
+    <section id="connect" class="end-section section-reveal"><div class="end-orb" aria-hidden="true"></div><p class="kicker">06 / WHAT'S NEXT?</p><h2>Let's build<br /><em>something meaningful.</em></h2><p>Good ideas get better when different minds come together.</p><a href="https://www.linkedin.com/in/deepak-s-b099186b" class="end-cta" target="_blank" rel="noopener noreferrer">Start a conversation <span aria-hidden="true">↗</span></a></section>
     <footer class="footer"><span>© <span id="year">2026</span> DEEPAK SHARMA. BUILT FROM CURIOSITY.</span><a href="#portal-journey">BACK TO THE UNIVERSE ↑</a><span>MADE TO EXPLORE, NOT JUST SCROLL.</span></footer>
   </div>
 </main>
 <script src="scene.js" defer></script>
 <script src="evidence-wall.js" defer></script>
+<script src="membership.js" defer></script>
 
 <script type="module" src="main.js"></script>
 </body>

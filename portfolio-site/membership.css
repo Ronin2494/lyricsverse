@@ -92,3 +92,6 @@
 .member-owner{margin-top:24px;border-style:dashed;border-color:#cfc0ff66}
 @media(max-width:680px){.member-gallery-heading>.member-status{font-size:9px}.member-media-card:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){.member-media-card{transition:none!important}}
+
+/* Creator authentication is never presented in the public gallery. */
+#member-entry:not(.member-hidden){width:min(100%,600px);margin:24px auto 0}

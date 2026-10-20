@@ -65,7 +65,6 @@
     hide(ui['member-email-form'], signedIn || !ready || Boolean(pendingEmail));
     hide(ui['member-code-form'], signedIn || !ready || !pendingEmail);
     hide(ui['member-logged-in'], !signedIn);
-    hide(ui['member-gallery'], !signedIn || !user?.hasAccess);
     hide(ui['member-owner'], !signedIn || !user?.admin);
     if (signedIn) {
       ui['member-email-display'].textContent = user.email;
@@ -123,10 +122,9 @@
     }
   }
   async function loadGallery() {
-    if (!user?.hasAccess) return;
     ui['member-empty'].textContent = 'Loading exclusive content…';
     try {
-      const result = await api('/api/media');
+      const result = await api(user?.hasAccess ? '/api/media' : '/api/gallery');
       ui['member-gallery-grid'].replaceChildren();
       const items = result.items || [];
       if (!items.length) {
@@ -179,7 +177,7 @@
             delete loadButton.dataset.originalLabel;
           }
         });
-        tools.append(loadButton);
+        if (user?.hasAccess) tools.append(loadButton);
         if (user.admin) {
           const remove = document.createElement('button');
           remove.type = 'button';
@@ -297,5 +295,6 @@
     finally{setBusy(ui['member-upload-submit'],false);}
   });
   update();
+  loadGallery();
   loadConfig();
 })();

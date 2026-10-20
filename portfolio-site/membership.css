@@ -54,3 +54,20 @@
 @media(max-width:850px){.membership-layout{grid-template-columns:1fr}.member-price{min-width:155px}}
 @media(max-width:680px){.membership-section{padding:24px 17px;margin-top:28px;border-radius:22px}.membership-intro{gap:22px}.member-price{width:100%;min-width:0}.member-benefits,.member-entry{padding:20px}.member-account-actions{width:100%}.member-gallery-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.member-cta,.member-secondary,.member-action{transition:none!important;transform:none!important}}
+
+/* Locked-by-default storefront; no private thumbnail URLs are exposed. */
+.member-gallery-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:13px}
+.member-gallery-heading h3{margin-bottom:0}
+.member-gallery-heading .kicker{margin:0 0 8px}
+.member-media-card{padding:10px;background:linear-gradient(160deg,#1d1932,#0b1020);border-color:#c6b4fd38;box-shadow:0 12px 32px #0003}
+.member-media-stage{position:relative;isolation:isolate;aspect-ratio:4/3;border-radius:12px;background:radial-gradient(ellipse at 70% 20%,#6952a277,transparent 50%),radial-gradient(ellipse at 25% 78%,#334b7966,transparent 46%),linear-gradient(135deg,#171628,#080b17)}
+.member-media-locked:before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,#ffffff05 0,#ffffff05 1px,transparent 1px,transparent 9px);mask-image:linear-gradient(to bottom,#000,transparent)}
+.member-media-locked .member-status{position:relative;z-index:1;padding:12px 17px;letter-spacing:.13em;font-size:10px;font-weight:700;background:#0d0b1bbd;border-color:#e2d1ff73;backdrop-filter:blur(12px)}
+.member-media-pay{flex:1;min-width:0;font-size:.72rem;min-height:42px;padding:11px 15px;text-align:center;text-decoration:none}
+.member-media-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
+.member-media-tools .member-secondary{font-size:.72rem}
+.member-owner{background:#10152abb;border-color:#b6a5f944}
+.member-price strong{font-size:clamp(1.8rem,3vw,2.4rem)}
+@media(min-width:850px){.member-gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:650px) and (max-width:849px){.member-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.member-gallery-heading{align-items:flex-start}.member-media-stage{aspect-ratio:4/3}.member-gallery-grid{grid-template-columns:1fr}}

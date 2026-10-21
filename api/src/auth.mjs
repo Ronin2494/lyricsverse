@@ -19,7 +19,7 @@ export async function requestEmailOtp(email,env=process.env,{dbFactory=getDataba
  await codes.insertOne({email:address,codeHash:digest(secret(env),address+':'+code),attempts:0,createdAt:time,expiresAt:new Date(time.getTime()+600000)});
  return {sent:true};
 }
-async function createSession(db,user,env,now=Date.now){
+export async function createSession(db,user,env,now=Date.now){
  const token=randomBytes(32).toString('base64url');
  await db.collection('user_sessions').createIndex({expiresAt:1},{expireAfterSeconds:0});
  await db.collection('user_sessions').insertOne({userId:user._id,tokenHash:createHash('sha256').update(token).digest('hex'),createdAt:new Date(now()),expiresAt:new Date(now()+7*86400000)});

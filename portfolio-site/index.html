@@ -104,7 +104,7 @@
     </section>
     <section class="manifesto section-reveal" aria-labelledby="manifesto-title"><p class="kicker">02 / HOW I THINK</p><div class="manifesto-inner"><span class="manifesto-quote">“</span><h2 id="manifesto-title">The best products don't just solve a problem.<br /><em>They make life feel different.</em></h2><p>I start with a question, follow the people, and build toward something useful.</p></div><div class="manifesto-pills"><span>Curiosity first</span><span>Human-centered thinking</span><span>Prototype, learn, repeat</span></div></section>
     <section id="beyond" class="beyond section-reveal" aria-labelledby="beyond-title">
-      <div class="section-heading"><div><p class="kicker">03 / BEYOND THE SCREEN</p><h2 id="beyond-title">More than<br /><span>the work.</span></h2></div><p>Four corners of my life. Select a card to explore.</p></div>
+      <div class="section-heading"><div><p class="kicker">03 / BEYOND THE SCREEN</p><h2 id="beyond-title">More than<br /><span>the work.</span></h2></div><p>Each card opens above the page and returns to its place when closed.</p></div>
       <div class="hobby-grid" id="beyond-grid">
         <button type="button" class="hobby-card music-card" data-interest="music" aria-expanded="false" aria-controls="beyond-detail">
           <span class="hobby-number">01 / RHYTHM</span>
@@ -131,13 +131,13 @@
           <span class="hobby-open">EXPLORE THE QUESTIONS <span aria-hidden="true">↗</span></span>
         </button>
       </div>
-      <div id="beyond-detail" class="beyond-detail" hidden tabindex="-1" aria-labelledby="beyond-detail-title">
+      <dialog id="beyond-detail" class="beyond-detail" hidden tabindex="-1" aria-modal="true" aria-labelledby="beyond-detail-title" aria-describedby="beyond-detail-description">
         <div class="beyond-detail-head">
           <div><span class="beyond-detail-eyebrow" id="beyond-detail-index"></span><h3 id="beyond-detail-title"></h3><p id="beyond-detail-description"></p></div>
           <button type="button" class="beyond-close" id="beyond-close" aria-label="Close selected interest">CLOSE <span aria-hidden="true">×</span></button>
         </div>
         <div id="beyond-detail-content"></div>
-      </div>
+      </dialog>
     </section>
     <section id="creative" class="creative-gallery creative-wall section-reveal" aria-labelledby="creative-title">
       <div class="creative-heading"><div><p class="kicker">04 / CREATIVE WALL</p><h2 id="creative-title">Four frames.<br/><em>One universe.</em></h2></div><p>Gaming, singing, dance, and ideas. Watch right here, without leaving the portfolio.</p></div>

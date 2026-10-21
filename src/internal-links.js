@@ -88,3 +88,21 @@ export function localSongMatches(query, { published = [], catalog = [] } = {}) {
     Number(b.type === 'lyrics') - Number(a.type === 'lyrics')
   );
 }
+
+
+// Search the text of lyrics the user has actually published on LyricVerse.
+// Return only song references; do not surface private drafts or unlicensed previews.
+export function publishedLyricsTextMatches(query, published = []) {
+ const words=String(query||'').trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+ if(words.join('').length<2)return [];
+ return published.filter(song=>{
+   if(song?.status!=='published'||(song.accessTier||'free')!=='free'||
+      typeof song.lyrics!=='string'||!song.lyrics.trim()||
+      !/^[a-f0-9]{24}$/i.test(String(song._id||'')))return false;
+   const text=song.lyrics.toLocaleLowerCase().replace(/\s+/g,' ');
+   return words.every(term=>text.includes(term));
+ }).slice(0,12).map(song=>({
+   type:'lyrics', href:'#/original/'+encodeURIComponent(String(song._id)),
+   title:song.title, artist:song.artist, inLyrics:true
+ }));
+}

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { readerArtworkSources, nextReaderArtworkSource, isReaderArtworkUrl } from '../src/reader-artwork.js';
+import { readerArtworkSources, nextReaderArtworkSource, recoverReaderArtwork, isReaderArtworkUrl } from '../src/reader-artwork.js';
 import { catalogMatch } from '../src/internal-links.js';
 
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
@@ -102,18 +102,85 @@ test('thumbnail helper renders catalog image with an encoded fallback chain and 
 });
 
 test('uploaded song reader, floater, and chart reader preserve the approved artwork layout',()=>{
- assert.match(app,/import \{ readerArtworkSources, nextReaderArtworkSource \} from '\.\/reader-artwork\.js'/);
+ assert.match(app,/import \{ readerArtworkSources, recoverReaderArtwork \} from '\.\/reader-artwork\.js'/);
  assert.match(app,/function originalReaderHTMLForSong\(song\)/);
  assert.match(app,/thumbnailHTML\(song,"original-reader-image"\)/);
  assert.match(app,/thumbnailHTML\(song,"original-floater-icon"\)/);
  assert.match(app,/function songMetaBanner\(song\)/);
  assert.match(app,/coverHTML\(song,'reader-art'\)/);
  assert.match(app,/onerror|addEventListener\('error'/);
- assert.match(app,/nextReaderArtworkSource\(img\)/);
+ assert.match(app,/recoverReaderArtwork\(img\)/);
  assert.match(app,/if\(publishedSongs.length\)void enrichArtwork\(publishedSongs/);
  assert.match(app,/artworkCache\.set\(artworkKey,url\)/);
  assert.match(app,/function floatingPearlsHTML\(songs\)/);
  assert.match(app,/href="\$\{songHref\(song\)\}"/);
  const css=read('styles.css');
  assert.match(css,/\.neon-original-cover img\{width:100%;height:auto;display:block;aspect-ratio:1;object-fit:cover\}/);
+});
+
+
+test('every published song reader eagerly loads artwork and carries its own final SVG fallback',()=>{
+ const start=app.indexOf('function thumbnailHTML(song,cls)');
+ const end=app.indexOf('function originalCompositionsHTML()',start);
+ const helper=app.slice(start,end);
+ const scope={
+   catalogMatch, readerArtworkSources, allSongs:catalog, artworkCache:new Map(),
+   generatedSongThumbnail:()=>svg,
+   esc:value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))
+ };
+ vm.createContext(scope);
+ vm.runInContext(helper+'\nthis.art=thumbnailHTML;',scope);
+ const withoutUrl={...published,thumbnailUrl:null,artist:'An Unlisted Artist',title:'New Composition'};
+ const rendered=scope.art(withoutUrl,'original-reader-image');
+ assert.match(rendered,/class="original-reader-image"/);
+ assert.match(rendered,/src="data:image\/svg\+xml/);
+ assert.match(rendered,/data-artwork-fallback="data:image\/svg\+xml/);
+ assert.match(rendered,/loading="eager" fetchpriority="high"/);
+ assert.match(rendered,/alt="Album artwork for New Composition by An Unlisted Artist"/);
+ const floated=scope.art(withoutUrl,'original-floater-icon');
+ assert.match(floated,/loading="lazy"/);
+ assert.doesNotMatch(floated,/fetchpriority="high"/);
+});
+
+test('image errors advance through remote sources, then locally generated cover',()=>{
+ const images=['https://people.com/broken.jpg','https://images.pexels.com/broken.jpg',svg];
+ const failed=new Set();
+ const img={
+   src:images[0],
+   dataset:{artworkNext:JSON.stringify(images.slice(1)),artworkFallback:svg},
+   classList:{add:name=>failed.add(name)}
+ };
+ assert.equal(recoverReaderArtwork(img),'next');
+ assert.equal(img.src,images[1]);
+ assert.equal(recoverReaderArtwork(img),'next');
+ assert.equal(img.src,svg);
+ // Even if the data URI could not load, preserve the parent artwork background.
+ assert.equal(recoverReaderArtwork(img),'exhausted');
+ assert.equal(failed.has('original-thumbnail-image-failed'),true);
+ assert.equal(recoverReaderArtwork(null),'ignored');
+});
+
+test('a malformed fallback chain retries the local cover exactly once',()=>{
+ const failed=new Set();
+ const img={
+   src:'https://broken.example/image.png',
+   dataset:{artworkNext:'{',artworkFallback:svg},
+   classList:{add:name=>failed.add(name)}
+ };
+ assert.equal(recoverReaderArtwork(img),'fallback');
+ assert.equal(img.src,svg);
+ assert.equal(recoverReaderArtwork(img),'exhausted');
+ assert.equal(recoverReaderArtwork(img),'exhausted');
+ assert.equal(failed.has('original-thumbnail-image-failed'),true);
+});
+
+test('reader cover always paints a local cover beneath external images',()=>{
+ const css=read('styles.css');
+ assert.match(app,/class="neon-original-cover" style="--lv-reader-artwork-fallback:url\(&quot;\$\{esc\(generated\)\}&quot;\)"/);
+ assert.match(css,/\.neon-original-reader \.neon-original-cover \{[\s\S]*?background-image:\s*var\(--lv-reader-artwork-fallback\)/);
+ assert.match(css,/\.original-thumbnail-image-failed\s*\{\s*visibility:\s*hidden/);
+ assert.match(css,/@media \(max-width: 650px\)/);
+ assert.match(app,/data-action="focus-lyrics"/);
+ assert.match(app,/function floatingPearlsHTML\(songs\)/);
+ assert.match(app,/href="\$\{songHref\(song\)\}"/);
 });

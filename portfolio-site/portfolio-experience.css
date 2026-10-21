@@ -103,6 +103,7 @@
 .beyond-activity-trend{border-top:1px solid #213c3625;padding-top:16px;display:flex;align-items:flex-end;gap:7px;height:64px}
 .beyond-activity-trend .activity-bar{flex:1;height:var(--bar-height,5%);min-height:3px;border-radius:6px 6px 2px 2px;background:currentColor;opacity:.65}
 .beyond-activity-trend .activity-bar[data-today="true"]{opacity:1}
+.beyond-activity-trend .activity-bar[data-missing="true"]{background:transparent;border:1px dashed currentColor;opacity:.22;min-height:5px}
 .beyond-activity-caption-secondary{font:600 10px 'Space Grotesk',sans-serif;opacity:.75;letter-spacing:.075em}
 @media(max-width:1050px){.constellation-layout{grid-template-columns:minmax(0,1.1fr) minmax(245px,.8fr)}.constellation-node{width:118px;font-size:10px}.constellation-map{height:480px}}
 @media(max-width:740px){

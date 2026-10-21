@@ -1,4 +1,5 @@
 import { stopMusicOrbs } from './music-orbs.js';
+import { observeFirebaseUser,signInFirebaseGoogle,signInFirebaseEmail,createFirebaseEmailAccount,resetFirebasePassword,signOutFirebase,refreshFirebaseIdentity,describeFirebaseError } from './firebase-client.js';
 import { mountMotion } from './motion.js';
 import { openFocusReader } from './reader-focus.js';
 import { readerArtworkSources, recoverReaderArtwork } from './reader-artwork.js';
@@ -10,7 +11,7 @@ const app = document.querySelector('#app');
 function safeStorageGet(type,key){try{return window[type]?.getItem(key)||null;}catch{return null;}}
 function safeStorageSet(type,key,value){try{window[type]?.setItem(key,value);}catch{}}
 function safeStorageRemove(type,key){try{window[type]?.removeItem(key);}catch{}}
-const API_URL='https://lyricsverse-api.onrender.com';let activeLrclibLyrics=null;let authToken=safeStorageGet('sessionStorage','lyricverse:session')||'';let authUser=null;let authReady=false;let authConfigChecked=false;let authConfigError='';let authConfig={googleClientId:null,emailEnabled:false};let googleScriptPromise=null;let authStep='email';let authEmail='';let authError='';let providerSongs=[],providerLoading=false,providerError=false,providerRequest=0;let videoResults=[],videoLoading=false,videoStatus='idle',videoSearchUrl='',activeSearchVideo=null,searchDebounceTimer=null;let realCatalog=[],catalogLoading=true,originalCompositions=[],publishedSongs=[],originalLoading=true;const artworkCache=new Map();const normalized=v=>String(v||'').toLocaleLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,' ').trim();async function enrichArtwork(songs){await Promise.allSettled(songs.map(async song=>{const artworkKey=String(song.id||song._id||'');if(!artworkKey||artworkCache.has(artworkKey)||(!song._id&&(song.thumbnailUrl||song.artworkUrl)))return;artworkCache.set(artworkKey,null);if(song.isDemo||allSongs.some(demo=>demo.id===song.id)||!song.artist||/^Q\d+$/.test(song.artist)||song.artist==='Artist not listed')return;try{const q=encodeURIComponent(song.title+' '+song.artist);const res=await fetch('https://itunes.apple.com/search?term='+q+'&entity=song&limit=15',{signal:AbortSignal.timeout(6500)});if(!res.ok)return;const data=await res.json();const found=(data.results||[]).find(x=>normalized(x.trackName)===normalized(song.title)&&normalized(x.artistName)===normalized(song.artist));if(found?.artworkUrl100){const url=found.artworkUrl100.replace(/100x100bb(?=\.)/,'300x300bb');if(/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(url))artworkCache.set(artworkKey,url);}}catch{}}));render();}async function loadRealCatalog(){catalogLoading=true;try{const r=await fetch(API_URL+'/api/v1/wikidata/songs?language='+encodeURIComponent(state.language));if(!r.ok)throw Error('catalog');realCatalog=(await r.json()).data||[];}catch{realCatalog=[];}catalogLoading=false;render();if(realCatalog.length)enrichArtwork(realCatalog);}function generatedSongThumbnail(song){const seed=Array.from(String(song.id||song.title||'music')).reduce((h,c)=>(Math.imul(h,31)+c.charCodeAt(0))>>>0,2166136261);const hue=seed%360;const hue2=(hue+55+(seed%55))%360;const variant=seed%3;const scene=variant===0?'<circle cx="210" cy="85" r="82" fill="url(#glow)" opacity=".8"/><circle cx="210" cy="85" r="51" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/><circle cx="210" cy="85" r="25" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>':variant===1?'<path d="M0 172Q70 35 145 170T300 110V300H0Z" fill="#fff" fill-opacity=".12"/><path d="M-20 200Q70 70 160 210T320 130" stroke="#fff" stroke-opacity=".4" stroke-width="7" fill="none"/>':'<circle cx="152" cy="135" r="105" fill="#000" fill-opacity=".22"/><circle cx="152" cy="135" r="78" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3"/><circle cx="152" cy="135" r="48" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="3"/>';const title=String(song.title||'Music').slice(0,26);const safe=title.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="hsl(${hue},60%,23%)"/><stop offset="1" stop-color="hsl(${hue2},75%,36%)"/></linearGradient><radialGradient id="glow"><stop stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="300" height="300" fill="url(#bg)"/>${scene}<rect y="210" width="300" height="90" fill="#091022" fill-opacity=".65"/><text x="18" y="239" fill="#fff" font-size="12" font-family="sans-serif" letter-spacing="2">LYRICVERSE ORIGINAL ART</text><text x="18" y="267" fill="#fff" font-size="20" font-weight="700" font-family="sans-serif">${safe}</text></svg>`;return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);}
+const API_URL='https://lyricsverse-api.onrender.com';let activeLrclibLyrics=null;let authToken='';let authUser=null;let authReady=false;let authConfigChecked=false;let authConfigError='';let authConfig=null;let authMode='signin';let authError='';let authStatus='';let authSyncSerial=0;let providerSongs=[],providerLoading=false,providerError=false,providerRequest=0;let videoResults=[],videoLoading=false,videoStatus='idle',videoSearchUrl='',activeSearchVideo=null,searchDebounceTimer=null;let realCatalog=[],catalogLoading=true,originalCompositions=[],publishedSongs=[],originalLoading=true;const artworkCache=new Map();const normalized=v=>String(v||'').toLocaleLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,' ').trim();async function enrichArtwork(songs){await Promise.allSettled(songs.map(async song=>{const artworkKey=String(song.id||song._id||'');if(!artworkKey||artworkCache.has(artworkKey)||(!song._id&&(song.thumbnailUrl||song.artworkUrl)))return;artworkCache.set(artworkKey,null);if(song.isDemo||allSongs.some(demo=>demo.id===song.id)||!song.artist||/^Q\d+$/.test(song.artist)||song.artist==='Artist not listed')return;try{const q=encodeURIComponent(song.title+' '+song.artist);const res=await fetch('https://itunes.apple.com/search?term='+q+'&entity=song&limit=15',{signal:AbortSignal.timeout(6500)});if(!res.ok)return;const data=await res.json();const found=(data.results||[]).find(x=>normalized(x.trackName)===normalized(song.title)&&normalized(x.artistName)===normalized(song.artist));if(found?.artworkUrl100){const url=found.artworkUrl100.replace(/100x100bb(?=\.)/,'300x300bb');if(/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(url))artworkCache.set(artworkKey,url);}}catch{}}));render();}async function loadRealCatalog(){catalogLoading=true;try{const r=await fetch(API_URL+'/api/v1/wikidata/songs?language='+encodeURIComponent(state.language));if(!r.ok)throw Error('catalog');realCatalog=(await r.json()).data||[];}catch{realCatalog=[];}catalogLoading=false;render();if(realCatalog.length)enrichArtwork(realCatalog);}function generatedSongThumbnail(song){const seed=Array.from(String(song.id||song.title||'music')).reduce((h,c)=>(Math.imul(h,31)+c.charCodeAt(0))>>>0,2166136261);const hue=seed%360;const hue2=(hue+55+(seed%55))%360;const variant=seed%3;const scene=variant===0?'<circle cx="210" cy="85" r="82" fill="url(#glow)" opacity=".8"/><circle cx="210" cy="85" r="51" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/><circle cx="210" cy="85" r="25" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>':variant===1?'<path d="M0 172Q70 35 145 170T300 110V300H0Z" fill="#fff" fill-opacity=".12"/><path d="M-20 200Q70 70 160 210T320 130" stroke="#fff" stroke-opacity=".4" stroke-width="7" fill="none"/>':'<circle cx="152" cy="135" r="105" fill="#000" fill-opacity=".22"/><circle cx="152" cy="135" r="78" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3"/><circle cx="152" cy="135" r="48" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="3"/>';const title=String(song.title||'Music').slice(0,26);const safe=title.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="hsl(${hue},60%,23%)"/><stop offset="1" stop-color="hsl(${hue2},75%,36%)"/></linearGradient><radialGradient id="glow"><stop stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="300" height="300" fill="url(#bg)"/>${scene}<rect y="210" width="300" height="90" fill="#091022" fill-opacity=".65"/><text x="18" y="239" fill="#fff" font-size="12" font-family="sans-serif" letter-spacing="2">LYRICVERSE ORIGINAL ART</text><text x="18" y="267" fill="#fff" font-size="20" font-weight="700" font-family="sans-serif">${safe}</text></svg>`;return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);}
 function realSongCard(s){const actual=s.thumbnailUrl&&/^https:\/\/upload\.wikimedia\.org\//.test(s.thumbnailUrl)?s.thumbnailUrl:artworkCache.get(s.id);const fallback=generatedSongThumbnail(s);const resolved=internalSongLink(s,{published:publishedSongs,catalog:allSongs});const href=resolved?.href||s.source;const external=!resolved;return `<a class="compact-lyric-card" href="${esc(href)}" ${external?'target="_blank" rel="noopener noreferrer"':''}><span class="compact-art"><img class="catalog-song-thumbnail" src="${esc(actual||fallback)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=this.dataset.fallback" data-fallback="${esc(fallback)}"></span><span class="compact-card-copy"><span class="compact-badge">${esc(s.language.toUpperCase())} · WIKIDATA</span><strong>${esc(s.title)}</strong><span class="compact-artist">${esc(s.artist)}</span><span class="compact-open">${resolved?.type==='lyrics'?'Read LyricVerse lyrics ↗':resolved?'Song details ↗':'External song details ↗'}</span></span></a>`;}
 function mixedSongCard(s){const fallback=generatedSongThumbnail({id:s._id,title:s.title});const image=s.thumbnailUrl&&/^https:\/\//.test(s.thumbnailUrl)?s.thumbnailUrl:fallback;return `<a class="compact-lyric-card" href="#/original/${encodeURIComponent(String(s._id))}"><span class="compact-art"><img class="catalog-song-thumbnail" src="${esc(image)}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=this.dataset.fallback" data-fallback="${esc(fallback)}"></span><span class="compact-card-copy"><span class="compact-badge">HINDI-ENGLISH MIX · ORIGINAL</span><strong>${esc(s.title)}</strong><span class="compact-artist">${esc(s.artist)}</span><span class="compact-open">Read lyrics ↗</span></span></a>`;}
 function mixedSongsHTML(){if(state.filter!=='Hindi-English Mix')return '';const songs=originalCompositions.filter(s=>s.genre==='Hindi-English Mix');return `<section class="homepage-hub" id="hindi-english-songs" aria-label="Hindi-English Mix songs"><div class="lyrics-hub-main"><div class="hub-header"><div><span class="section-kicker">BILINGUAL ORIGINALS</span><h2>Hindi-English Mix</h2><p>Discover original songs blending Hindi and English.</p></div></div><div class="compact-lyrics-grid">${songs.map(mixedSongCard).join('')||'<p>Published songs in this genre will appear here.</p>'}</div></div></section>`;}
@@ -183,10 +184,15 @@ function libraryEmptyHTML(){
 }
 function libraryHTML(){const results=allSongs.filter(s=>state.saved.includes(s.id));return `${navHTML()}<main id="app-main" tabindex="-1" class="discovery-main search-page neon-library"><section class="search-page-header"><span class="section-kicker">YOUR COLLECTION</span><h1>Your library</h1><p class="library-description">${results.length?'Saved songs':authUser?'Your saved soundtrack is waiting.':'Sign in to keep your favorites together.'}</p></section>${results.length?sectionHTML('Saved songs',results,results.slice(0,2)):libraryEmptyHTML()}</main>${bottomNavHTML()}`;}
 function authHTML(){
- const emailEnabled=authConfig.emailEnabled;
- const googleEnabled=!!authConfig.googleClientId;
- const status=!emailEnabled&&!googleEnabled?(authConfigError||'Authentication is not configured on the API. Check AUTH_SECRET, MONGODB_URI, and GOOGLE_CLIENT_ID in Render.'):'';
- return `<main id="app-main" tabindex="-1" class="auth-gate"><section class="auth-panel"><h1>Welcome to LyricVerse</h1><p>Sign in with Google or a verified email address.</p>${googleEnabled?'<div id="google-signin" class="auth-google"></div>':''}${emailEnabled?`<p>Or continue with email</p><form id="auth-form"><label for="auth-email">Email address</label><input id="auth-email" name="email" type="email" autocomplete="email" required value="${esc(authEmail)}">${authStep==='verify'?'<label for="auth-code">Verification code</label><input id="auth-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>':''}<button class="button button-primary" type="submit">${authStep==='verify'?'Verify email':'Send verification code'}</button></form>`:''}<p role="status" class="auth-status">${esc(status)}</p><p role="alert" class="auth-error">${esc(authError)}</p></section></main>`;
+ const configured=authReady&&!!authConfig;
+ const status=configured?authStatus:(authConfigError||'Firebase Authentication is not yet configured for LyricVerse.');
+ return '<main id="app-main" tabindex="-1" class="auth-gate"><section class="auth-panel lv-firebase-auth"><span class="lv-auth-kicker">LYRICVERSE · SECURE ACCOUNT</span><h1>Welcome to LyricVerse</h1><p>Continue with Firebase Authentication to save your favorites and manage your profile.</p>'+
+ (configured?'<button type="button" class="button button-primary lv-firebase-google" data-action="firebase-google">Continue with Google</button>'+
+ '<div class="lv-auth-divider"><span>or use email</span></div>'+
+ '<form id="firebase-auth-form"><label for="firebase-email">Email address</label><input id="firebase-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com"><label for="firebase-password">Password</label><input id="firebase-password" name="password" type="password" autocomplete="'+(authMode==='signup'?'new-password':'current-password')+'" minlength="6" required placeholder="At least 6 characters"><button class="button button-primary" type="submit">'+(authMode==='signup'?'Create Firebase account':'Sign in with email')+'</button></form>'+
+ '<div class="lv-firebase-actions"><button type="button" data-action="firebase-mode">'+(authMode==='signup'?'Already have an account? Sign in':'Create an account')+'</button><button type="button" data-action="firebase-reset">Reset password</button><button type="button" data-action="firebase-refresh">I verified my email</button></div>':
+ '<p class="lv-firebase-unconfigured">Firebase configuration is required before account sign-in can be enabled.</p>')+
+ '<p role="status" class="auth-status">'+esc(status)+'</p><p role="alert" class="auth-error">'+esc(authError)+'</p></section></main>';
 }
 function profileHTML(){
  if(!authUser)return `${navHTML()}${authHTML()}${bottomNavHTML()}`;
@@ -194,31 +200,71 @@ function profileHTML(){
  const genres=['Pop','Rock','Hip-Hop','R&B','Indie','Bollywood','Classical','Electronic','Other'];
  return `${navHTML()}<main id="app-main" tabindex="-1" class="profile-main neon-profile"><section class="neon-profile-hero"><span class="section-kicker">YOUR MUSIC UNIVERSE</span><h1>Your profile</h1><p>Every song tells part of your story.</p></section><section class="profile-panel"><h2>Account settings</h2><p>Manage your account and music preferences.</p><div class="profile-identity"><span class="profile-avatar" aria-hidden="true">${esc((authUser.name||authUser.email).charAt(0).toUpperCase())}</span><div><strong>${name}</strong><p>${esc(authUser.email)}</p><small>Verified account</small></div></div><form id="profile-form"><label for="profile-name">Display name</label><input id="profile-name" name="name" maxlength="80" required value="${esc(authUser.name||'')}"><label for="profile-language">Preferred language</label><select id="profile-language" name="preferredLanguage"><option value="en" ${authUser.preferredLanguage!=='hi'?'selected':''}>English</option><option value="hi" ${authUser.preferredLanguage==='hi'?'selected':''}>Hindi</option></select><fieldset class="profile-genres"><legend>Favorite genres</legend>${genres.map(g=>`<label><input type="checkbox" name="genre" value="${esc(g)}" ${(authUser.favoriteGenres||[]).includes(g)?'checked':''}> ${esc(g)}</label>`).join('')}</fieldset><button class="button button-primary" type="submit">Save profile</button><p role="status" id="profile-status"></p></form><div class="profile-actions"><a class="button button-secondary" href="#/library">Saved Songs (${state.saved.length})</a><button class="button button-secondary" type="button" data-action="logout">Sign out</button></div></section><section class="profile-saved-section neon-favorites" aria-label="Saved Songs"><div class="section-heading"><h2>Saved Songs</h2><a href="#/library">View all →</a></div>${state.saved.length?`<div class="profile-saved-grid">${allSongs.filter(song=>state.saved.includes(song.id)).map(song=>songCardHTML(song)).join("")}</div>`:`<p class="library-description">No saved songs yet. Tap the heart on a song to add it here.</p>`}</section></main>${bottomNavHTML()}`;
 }
-async function authCall(path,data){const r=await fetch(API_URL+'/api/v1/auth/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const payload=await r.json();if(!r.ok)throw Error(payload.error||'Sign-in failed');return payload.data;}
-async function finishAuth(data){authToken=data.token;safeStorageSet('sessionStorage','lyricverse:session',authToken);authUser=data.user;state.saved=authUser.savedSongs||[];authError='';render();}
-async function initGoogleAuth(){
- if(authUser||!authConfig.googleClientId||!document.querySelector('#google-signin'))return;
+async function syncFirebaseUser(firebaseUser,error){
+ const serial=++authSyncSerial;
+ if(error){authError=describeFirebaseError(error);render();return;}
+ if(!firebaseUser){
+   authToken='';authUser=null;state.saved=[];authStatus='';
+   safeStorageRemove('sessionStorage','lyricverse:session');
+   render();return;
+ }
+ if(!firebaseUser.emailVerified){
+   authToken='';authUser=null;state.saved=[];
+   authStatus='Verify your email to activate your account. Then select “I verified my email”.';
+   render();return;
+ }
  try{
-  if(!googleScriptPromise)googleScriptPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://accounts.google.com/gsi/client';script.async=true;script.onload=resolve;script.onerror=()=>reject(Error('google_script_unavailable'));document.head.append(script);}).catch(error=>{googleScriptPromise=null;throw error;});
-  await googleScriptPromise;
-  const target=document.querySelector('#google-signin');if(!target||!window.google?.accounts?.id)return;
-  google.accounts.id.initialize({client_id:authConfig.googleClientId,callback:async response=>{try{await finishAuth(await authCall('google',{credential:response.credential}));}catch(e){authError=e.message;render();}}});
-  google.accounts.id.renderButton(target,{type:'standard',theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:Math.max(200,Math.min(320,Math.floor(target.getBoundingClientRect().width||window.innerWidth-48)))});
- }catch{const target=document.querySelector('#google-signin');if(target)target.innerHTML='<p role="alert">Google sign-in could not load.</p><button type="button" class="button button-secondary" data-action="retry-google">Retry Google sign-in</button>';}
+   const idToken=await firebaseUser.getIdToken();
+   const r=await fetch(API_URL+'/api/v1/auth/firebase/session',{
+     method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({idToken})
+   });
+   const payload=await r.json();
+   if(!r.ok)throw Error(payload.error==='firebase_account_conflict'?'This account is already linked to another Firebase identity.':payload.error||'Unable to complete Firebase sign-in.');
+   if(serial!==authSyncSerial)return;
+   authToken=payload.data.token;
+   safeStorageSet('sessionStorage','lyricverse:session',authToken);
+   authUser=payload.data.user;
+   state.saved=authUser.savedSongs||[];
+   authStatus='';authError='';render();
+ }catch(e){if(serial!==authSyncSerial)return;authError=e.message;authToken='';authUser=null;render();}
+}
+async function runFirebaseAction(action,args=[]){
+ if(!authReady||!authConfig){authError='Firebase Authentication is not configured.';render();return;}
+ authError='';authStatus='';
+ try{
+   if(action==='firebase-google'){await signInFirebaseGoogle(authConfig);}
+   else if(action==='firebase-login'){await signInFirebaseEmail(authConfig,...args);}
+   else if(action==='firebase-create'){
+     await createFirebaseEmailAccount(authConfig,...args);
+     authStatus='Verification email sent. Verify your email before activating the account.';
+     render();
+   }else if(action==='firebase-reset'){
+     const email=window.prompt('Enter your account email address');
+     if(!email)return;
+     await resetFirebasePassword(authConfig,email.trim());
+     authStatus='If the account exists, a password-reset message will be sent.';
+     render();
+   }else if(action==='firebase-refresh'){
+     const user=await refreshFirebaseIdentity(authConfig);
+     if(!user)throw Error('Sign in to your Firebase account first.');
+     await syncFirebaseUser(user);
+   }
+ }catch(error){authError=describeFirebaseError(error);render();}
 }
 function render(){
  const route=currentRoute();
  if(route.page==='original')void ensureOriginalSong(route.slug);
  stopMusicOrbs();
  if(!authConfigChecked){app.innerHTML='<main id="app-main" tabindex="-1" role="status" class="auth-loading">Loading LyricVerse…</main>';return;}
- if(route.page==='profile'&&!authUser){app.innerHTML=profileHTML();mountMotion(app);void initGoogleAuth();return;}
+ if(route.page==='profile'&&!authUser){app.innerHTML=profileHTML();mountMotion(app);return;}
  app.innerHTML=route.page==='profile'?profileHTML():route.page==='original'?originalReaderHTML():route.page==='lyrics'?readerHTML():route.page==='search'?searchPageHTML():route.page==='library'?libraryHTML():route.page==='info'?infoHTML():homeHTML();
  document.title=route.page==='lyrics'?`${allSongs.find(s=>s.id===route.slug)?.title||'Lyrics'} — LyricVerse`:'LyricVerse — Every song has a story';
  if(route.page==='lyrics'){document.documentElement.style.setProperty('--lyrics-adjust',`${state.fontBoost}px`);}else document.documentElement.style.removeProperty('--lyrics-adjust');
  mountMotion(app);
  if(route.page==='home')initSongBanner();
  if(originalDismissed)document.querySelector('.original-floater')?.remove();if(state.toast)showToast(state.toast,false);
- if(route.page==='profile'&&!authUser)void initGoogleAuth();
+ // Firebase authentication is managed by the SDK observer.
 }
 function toast(s){state.toast=s;clearTimeout(state.toastTimer);showToast(s,true);state.toastTimer=setTimeout(()=>{state.toast='';document.querySelector('.toast')?.remove();},3800);}
 function showToast(s){document.querySelector('.toast')?.remove();const div=document.createElement('div');div.className='toast';div.role='status';div.textContent=s;document.body.appendChild(div);}
@@ -250,7 +296,7 @@ app.addEventListener('click',async e=>{const video=e.target.closest('[data-video
    document.querySelector('.youtube-preview-panel')?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'nearest'});
   }
  }
-}if(action==='share'){try{await navigator.clipboard.writeText(location.href);toast('Link copied');}catch{toast('Share this page using the address bar.')}}if(action==='sign-in'){e.preventDefault();location.hash='#/profile';render();}if(action==='retry-google'){e.preventDefault();void initGoogleAuth();}if(action==='logout'){e.preventDefault();const token=authToken;authToken='';authUser=null;authStep='email';authError='';safeStorageRemove('sessionStorage','lyricverse:session');render();if(token)void fetch(API_URL+'/api/v1/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token}}).catch(()=>{});}});
+}if(action==='share'){try{await navigator.clipboard.writeText(location.href);toast('Link copied');}catch{toast('Share this page using the address bar.')}}if(action==='sign-in'){e.preventDefault();location.hash='#/profile';render();}if(['firebase-google','firebase-reset','firebase-refresh'].includes(action)){e.preventDefault();void runFirebaseAction(action);return;}if(action==='firebase-mode'){e.preventDefault();authMode=authMode==='signup'?'signin':'signup';authError='';render();return;}if(action==='logout'){e.preventDefault();const token=authToken;authToken='';authUser=null;state.saved=[];safeStorageRemove('sessionStorage','lyricverse:session');render();if(token)void fetch(API_URL+'/api/v1/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token}}).catch(()=>{});if(authConfig)void signOutFirebase(authConfig).catch(()=>{});}});
 function renderRouteTransition(){
  const update=()=>{
   window.scrollTo(0,0);
@@ -300,22 +346,32 @@ loadRatingSummary();
 document.addEventListener('click',event=>{const pearl=event.target.closest('a.lyric-pearl');if(!pearl)return;if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;event.preventDefault();if(pearl.classList.contains('is-popping'))return;pearl.classList.add('is-popping');const destination=pearl.getAttribute('href');setTimeout(()=>{location.hash=destination;},430);});
 document.addEventListener('click',async event=>{const button=event.target.closest('[data-lrclib-id]');if(!button)return;const id=Number(button.dataset.lrclibId);if(!Number.isSafeInteger(id)||id<1)return;button.disabled=true;button.setAttribute('aria-busy','true');try{const response=await fetch(API_URL+'/api/v1/providers/lrclib/lyrics?id='+id);const payload=await response.json();if(!response.ok||payload.data?.status!=='available'){toast(payload.data?.status==='permission_required'?'Lyrics publication pending permission':'Lyrics unavailable');return;}activeLrclibLyrics=payload.data;render();}catch{toast('Lyrics unavailable');}finally{button.disabled=false;button.removeAttribute('aria-busy');}});
 
-document.addEventListener('submit',async e=>{if(e.target.id!=='auth-form')return;e.preventDefault();const fd=new FormData(e.target);authEmail=String(fd.get('email')||'').trim();authError='';try{if(authStep==='verify'){await finishAuth(await authCall('email/verify',{email:authEmail,code:String(fd.get('code')||'')}));}else{await authCall('email/request',{email:authEmail});authStep='verify';render();}}catch(err){authError=err.message;render();}});
+document.addEventListener('submit',async e=>{
+ if(e.target.id!=='firebase-auth-form')return;
+ e.preventDefault();
+ const fd=new FormData(e.target);
+ const email=String(fd.get('email')||'').trim(),password=String(fd.get('password')||'');
+ if(!email||password.length<6){authError='Enter your email and a password of at least six characters.';render();return;}
+ await runFirebaseAction(authMode==='signup'?'firebase-create':'firebase-login',[email,password]);
+});
 async function initializeUserAccess(){
- // Show the public site immediately; a sleeping backend must not leave mobile visitors on a blank page.
+ // The public catalog never depends on Firebase availability.
  authConfigChecked=true;render();
+ // Discard legacy local sessions. Firebase will mint a fresh Mongo bridge
+ // session only for an identity verified by the LyricVerse Firebase project.
+ safeStorageRemove('sessionStorage','lyricverse:session');
  try{
-  const r=await fetch(API_URL+'/api/v1/auth/config',{signal:typeof AbortSignal.timeout==='function'?AbortSignal.timeout(12000):undefined});
-  if(r.ok){const config=await r.json();authConfig={googleClientId:config.data?.googleClientId||null,emailEnabled:config.data?.emailEnabled===true};authReady=config.data?.authReady===true;authConfigError='';}
-  else authConfigError='Authentication API returned HTTP '+r.status+'. Check API and CORS settings.';
- }catch{authConfigError='Authentication API is unreachable. Check the API service, network, and CORS settings.';}
- if(authToken){
-  try{const r=await fetch(API_URL+'/api/v1/auth/me',{headers:{Authorization:'Bearer '+authToken},signal:typeof AbortSignal.timeout==='function'?AbortSignal.timeout(10000):undefined});
-   if(r.ok){const payload=await r.json();authUser=payload.data?.user||null;state.saved=authUser?.savedSongs||[];}
-   else if(r.status===401){safeStorageRemove('sessionStorage','lyricverse:session');authToken='';}
-  }catch{authError='Unable to verify session. Please retry.';}
- }
- render();
+   const r=await fetch(API_URL+'/api/v1/auth/config',{
+     signal:typeof AbortSignal.timeout==='function'?AbortSignal.timeout(12000):undefined
+   });
+   if(!r.ok)throw Error('Authentication configuration is unavailable.');
+   const config=(await r.json()).data;
+   authConfig=config?.firebaseConfig||null;
+   authReady=config?.authReady===true;
+   authConfigError='';
+   render();
+   if(authReady&&authConfig)await observeFirebaseUser(authConfig,syncFirebaseUser);
+ }catch(e){authConfigError=e?.message||'Firebase Authentication is unavailable.';authReady=false;render();}
 }
 initializeUserAccess();
 // A remote artwork host may reject embeds; walk through the same gallery image

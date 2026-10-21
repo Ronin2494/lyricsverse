@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createHandler } from '../src/handler.mjs';
-const env={FIREBASE_PROJECT_ID:'lyricsverse-demo-123',FIREBASE_WEB_API_KEY:'AIzaTEST_PUBLIC_SAMPLE_KEY_ABC123',FIREBASE_APP_ID:'1:123456789:web:abc123abc123',MONGODB_URI:'mongodb://localhost:27017/test'};
+const env={AUTH_SECRET:'x'.repeat(40),FIREBASE_PROJECT_ID:'lyricsverse-demo-123',FIREBASE_WEB_API_KEY:'AIzaTEST_PUBLIC_SAMPLE_KEY_ABC123',FIREBASE_APP_ID:'1:123456789:web:abc123abc123',MONGODB_URI:'mongodb://localhost:27017/test'};
 async function config(settings){
  const server=createServer(createHandler({env:settings}));
  await new Promise(done=>server.listen(0,'127.0.0.1',done));

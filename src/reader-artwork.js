@@ -42,3 +42,22 @@ export function nextReaderArtworkSource(image) {
   image.src = next;
   return true;
 }
+
+/**
+ * Advance a failed reader image through verified candidates and a local cover.
+ * A remote provider can return broken HTML, block hotlinking, or time out.
+ * If every source fails, the parent cover's generated artwork stays visible.
+ */
+export function recoverReaderArtwork(image) {
+  if (!image?.dataset) return 'ignored';
+  if (nextReaderArtworkSource(image)) return 'next';
+  const fallback = image.dataset.artworkFallback;
+  if (isReaderArtworkUrl(fallback) && image.src !== fallback &&
+      image.dataset.artworkFinalAttempt !== 'true') {
+    image.dataset.artworkFinalAttempt = 'true';
+    image.src = fallback;
+    return 'fallback';
+  }
+  image.classList?.add('original-thumbnail-image-failed');
+  return 'exhausted';
+}

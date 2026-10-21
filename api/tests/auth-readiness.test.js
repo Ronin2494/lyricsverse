@@ -2,52 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createHandler } from '../src/handler.mjs';
-
-const configured = {
-  AUTH_SECRET: 'x'.repeat(32),
-  RESEND_API_KEY: 'test-resend-key',
-  AUTH_FROM_EMAIL: 'no-reply@example.com',
-  GOOGLE_CLIENT_ID: 'test-google-client-id',
-  MONGODB_URI: 'mongodb://127.0.0.1:27017'
-};
-
-async function readAuthConfig(env) {
-  const server = createServer(createHandler({ env }));
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  try {
-    const response = await fetch('http://127.0.0.1:' + server.address().port + '/api/v1/auth/config');
-    assert.equal(response.status, 200);
-    return (await response.json()).data;
-  } finally {
-    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
-  }
+const env={AUTH_SECRET:'x'.repeat(40),FIREBASE_PROJECT_ID:'lyricsverse-demo-123',FIREBASE_WEB_API_KEY:'AIzaTEST_PUBLIC_SAMPLE_KEY_ABC123',FIREBASE_APP_ID:'1:123456789:web:abc123abc123',MONGODB_URI:'mongodb://localhost:27017/test'};
+async function getConfig(config){
+ const server=createServer(createHandler({env:config}));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const res=await fetch('http://127.0.0.1:'+server.address().port+'/api/v1/auth/config');
+  assert.equal(res.status,200);return (await res.json()).data;
+ }finally{await new Promise(done=>server.close(done));}
 }
-
-test('auth config returns boolean readiness when all providers and MongoDB are configured', async () => {
-  const data = await readAuthConfig(configured);
-  assert.equal(data.authReady, true);
-  assert.equal(typeof data.authReady, 'boolean');
-  assert.equal(data.googleClientId, 'test-google-client-id');
-  assert.equal(data.emailEnabled, true);
+test('Firebase project, web key, app id and database are mandatory',async()=>{
+ const configured=await getConfig(env);
+ assert.equal(configured.authReady,true);
+ assert.equal(typeof configured.authReady,'boolean');
+ for(const key of ['FIREBASE_PROJECT_ID','FIREBASE_WEB_API_KEY','FIREBASE_APP_ID','MONGODB_URI']){
+  const partial=await getConfig({...env,[key]:''});
+  assert.equal(partial.authReady,false,key);
+ }
 });
-
-test('shared prerequisites are required regardless of provider', async () => {
-  for (const key of ['AUTH_SECRET', 'MONGODB_URI']) {
-    const env = { ...configured };
-    delete env[key];
-    const data = await readAuthConfig(env);
-    assert.equal(data.authReady, false, key + ' missing');
-    assert.equal(typeof data.authReady, 'boolean');
-  }
-});
-
-test('one configured provider is sufficient for authentication readiness', async () => {
-  for (const key of ['RESEND_API_KEY', 'AUTH_FROM_EMAIL', 'GOOGLE_CLIENT_ID']) {
-    const env = { ...configured };
-    delete env[key];
-    const data = await readAuthConfig(env);
-    assert.equal(data.authReady, true, key + ' missing should not disable the other provider');
-    assert.equal(data.emailEnabled, key === 'GOOGLE_CLIENT_ID');
-    assert.equal(Boolean(data.googleClientId), key !== 'GOOGLE_CLIENT_ID');
-  }
+test('legacy AUTH_SECRET, Resend and Google credentials no longer enable password or Google login',async()=>{
+ const result=await getConfig({AUTH_SECRET:'x'.repeat(32),RESEND_API_KEY:'sample',AUTH_FROM_EMAIL:'a@example.com',GOOGLE_CLIENT_ID:'old',MONGODB_URI:env.MONGODB_URI});
+ assert.equal(result.authReady,false);
 });

@@ -1,16 +1,17 @@
-import {test} from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import { readFileSync } from 'node:fs';
 const app=readFileSync(new URL('../src/app.js',import.meta.url),'utf8');
-test('mobile Profile route has Google sign-in container',()=>{
- assert.match(app,/function profileHTML\(\)/);
- assert.match(app,/if\(!authUser\)return .*authHTML\(\)/);
- assert.ok(app.includes('id="google-signin"'));
- assert.match(app,/route\.page==='profile'&&!authUser/);
+const client=readFileSync(new URL('../src/firebase-client.js',import.meta.url),'utf8');
+test('mobile profile renders Firebase sign-in without Google Identity Services',()=>{
+ assert.match(app,/if\(!authUser\)return.*authHTML/);
+ assert.match(app,/data-action="firebase-google"/);
+ assert.match(app,/firebase-auth-form/);
+ assert.doesNotMatch(app,/google\.accounts\.id|accounts\.google\.com\/gsi/);
 });
-test('Google sign-in uses container-aware sizing and supports retry',()=>{
- assert.match(app,/target\.getBoundingClientRect\(\)\.width/);
- assert.match(app,/googleScriptPromise=null;throw error/);
- assert.ok(app.includes('data-action="retry-google"'));
- assert.match(app,/action==='retry-google'/);
+test('Firebase Google button supports popup authentication with actionable error recovery',()=>{
+ assert.match(client,/signInWithPopup\(auth,new authSDK\.GoogleAuthProvider\(\)\)/);
+ assert.match(client,/auth\/popup-blocked/);
+ assert.match(client,/auth\/unauthorized-domain/);
+ assert.match(app,/authError=describeFirebaseError\(error\)/);
 });

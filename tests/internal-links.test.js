@@ -34,7 +34,7 @@ test('unmatched uploaded songs still reach internal song details, rather than ex
 
 test('all song discovery surfaces consume shared resolver with the clean existing design',()=>{
   const app=read('src/app.js');
-  assert.match(app,/import \{ internalSongLink, localSongMatches, publishedMatch \} from '\.\/internal-links\.js'/);
+  assert.match(app,/import \{ internalSongLink, localSongMatches, publishedMatch(?:, catalogMatch)? \} from '\.\/internal-links\.js'/);
   assert.match(app,/const songHref = song => internalSongLink/);
   assert.match(app,/function floatingPearlsHTML\(songs\)/);
   assert.match(app,/function songCardHTML\(song\)/);

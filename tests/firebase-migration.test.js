@@ -102,6 +102,6 @@ test('public endpoint exposes only Firebase web config and retires old auth API'
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
 test('Firebase SDK errors provide a user-friendly message',()=>{
- assert.match(describeFirebaseError({code:'auth/unauthorized-domain'}),/authorized domains/);
+ assert.match(describeFirebaseError({code:'auth/unauthorized-domain'}),/temporarily unavailable/);
  assert.match(describeFirebaseError({code:'auth/popup-blocked'}),/pop-ups/);
 });

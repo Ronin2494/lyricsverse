@@ -1,5 +1,6 @@
 // Firebase Auth is loaded only when the backend advertises an explicitly
 // configured LyricVerse Firebase web app. No service-account secrets in JS.
+import { lyricverseFirebaseConfig } from './firebase-config.js';
 const VERSION='12.19.0';
 let clientPromise=null,unsubscribe=null;
 export function describeFirebaseError(error){
@@ -24,18 +25,25 @@ export function validFirebaseConfig(config){
  return Boolean(config&&typeof config==='object'&&
   /^AIza[\w-]{20,}$/.test(String(config.apiKey||''))&&
   /^[a-z0-9][a-z0-9-]{4,70}$/i.test(String(config.projectId||''))&&
-  /^https?:\/\//.test('https://'+String(config.authDomain||''))&&
   /^[a-z0-9.-]+\.firebaseapp\.com$/i.test(String(config.authDomain||''))&&
   typeof config.appId==='string'&&config.appId.length>=10);
 }
-export async function loadFirebaseClient(config){
- if(!validFirebaseConfig(config))throw Error('firebase_not_configured');
+export async function loadFirebaseClient(config=lyricverseFirebaseConfig){
+ if(!validFirebaseConfig(config)||config.projectId!==lyricverseFirebaseConfig.projectId||config.appId!==lyricverseFirebaseConfig.appId)throw Error('firebase_not_configured');
  if(!clientPromise)clientPromise=Promise.all([
    import('https://www.gstatic.com/firebasejs/'+VERSION+'/firebase-app.js'),
    import('https://www.gstatic.com/firebasejs/'+VERSION+'/firebase-auth.js')
  ]).then(([appSDK,authSDK])=>{
    const app=appSDK.initializeApp(config,'lyricsverse');
    const auth=authSDK.getAuth(app);
+   // Analytics is nonessential: unsupported browsers or blocked tracking may
+   // never interrupt authentication or the public lyrics experience.
+   if(config.measurementId && typeof window!=='undefined'){
+     void import('https://www.gstatic.com/firebasejs/'+VERSION+'/firebase-analytics.js')
+       .then(async analyticsSDK=>{
+         if(await analyticsSDK.isSupported())analyticsSDK.getAnalytics(app);
+       }).catch(()=>{});
+   }
    return {auth,authSDK};
  }).catch(error=>{clientPromise=null;throw error;});
  return clientPromise;

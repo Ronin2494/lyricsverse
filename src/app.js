@@ -1,5 +1,5 @@
 import { stopMusicOrbs } from './music-orbs.js';
-import {validateEmailAddress,checkPasswordStrength,validateSignupCredentials,generateSecurePassword} from './password-security.js';
+import {validateEmailAddress,checkPasswordStrength,validateSignupCredentials,validateAuthenticationSubmission,generateSecurePassword,PASSWORD_RESET_CONFIRMATION} from './password-security.js';
 import { observeFirebaseUser,signInFirebaseGoogle,signInFirebaseEmail,createFirebaseEmailAccount,resetFirebasePassword,signOutFirebase,refreshFirebaseIdentity,describeFirebaseError } from './firebase-client.js';
 import { mountMotion } from './motion.js';
 import { openFocusReader } from './reader-focus.js';
@@ -187,11 +187,15 @@ function libraryHTML(){const results=allSongs.filter(s=>state.saved.includes(s.i
 function authHTML(){
  const configured=authReady&&!!authConfig;
  const status=configured?authStatus:(authConfigError||'Sign-in is temporarily unavailable.');
+ const reset=authMode==='reset',signup=authMode==='signup';
+ const email='<label for="firebase-email">Email address</label><input id="firebase-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com" value="'+esc(authEmailDraft)+'" aria-describedby="firebase-form-error">';
+ const password='<label for="firebase-password">Password</label><div class="lv-password-row"><input id="firebase-password" name="password" type="password" autocomplete="'+(signup?'new-password':'current-password')+'" required minlength="'+(signup?'12':'6')+'" maxlength="'+(signup?'128':'256')+'" placeholder="'+(signup?'At least 12 characters':'At least 6 characters')+'" aria-describedby="firebase-form-error firebase-password-rule'+(signup?' firebase-password-guidance':'')+'"><button type="button" class="lv-password-visibility" data-action="firebase-toggle-password" aria-label="Show password" aria-pressed="false">Show</button></div><p class="lv-password-rule" id="firebase-password-rule">'+(signup?'New passwords must be at least 12 characters.':'Password must be at least 6 characters.')+'</p>';
+ const signupFields='<div class="lv-password-meter" aria-live="polite"><span id="firebase-password-guidance">Use 12+ characters and a varied password or a long passphrase.</span><meter id="firebase-password-strength" min="0" max="4" value="0" aria-label="Password strength"></meter></div><button class="lv-password-generate" type="button" data-action="firebase-generate-password">Generate secure password</button><label for="firebase-confirm-password">Confirm password</label><div class="lv-password-row"><input id="firebase-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" required maxlength="128" placeholder="Repeat your password"><button type="button" class="lv-password-visibility" data-action="firebase-toggle-confirm" aria-label="Show password confirmation" aria-pressed="false">Show</button></div>';
+ const form='<form id="firebase-auth-form" novalidate>'+email+(reset?'':password)+(signup?signupFields:'')+'<p class="lv-form-error" id="firebase-form-error" role="alert" aria-live="assertive"></p><button class="button button-primary" type="submit">'+(signup?'Create Firebase account':reset?'Send reset instructions':'Sign in with email')+'</button></form>';
+ const actions='<div class="lv-firebase-actions"><button type="button" data-action="firebase-mode">'+(authMode==='signin'?'Create an account':'Back to sign in')+'</button>'+(authMode==='signin'?'<button type="button" data-action="firebase-reset">Forgot password?</button>':'')+(reset?'':'<button type="button" data-action="firebase-refresh">I verified my email</button>')+'</div>';
  return '<main id="app-main" tabindex="-1" class="auth-gate"><section class="auth-panel lv-firebase-auth"><span class="lv-auth-kicker">LYRICVERSE · SECURE ACCOUNT</span><h1>Welcome to LyricVerse</h1><p>Sign in to save your favorite songs and manage your profile.</p>'+
- (configured?'<button type="button" class="button button-primary lv-firebase-google" data-action="firebase-google">Continue with Google</button>'+
- '<div class="lv-auth-divider"><span>or use email</span></div>'+
- '<form id="firebase-auth-form" novalidate><label for="firebase-email">Email address</label><input id="firebase-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com" value="'+esc(authEmailDraft)+'" aria-describedby="firebase-form-error"><label for="firebase-password">Password</label><div class="lv-password-row"><input id="firebase-password" name="password" type="password" autocomplete="'+(authMode==='signup'?'new-password':'current-password')+'" required maxlength="'+(authMode==='signup'?'128':'256')+'" placeholder="'+(authMode==='signup'?'At least 12 characters':'Your password')+'" aria-describedby="firebase-form-error'+(authMode==='signup'?' firebase-password-guidance':'')+'"><button type="button" class="lv-password-visibility" data-action="firebase-toggle-password" aria-label="Show password" aria-pressed="false">Show</button></div>'+ (authMode==='signup'?'<div class="lv-password-meter" aria-live="polite"><span id="firebase-password-guidance">Use 12+ characters and a varied password or a long passphrase.</span><meter id="firebase-password-strength" min="0" max="4" value="0" aria-label="Password strength"></meter></div><button class="lv-password-generate" type="button" data-action="firebase-generate-password">Generate secure password</button><label for="firebase-confirm-password">Confirm password</label><div class="lv-password-row"><input id="firebase-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" required maxlength="128" placeholder="Repeat your password"><button type="button" class="lv-password-visibility" data-action="firebase-toggle-confirm" aria-label="Show password confirmation" aria-pressed="false">Show</button></div>':'')+'<p class="lv-form-error" id="firebase-form-error" role="alert"></p><button class="button button-primary" type="submit">'+(authMode==='signup'?'Create Firebase account':'Sign in with email')+'</button></form>'+
- '<div class="lv-firebase-actions"><button type="button" data-action="firebase-mode">'+(authMode==='signup'?'Already have an account? Sign in':'Create an account')+'</button><button type="button" data-action="firebase-reset">Reset password</button><button type="button" data-action="firebase-refresh">I verified my email</button></div>':
+ (configured?(reset?'':'<button type="button" class="button button-primary lv-firebase-google" data-action="firebase-google">Continue with Google</button>')+
+ '<div class="lv-auth-divider"><span>'+(reset?'RESET YOUR PASSWORD':'OR USE EMAIL')+'</span></div>'+form+actions:
  '<p class="lv-firebase-unconfigured">Sign-in is temporarily unavailable. Please try again later.</p>')+
  '<p role="status" class="auth-status">'+esc(status)+'</p><p role="alert" class="auth-error">'+esc(authError)+'</p></section></main>';
 }
@@ -257,10 +261,8 @@ async function runFirebaseAction(action,args=[]){
      authStatus='Verification email sent. Verify your email before activating the account.';
      render();
    }else if(action==='firebase-reset'){
-     const email=window.prompt('Enter your account email address');
-     if(!email)return;
-     await resetFirebasePassword(authConfig,email.trim());
-     authStatus='If the account exists, a password-reset message will be sent.';
+     await resetFirebasePassword(authConfig,String(args[0]||'').trim());
+     authStatus=PASSWORD_RESET_CONFIRMATION;
      render();
    }else if(action==='firebase-refresh'){
      const user=await refreshFirebaseIdentity(authConfig);
@@ -313,7 +315,7 @@ app.addEventListener('click',async e=>{const video=e.target.closest('[data-video
    document.querySelector('.youtube-preview-panel')?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'nearest'});
   }
  }
-}if(action==='share'){try{await navigator.clipboard.writeText(location.href);toast('Link copied');}catch{toast('Share this page using the address bar.')}}if(action==='sign-in'){e.preventDefault();location.hash='#/profile';render();}if(['firebase-google','firebase-reset','firebase-refresh'].includes(action)){e.preventDefault();void runFirebaseAction(action);return;}if(action==='firebase-mode'){e.preventDefault();authMode=authMode==='signup'?'signin':'signup';authError='';render();return;}if(action==='firebase-generate-password'){e.preventDefault();const form=document.querySelector('#firebase-auth-form');if(!form)return;try{const pw=generateSecurePassword();form.elements.password.value=pw;form.elements.confirmPassword.value=pw;form.elements.password.type='text';form.elements.confirmPassword.type='text';form.querySelectorAll('.lv-password-visibility').forEach(button=>{button.textContent='Hide';button.setAttribute('aria-pressed','true');});showFirebaseFormError(form,'');updateFirebaseStrength(form);}catch(error){showFirebaseFormError(form,error.message);}return;}if(action==='firebase-toggle-password'||action==='firebase-toggle-confirm'){e.preventDefault();const field=document.getElementById(action==='firebase-toggle-password'?'firebase-password':'firebase-confirm-password');if(!field)return;field.type=field.type==='password'?'text':'password';button.setAttribute('aria-pressed',String(field.type==='text'));button.textContent=field.type==='text'?'Hide':'Show';button.setAttribute('aria-label',field.type==='text'?'Hide password':'Show password');return;}if(action==='logout'){e.preventDefault();const token=authToken;authToken='';authUser=null;state.saved=[];safeStorageRemove('sessionStorage','lyricverse:session');render();if(token)void fetch(API_URL+'/api/v1/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token}}).catch(()=>{});if(authConfig)void signOutFirebase(authConfig).catch(()=>{});}});
+}if(action==='share'){try{await navigator.clipboard.writeText(location.href);toast('Link copied');}catch{toast('Share this page using the address bar.')}}if(action==='sign-in'){e.preventDefault();location.hash='#/profile';render();}if(['firebase-google','firebase-reset','firebase-refresh'].includes(action)){e.preventDefault();void runFirebaseAction(action);return;}if(action==='firebase-mode'){e.preventDefault();authMode=authMode==='signin'?'signup':'signin';authError='';authStatus='';render();return;}if(action==='firebase-reset'){e.preventDefault();authMode='reset';authError='';authStatus='';render();return;}if(action==='firebase-generate-password'){e.preventDefault();const form=document.querySelector('#firebase-auth-form');if(!form)return;try{const pw=generateSecurePassword();form.elements.password.value=pw;form.elements.confirmPassword.value=pw;form.elements.password.type='text';form.elements.confirmPassword.type='text';form.querySelectorAll('.lv-password-visibility').forEach(button=>{button.textContent='Hide';button.setAttribute('aria-pressed','true');});showFirebaseFormError(form,'');updateFirebaseStrength(form);}catch(error){showFirebaseFormError(form,error.message);}return;}if(action==='firebase-toggle-password'||action==='firebase-toggle-confirm'){e.preventDefault();const field=document.getElementById(action==='firebase-toggle-password'?'firebase-password':'firebase-confirm-password');if(!field)return;field.type=field.type==='password'?'text':'password';button.setAttribute('aria-pressed',String(field.type==='text'));button.textContent=field.type==='text'?'Hide':'Show';button.setAttribute('aria-label',field.type==='text'?'Hide password':'Show password');return;}if(action==='logout'){e.preventDefault();const token=authToken;authToken='';authUser=null;state.saved=[];safeStorageRemove('sessionStorage','lyricverse:session');render();if(token)void fetch(API_URL+'/api/v1/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token}}).catch(()=>{});if(authConfig)void signOutFirebase(authConfig).catch(()=>{});}});
 function renderRouteTransition(){
  const update=()=>{
   window.scrollTo(0,0);
@@ -372,18 +374,14 @@ document.addEventListener('submit',async e=>{
  const fd=new FormData(form);
  const email=String(fd.get('email')||'').trim(),password=String(fd.get('password')||'');
  authEmailDraft=email;
- const address=validateEmailAddress(email);
- if(!address.valid){showFirebaseFormError(form,address.message,'email');return;}
- if(authMode==='signup'){
-  const confirm=String(fd.get('confirmPassword')||'');
-  const validation=validateSignupCredentials(email,password,confirm);
-  if(!validation.valid){showFirebaseFormError(form,validation.message,validation.field==='confirm'?'confirmPassword':validation.field);return;}
- }else if(!password){showFirebaseFormError(form,'Enter your password.','password');return;}
+ const confirmation=authMode==='signup'?String(fd.get('confirmPassword')||''):'';
+ const result=validateAuthenticationSubmission({mode:authMode,email,password,confirmation});
+ if(!result.valid){showFirebaseFormError(form,result.message,result.field==='confirm'?'confirmPassword':result.field);return;}
  showFirebaseFormError(form,'');
  const submit=form.querySelector('button[type="submit"]');
  if(submit){submit.disabled=true;submit.textContent='Please wait…';}
- try{await runFirebaseAction(authMode==='signup'?'firebase-create':'firebase-login',[address.email,password]);}
- finally{if(submit.isConnected){submit.disabled=false;submit.textContent=authMode==='signup'?'Create Firebase account':'Sign in with email';}}
+ try{await runFirebaseAction(authMode==='signup'?'firebase-create':authMode==='reset'?'firebase-reset':'firebase-login',authMode==='reset'?[result.email]:[result.email,password]);}
+ finally{if(submit.isConnected){submit.disabled=false;submit.textContent=authMode==='signup'?'Create Firebase account':authMode==='reset'?'Send reset instructions':'Sign in with email';}}
 });
 async function initializeUserAccess(){
  // The public catalog never depends on Firebase availability.

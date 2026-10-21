@@ -2263,3 +2263,56 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
     margin-top: 3px;
   }
 }
+
+
+/* Firebase-only account surface. Keeps the approved LyricVerse color system. */
+.lv-firebase-auth { max-width: 510px; }
+.lv-auth-kicker {
+ display:block; font-size:11px; font-weight:800; letter-spacing:.15em; color:#9ce9fa;
+ margin-bottom:16px;
+}
+.lv-firebase-auth > p { line-height:1.65; }
+.lv-firebase-auth .lv-firebase-google {
+ width:100%; min-height:52px; margin:22px 0 5px;
+ background:linear-gradient(112deg,#f7f7ff,#dce8ff);
+ color:#14204b; border:1px solid rgba(205,212,255,.8);
+ font-weight:800;
+}
+.lv-auth-divider {
+ display:flex; align-items:center; gap:15px; margin:20px 0 15px;
+ color:#b6c6e5; font-size:11px; text-transform:uppercase; letter-spacing:.11em;
+}
+.lv-auth-divider::before,.lv-auth-divider::after {
+ content:""; height:1px; flex:1; background:rgba(161,173,236,.23);
+}
+.lv-firebase-auth #firebase-auth-form {
+ display:flex; flex-direction:column; gap:10px; width:100%;
+}
+.lv-firebase-auth #firebase-auth-form label {
+ font-size:13px; font-weight:700; color:#dce7fa;
+}
+.lv-firebase-auth #firebase-auth-form input {
+ min-height:48px; border-radius:13px; background:#e9edfb; color:#14204b;
+ padding:10px 16px; border:1px solid rgba(174,186,233,.4); width:100%;
+}
+.lv-firebase-auth #firebase-auth-form button {
+ min-height:49px; margin-top:10px; width:100%;
+}
+.lv-firebase-actions {display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:15px;}
+.lv-firebase-actions button {
+ min-height:44px;padding:8px 4px;border:0;background:transparent;
+ color:#a9e8fc;text-underline-offset:4px;font-size:12px;font-weight:700;cursor:pointer;
+}
+.lv-firebase-actions button:hover {text-decoration:underline;}
+.lv-firebase-auth :is(button,input):focus-visible {outline:3px solid #9eefff;outline-offset:3px;}
+.lv-firebase-unconfigured {
+ border:1px solid rgba(233,177,136,.3); border-radius:14px;
+ padding:14px; color:#ffe1ca; background:rgba(126,83,52,.17);
+}
+@media(max-width:650px){
+ .lv-firebase-auth {width:100%;max-width:100%;padding:clamp(17px,4.5vw,27px);}
+ .lv-firebase-actions {flex-direction:column;gap:0;}
+}
+@media(prefers-reduced-motion:reduce){
+ .lv-firebase-auth :is(button,input){animation:none!important;transition:none!important;}
+}

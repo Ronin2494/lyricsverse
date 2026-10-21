@@ -54,7 +54,7 @@ export async function verifyFirebaseIdToken(idToken,env=process.env,{fetcher=fet
     throw Error('invalid_firebase_token');
   const keys=await publicKeys(fetcher,now());
   const cert=keys[header.kid];
-  if(typeof cert!=='string'||!cert.includes('BEGIN CERTIFICATE'))throw Error('invalid_firebase_token');
+  if(typeof cert!=='string'||!(cert.includes('BEGIN CERTIFICATE')||cert.includes('BEGIN PUBLIC KEY')))throw Error('invalid_firebase_token');
   try{
     const verifier=createVerify('RSA-SHA256');
     verifier.update(segments[0]+'.'+segments[1]);

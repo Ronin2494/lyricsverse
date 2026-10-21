@@ -1179,3 +1179,321 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
   }
   .lv-cinematic .lv-stardust-point { opacity: var(--lv-star-opacity); }
 }
+
+
+/* ==========================================================================
+   Reading Studio — an opt-in, distraction-free lyric reading experience.
+   Inspired by Portfolio's cinematic editorial staging and quiet glass panels.
+   All controls stay functional with CSS, native dialog, and keyboard navigation.
+   ========================================================================== */
+.lv-reader-open {
+  min-height: 44px;
+  border-color: rgba(169, 180, 255, .48);
+  background: linear-gradient(135deg, rgba(38, 45, 107, .7), rgba(16, 25, 67, .83));
+  box-shadow: inset 0 1px rgba(255, 255, 255, .07);
+}
+.lv-reader-dialog {
+  color-scheme: dark;
+  --lv-reader-font-size: 22px;
+  --lv-reader-foreground: #f6f3ff;
+  --lv-reader-muted: #aab9d9;
+  --lv-reader-surface: #0b1334;
+  --lv-reader-sheet: linear-gradient(165deg, #141e48 0%, #0a1437 100%);
+  --lv-reader-border: rgba(167, 181, 255, .27);
+  --lv-reader-accent: #91e5fa;
+  box-sizing: border-box;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  width: min(1120px, calc(100vw - 36px));
+  height: min(900px, calc(100dvh - 36px));
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(200, 199, 255, .38);
+  border-radius: clamp(18px, 3vw, 32px);
+  color: var(--lv-reader-foreground);
+  background: #0b1334;
+  box-shadow: 0 46px 128px rgba(0, 2, 23, .76), 0 0 0 1px rgba(128, 116, 255, .06);
+}
+.lv-reader-dialog::backdrop {
+  background: rgba(3, 6, 24, .83);
+  backdrop-filter: blur(15px) saturate(120%);
+  -webkit-backdrop-filter: blur(15px) saturate(120%);
+}
+.lv-reader-dialog:not([open]) { display: none; }
+.lv-reader-fallback-open::before {
+  content: "";
+  position: fixed;
+  z-index: 9998;
+  inset: 0;
+  background: rgba(3, 6, 24, .9);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+}
+.lv-reader-fallback-open { overflow: hidden; }
+.lv-reader-stage {
+  isolation: isolate;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse 60% 45% at 95% 3%, rgba(134, 83, 226, .21), transparent 75%),
+              radial-gradient(ellipse 50% 37% at 5% 90%, rgba(42, 120, 211, .11), transparent 78%),
+              var(--lv-reader-surface);
+}
+.lv-reader-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 500px;
+  height: 500px;
+  right: -210px;
+  top: -260px;
+  border-radius: 50%;
+  border: 1px solid rgba(168, 157, 255, .11);
+  pointer-events: none;
+}
+.lv-reader-stage-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex: none;
+  padding: clamp(20px, 3vw, 37px) clamp(22px, 4vw, 55px) 16px;
+}
+.lv-reader-stage-heading { min-width: 0; }
+.lv-reader-kicker {
+  display: block;
+  color: #a5dffa;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  margin-bottom: 11px;
+}
+.lv-reader-stage-heading h2 {
+  font-family: 'Sora', 'Inter', sans-serif;
+  font-size: clamp(27px, 3.4vw, 44px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -.054em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  margin: 0 0 7px;
+}
+.lv-reader-byline {
+  color: var(--lv-reader-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.lv-reader-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 5px;
+  min-height: 43px;
+  min-width: 94px;
+  padding: 8px 15px;
+  border: 1px solid rgba(161, 172, 241, .43);
+  border-radius: 999px;
+  color: var(--lv-reader-foreground);
+  background: rgba(17, 25, 61, .77);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  transition: background .2s ease, border-color .2s ease;
+}
+.lv-reader-close:hover { background: rgba(83, 73, 145, .48); border-color: #b8adff; }
+.lv-reader-stage-tools {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px clamp(22px, 4vw, 55px) 17px;
+  border-bottom: 1px solid var(--lv-reader-border);
+}
+.lv-reader-hint {
+  color: var(--lv-reader-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.lv-reader-type-controls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+}
+.lv-reader-tool {
+  display: inline-grid;
+  place-items: center;
+  min-width: 43px;
+  min-height: 43px;
+  padding: 8px 11px;
+  border: 1px solid var(--lv-reader-border);
+  border-radius: 13px;
+  background: rgba(53, 59, 121, .36);
+  color: var(--lv-reader-foreground);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease;
+}
+.lv-reader-tool:hover:not(:disabled) {
+  border-color: #ab9fff;
+  background: rgba(91, 81, 167, .42);
+}
+.lv-reader-tool:disabled { opacity: .43; cursor: not-allowed; }
+.lv-reader-font-size {
+  min-width: 45px;
+  font-size: 11px;
+  color: var(--lv-reader-muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.lv-reader-theme { min-width: 95px; }
+.lv-reader-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scrollbar-color: rgba(163, 165, 255, .5) transparent;
+  scrollbar-width: thin;
+  outline-offset: -4px;
+}
+.lv-reader-sheet {
+  width: min(100% - 52px, 760px);
+  min-height: 100%;
+  margin-inline: auto;
+  padding: clamp(26px, 4vw, 48px) clamp(10px, 3vw, 36px) clamp(60px, 8vw, 100px);
+  position: relative;
+}
+.lv-reader-sheet::before {
+  content: "♪";
+  position: absolute;
+  top: clamp(28px, 4vw, 46px);
+  right: clamp(12px, 4vw, 39px);
+  font-family: Georgia, serif;
+  font-size: 32px;
+  line-height: 1;
+  color: rgba(158, 164, 255, .18);
+  pointer-events: none;
+}
+.lv-reader-poem {
+  font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+  font-size: var(--lv-reader-font-size);
+  line-height: 2.05;
+  font-weight: 450;
+  color: var(--lv-reader-foreground);
+  text-wrap: pretty;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 4;
+  max-width: 66ch;
+  margin: 0 auto;
+  padding-right: 0;
+}
+.lv-reader-stage-foot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 13px;
+  padding: 13px clamp(22px, 4vw, 55px) 18px;
+  border-top: 1px solid var(--lv-reader-border);
+  background: rgba(9, 16, 42, .74);
+}
+.lv-reader-progress-label,
+.lv-reader-progress-value {
+  color: var(--lv-reader-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lv-reader-progress-value { min-width: 36px; text-align: right; }
+.lv-reader-progress {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(130, 146, 203, .25);
+}
+.lv-reader-progress::-webkit-progress-bar { background: rgba(130, 146, 203, .25); border-radius: 9px; }
+.lv-reader-progress::-webkit-progress-value {
+  background: linear-gradient(90deg, #a38afa, #77deee);
+  border-radius: 9px;
+}
+.lv-reader-progress::-moz-progress-bar { background: linear-gradient(90deg, #a38afa, #77deee); }
+/* Optional soft ivory reading sheet, independent of the dark brand surrounding it. */
+.lv-reader-paper {
+  color-scheme: light;
+  --lv-reader-foreground: #262c43;
+  --lv-reader-muted: #5f6680;
+  --lv-reader-surface: #f7f0e5;
+  --lv-reader-sheet: #faf6ee;
+  --lv-reader-border: rgba(77, 78, 115, .2);
+  --lv-reader-accent: #5745ae;
+  border-color: rgba(255, 245, 226, .55);
+}
+.lv-reader-paper .lv-reader-stage {
+  background: radial-gradient(ellipse at 85% 0%, #e6def6, transparent 55%),
+              linear-gradient(155deg, #f8f2e8, #f1e9de);
+}
+.lv-reader-paper .lv-reader-stage-head,
+.lv-reader-paper .lv-reader-stage-tools,
+.lv-reader-paper .lv-reader-stage-foot { background: rgba(255, 251, 244, .38); }
+.lv-reader-paper .lv-reader-kicker { color: #5a4daa; }
+.lv-reader-paper .lv-reader-close,
+.lv-reader-paper .lv-reader-tool {
+  background: rgba(255, 255, 255, .66);
+  color: var(--lv-reader-foreground);
+  border-color: rgba(84, 79, 145, .24);
+}
+.lv-reader-paper .lv-reader-tool:hover:not(:disabled),
+.lv-reader-paper .lv-reader-close:hover { background: #e7def6; }
+.lv-reader-paper .lv-reader-stage-foot { background: rgba(247, 239, 224, .8); }
+.lv-reader-paper .lv-reader-progress { background: rgba(126, 113, 166, .16); }
+.lv-reader-paper .lv-reader-progress::-webkit-progress-bar { background: rgba(126, 113, 166, .16); }
+.lv-reader-paper .lv-reader-sheet::before { color: rgba(109, 94, 157, .2); }
+.lv-reader-dialog :is(button,section):focus-visible {
+  outline: 2px solid var(--lv-reader-accent);
+  outline-offset: 3px;
+}
+@media(max-width:700px) {
+  .lv-reader-dialog {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    border: 0;
+  }
+  .lv-reader-stage-head { padding: 19px 19px 12px; gap: 13px; }
+  .lv-reader-stage-heading h2 { font-size: clamp(26px, 7vw, 33px); }
+  .lv-reader-close { padding-inline: 11px; min-width: 76px; }
+  .lv-reader-stage-tools { padding: 9px 19px 15px; align-items: flex-start; flex-direction: column; gap: 11px; }
+  .lv-reader-type-controls { width: 100%; }
+  .lv-reader-theme { margin-left: auto; }
+  .lv-reader-sheet { width: min(100% - 30px, 700px); padding: 27px 13px 80px; }
+  .lv-reader-poem { line-height: 1.9; }
+  .lv-reader-stage-foot { padding: 15px 19px max(16px, env(safe-area-inset-bottom)); }
+  .lv-reader-progress-label { display: none; }
+}
+@media(prefers-reduced-motion: reduce) {
+  .lv-reader-dialog *,
+  .lv-reader-dialog *::before,
+  .lv-reader-dialog *::after { animation: none !important; transition: none !important; }
+  .lv-reader-viewport { scroll-behavior: auto; }
+}

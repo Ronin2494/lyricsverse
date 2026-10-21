@@ -1497,3 +1497,284 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
   .lv-reader-dialog *::after { animation: none !important; transition: none !important; }
   .lv-reader-viewport { scroll-behavior: auto; }
 }
+
+
+/* ==========================================================================
+   Library opening composition — Portfolio-inspired editorial bento empty state.
+   Never represents demo tracks as saved songs. Native links remain navigable.
+   ========================================================================== */
+.lv-library-empty {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.16fr) minmax(290px, .84fr);
+  gap: clamp(20px, 4vw, 64px);
+  align-items: center;
+  min-height: 370px;
+  overflow: hidden;
+  margin-block: clamp(20px, 4vw, 38px) 50px;
+  padding: clamp(30px, 5.3vw, 76px);
+  border: 1px solid rgba(174, 164, 254, .31);
+  border-radius: clamp(23px, 3vw, 34px);
+  background:
+    radial-gradient(ellipse 50% 70% at 91% 41%, rgba(122, 79, 231, .3), transparent 70%),
+    radial-gradient(ellipse 46% 55% at 6% 95%, rgba(43, 119, 203, .22), transparent 70%),
+    linear-gradient(132deg, #121c47 2%, #101637 48%, #17183a 100%);
+  box-shadow: 0 30px 86px rgba(1, 4, 28, .38), inset 0 1px rgba(243, 230, 255, .09);
+}
+.lv-library-empty::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-radial-gradient(
+    circle at 81% 50%, transparent 0 22px, rgba(145, 139, 255, .045) 23px 24px, transparent 25px 49px
+  );
+  mask-image: linear-gradient(90deg, transparent 24%, #000 96%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 24%, #000 96%);
+}
+.lv-library-empty-copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+.lv-library-empty-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: clamp(20px, 3vw, 32px);
+  color: #b3ddf8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .17em;
+}
+.lv-library-empty-kicker span {
+  color: #dcb1ff;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+.lv-library-empty-copy h2 {
+  max-width: 16ch;
+  margin: 0 0 22px;
+  color: #f9f8ff;
+  font-family: 'Sora', 'Inter', sans-serif;
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: 700;
+  line-height: 1.11;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+.lv-library-empty-copy > p {
+  max-width: 50ch;
+  margin: 0;
+  color: #ced5f1;
+  font-size: clamp(14px, 1.2vw, 16px);
+  line-height: 1.78;
+  text-wrap: pretty;
+}
+.lv-library-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+}
+.lv-library-empty-actions .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 47px;
+  padding-inline: 20px;
+  white-space: normal;
+  text-align: center;
+}
+.lv-library-empty-secondary {
+  border: 1px solid rgba(179, 175, 255, .4);
+  background: rgba(34, 47, 100, .41);
+}
+.lv-library-empty-guide {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 28px;
+  color: #a8b6d5;
+  font-size: 11px;
+  letter-spacing: .025em;
+  line-height: 1.6;
+}
+.lv-library-empty-guide-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8be8e9;
+  box-shadow: 0 0 13px rgba(131, 236, 235, .6);
+}
+.lv-library-empty-stage {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 320px;
+  perspective: 800px;
+  pointer-events: none;
+}
+.lv-library-empty-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 92%;
+  height: 75%;
+  border-radius: 50%;
+  background: rgba(123, 94, 239, .24);
+  filter: blur(55px);
+}
+.lv-library-empty-orbit {
+  position: absolute;
+  width: min(96%, 370px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(181, 161, 255, .22);
+  border-radius: 50%;
+  transform: rotate(-26deg) scaleY(.8);
+}
+.lv-library-empty-orbit-two {
+  width: min(112%, 428px);
+  border-color: rgba(134, 183, 255, .11);
+  transform: rotate(26deg) scaleY(.73);
+}
+.lv-library-empty-record {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(180px, 22vw, 265px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle, transparent 0 5px, rgba(219, 217, 255, .1) 6px 7px, transparent 8px 11px),
+    conic-gradient(from 30deg, #12183b, #8c6dca, #1c2256, #232a65, #151c45, #a87ccf, #141b40);
+  box-shadow: 0 23px 58px rgba(1, 3, 27, .56), inset 0 0 0 3px rgba(223, 218, 255, .16), 0 0 45px rgba(145, 89, 239, .16);
+  transform: rotate(-17deg) rotateY(13deg);
+}
+.lv-library-empty-record::before {
+  content: "";
+  position: absolute;
+  inset: 13%;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 193, 255, .2);
+  box-shadow: inset 0 0 22px rgba(3, 5, 27, .48);
+}
+.lv-library-empty-record-label {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 29%;
+  aspect-ratio: 1;
+  border: 4px solid rgba(8, 15, 37, .6);
+  border-radius: 50%;
+  background: radial-gradient(circle at 33% 24%, #e4d8fd, #ac90e4 44%, #685ba6);
+  color: #222049;
+  font-family: 'Sora', 'Inter', sans-serif;
+  font-size: clamp(12px, 1.6vw, 19px);
+  font-weight: 850;
+  box-shadow: 0 0 0 1px rgba(237, 219, 255, .18);
+}
+.lv-library-empty-record-label i {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #121535;
+}
+.lv-library-empty-card {
+  position: absolute;
+  right: min(-10px, -2%);
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 275px);
+  padding: 13px;
+  border: 1px solid rgba(207, 206, 255, .36);
+  border-radius: 17px;
+  background: rgba(28, 31, 79, .83);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 22px 42px rgba(2, 5, 28, .44), inset 0 1px rgba(255, 255, 255, .12);
+  transform: rotate(-3deg);
+}
+.lv-library-empty-card-art {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  color: #f8f8ff;
+  background: linear-gradient(130deg, #9879db, #355dba);
+  font-size: 23px;
+}
+.lv-library-empty-card-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.lv-library-empty-card-copy strong {
+  font-size: 9px;
+  letter-spacing: .13em;
+  color: #e9e4ff;
+}
+.lv-library-empty-card-copy small {
+  font-size: 11px;
+  color: #b9c8e9;
+  line-height: 1.3;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .lv-library-empty-record {
+    transition: transform .55s cubic-bezier(.2,.7,.2,1);
+  }
+  .lv-library-empty:hover .lv-library-empty-record {
+    transform: rotate(-11deg) rotateY(5deg) translateY(-6px);
+  }
+  .lv-library-empty-card {
+    transition: transform .42s cubic-bezier(.2,.7,.2,1);
+  }
+  .lv-library-empty:hover .lv-library-empty-card {
+    transform: rotate(-1deg) translateY(-5px);
+  }
+}
+@media (max-width: 850px) {
+  .lv-library-empty {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, .67fr);
+    padding: clamp(25px, 4vw, 42px);
+    gap: 20px;
+  }
+  .lv-library-empty-record { width: clamp(145px, 22vw, 230px); }
+  .lv-library-empty-stage { min-height: 270px; }
+}
+@media (max-width: 650px) {
+  .lv-library-empty {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 27px 22px 25px;
+    gap: 9px;
+    margin-top: 18px;
+    border-radius: 22px;
+    min-height: 0;
+  }
+  .lv-library-empty-copy h2 { font-size: clamp(29px, 8vw, 40px); }
+  .lv-library-empty-copy > p { max-width: none; }
+  .lv-library-empty-actions { gap: 10px; margin-top: 23px; }
+  .lv-library-empty-actions .button { min-height: 44px; padding: 10px 15px; font-size: 12px; }
+  .lv-library-empty-stage { min-height: 235px; margin-top: 10px; }
+  .lv-library-empty-record { width: 160px; }
+  .lv-library-empty-card { width: min(70%, 235px); right: 4%; bottom: 0; padding: 9px; }
+  .lv-library-empty-card-art { width: 34px; height: 34px; font-size: 19px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-library-empty *,
+  .lv-library-empty *::before,
+  .lv-library-empty *::after { animation: none !important; transition: none !important; }
+}

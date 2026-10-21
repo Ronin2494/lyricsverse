@@ -3,23 +3,40 @@
 import { lyricverseFirebaseConfig } from './firebase-config.js';
 const VERSION='12.19.0';
 let clientPromise=null,unsubscribe=null;
-export function describeFirebaseError(error){
+export function describeFirebaseError(error,action='signin'){
   const code=String(error?.code||'');
+  const invalidCredentials='Incorrect email or password. Check your details and try again, or reset your password.';
   const messages={
-    'auth/popup-closed-by-user':'Sign-in was cancelled.',
-    'auth/popup-blocked':'Your browser blocked the sign-in window. Allow pop-ups for LyricVerse and try again.',
-    'auth/unauthorized-domain':'LyricVerse must be added to Firebase Authentication authorized domains.',
-    'auth/invalid-credential':'Email or password was not accepted.',
-    'auth/wrong-password':'Email or password was not accepted.',
-    'auth/user-not-found':'Email or password was not accepted.',
-    'auth/email-already-in-use':'This email is already registered. Sign in instead.',
-    'auth/weak-password':'Choose a stronger password (at least six characters).',
+    'auth/invalid-credential':invalidCredentials,
+    'auth/wrong-password':invalidCredentials,
+    'auth/user-not-found':invalidCredentials,
+    'auth/invalid-login-credentials':invalidCredentials,
+    'auth/invalid-password':invalidCredentials,
     'auth/invalid-email':'Enter a valid email address.',
-    'auth/too-many-requests':'Too many attempts. Try again later.',
-    'auth/network-request-failed':'A network error interrupted sign-in. Try again.',
-    'auth/operation-not-allowed':'Enable this sign-in provider in Firebase Authentication.'
+    'auth/missing-email':'Enter your email address.',
+    'auth/missing-password':'Enter your password.',
+    'auth/email-already-in-use':'An account already uses this email. Sign in or reset your password.',
+    'auth/weak-password':'Choose a stronger password. Try the secure password generator.',
+    'auth/too-many-requests':'Too many sign-in attempts. Try again later or reset your password.',
+    'auth/user-disabled':'This account has been disabled. Please contact support.',
+    'auth/network-request-failed':'Connection problem. Check your internet and try again.',
+    'auth/popup-closed-by-user':'Sign-in was cancelled. Try again when you are ready.',
+    'auth/cancelled-popup-request':'The previous sign-in window was cancelled. Please try again.',
+    'auth/popup-blocked':'Your browser blocked the sign-in window. Allow pop-ups and try again.',
+    'auth/unauthorized-domain':'Google sign-in is temporarily unavailable on this website. Please try again later.',
+    'auth/operation-not-allowed':'This sign-in method is currently unavailable. Please use another method.',
+    'auth/account-exists-with-different-credential':'This email already uses another sign-in method. Try that method.',
+    'auth/requires-recent-login':'For security, please sign in again and retry.',
+    'auth/invalid-api-key':'Sign-in is temporarily unavailable. Please try again later.',
+    'auth/app-not-authorized':'Sign-in is temporarily unavailable. Please try again later.',
+    'auth/internal-error':'We could not complete sign-in right now. Please try again later.'
   };
-  return messages[code]||'Firebase sign-in could not be completed. Please try again.';
+  if(messages[code])return messages[code];
+  if(error?.message==='firebase_not_configured')return 'Sign-in is temporarily unavailable. Please try again later.';
+  if(action==='signup')return 'We could not create your account. Check your details and try again.';
+  if(action==='reset')return 'We could not send the reset email. Check your address and try again.';
+  if(action==='google')return 'Google sign-in could not be completed. Please try again.';
+  return 'We could not sign you in. Check your details or try again later.';
 }
 export function validFirebaseConfig(config){
  return Boolean(config&&typeof config==='object'&&

@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="membership.css?v=gallery-refinement-20261020" />
 <link rel="stylesheet" href="work-showcase.css?v=1" />
 <link rel="stylesheet" href="intro-orbit.css?v=1" />
+<link rel="stylesheet" href="beyond.css?v=1" />
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4702288635921911" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -102,7 +103,42 @@
       <div class="more-work section-reveal"><span>ALWAYS EXPERIMENTING. ALWAYS BUILDING.</span><a href="https://github.com/Ronin2494" target="_blank" rel="noopener noreferrer">Explore my GitHub <span aria-hidden="true">↗</span></a></div>
     </section>
     <section class="manifesto section-reveal" aria-labelledby="manifesto-title"><p class="kicker">02 / HOW I THINK</p><div class="manifesto-inner"><span class="manifesto-quote">“</span><h2 id="manifesto-title">The best products don't just solve a problem.<br /><em>They make life feel different.</em></h2><p>I start with a question, follow the people, and build toward something useful.</p></div><div class="manifesto-pills"><span>Curiosity first</span><span>Human-centered thinking</span><span>Prototype, learn, repeat</span></div></section>
-    <section id="beyond" class="beyond section-reveal" aria-labelledby="beyond-title"><div class="section-heading"><div><p class="kicker">03 / BEYOND THE SCREEN</p><h2 id="beyond-title">More than<br /><span>the work.</span></h2></div><p>A product is one way to express an idea. There are plenty of others.</p></div><div class="hobby-grid"><div class="hobby-card music-card"><span class="hobby-number">01 / RHYTHM</span><div class="hobby-graphic music-bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div><h3>Sing. Rap. Write.</h3><p>Small songs, big ideas, and everything in between.</p></div></div><div class="hobby-card dance-card"><span class="hobby-number">02 / MOVEMENT</span><div class="hobby-graphic dance-orbit" aria-hidden="true"><div></div><div></div><div></div></div><div><h3>Move differently.</h3><p>Dance as creative expression and a way to stay present.</p></div></div><div class="hobby-card mind-card"><span class="hobby-number">03 / PRESENCE</span><div class="hobby-graphic zen-graphic" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Go inward.</h3><p>Meditation, philosophy, and the practice of understanding ourselves.</p></div></div><div class="hobby-card build-card"><span class="hobby-number">04 / CURIOSITY</span><div class="hobby-graphic build-graphic" aria-hidden="true"><span>?</span><span>→</span><span>!</span></div><div><h3>Keep creating.</h3><p>Experiments that turn everyday frustrations into better possibilities.</p></div></div></div></section>
+    <section id="beyond" class="beyond section-reveal" aria-labelledby="beyond-title">
+      <div class="section-heading"><div><p class="kicker">03 / BEYOND THE SCREEN</p><h2 id="beyond-title">More than<br /><span>the work.</span></h2></div><p>Four corners of my life. Select a card to explore.</p></div>
+      <div class="hobby-grid" id="beyond-grid">
+        <button type="button" class="hobby-card music-card" data-interest="music" aria-expanded="false" aria-controls="beyond-detail">
+          <span class="hobby-number">01 / RHYTHM</span>
+          <span class="hobby-graphic music-bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+          <span class="hobby-copy"><span class="hobby-heading">Sing. Rap.<br />Write.</span><span class="hobby-description">Original compositions and performances.</span></span>
+          <span class="hobby-open">OPEN THE COLLECTION <span aria-hidden="true">↗</span></span>
+        </button>
+        <button type="button" class="hobby-card dance-card" data-interest="movement" aria-expanded="false" aria-controls="beyond-detail">
+          <span class="hobby-number">02 / MOVEMENT</span>
+          <span class="hobby-graphic dance-orbit" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="hobby-copy"><span class="hobby-heading">Move<br />differently.</span><span class="hobby-description">My daily steps and active calories.</span></span>
+          <span class="hobby-open">VIEW DAILY ACTIVITY <span aria-hidden="true">↗</span></span>
+        </button>
+        <button type="button" class="hobby-card mind-card" data-interest="presence" aria-expanded="false" aria-controls="beyond-detail">
+          <span class="hobby-number">03 / PRESENCE</span>
+          <span class="hobby-graphic zen-graphic" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="hobby-copy"><span class="hobby-heading">Go inward.</span><span class="hobby-description">Meditation and mindfulness films.</span></span>
+          <span class="hobby-open">WATCH THE PRACTICE <span aria-hidden="true">↗</span></span>
+        </button>
+        <button type="button" class="hobby-card build-card" data-interest="questions" aria-expanded="false" aria-controls="beyond-detail">
+          <span class="hobby-number">04 / CURIOSITY</span>
+          <span class="hobby-graphic build-graphic" aria-hidden="true"><span>?</span><span>→</span><span>!</span></span>
+          <span class="hobby-copy"><span class="hobby-heading">Keep creating.</span><span class="hobby-description">Questions currently on my mind.</span></span>
+          <span class="hobby-open">EXPLORE THE QUESTIONS <span aria-hidden="true">↗</span></span>
+        </button>
+      </div>
+      <div id="beyond-detail" class="beyond-detail" hidden tabindex="-1" aria-labelledby="beyond-detail-title">
+        <div class="beyond-detail-head">
+          <div><span class="beyond-detail-eyebrow" id="beyond-detail-index"></span><h3 id="beyond-detail-title"></h3><p id="beyond-detail-description"></p></div>
+          <button type="button" class="beyond-close" id="beyond-close" aria-label="Close selected interest">CLOSE <span aria-hidden="true">×</span></button>
+        </div>
+        <div id="beyond-detail-content"></div>
+      </div>
+    </section>
     <section id="creative" class="creative-gallery creative-wall section-reveal" aria-labelledby="creative-title">
       <div class="creative-heading"><div><p class="kicker">04 / CREATIVE WALL</p><h2 id="creative-title">Four frames.<br/><em>One universe.</em></h2></div><p>Gaming, singing, dance, and ideas. Watch right here, without leaving the portfolio.</p></div>
       <div class="creative-wall-grid" aria-label="Four featured videos">
@@ -170,6 +206,7 @@
 
 <script src="work-showcase.js?v=1" defer></script>
 <script src="intro-orbit.js?v=1" defer></script>
+<script src="beyond.js?v=1" defer></script>
 <script type="module" src="main.js?v=portal-handoff-fast-2"></script>
 </body>
 </html>

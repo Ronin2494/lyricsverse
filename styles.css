@@ -2316,3 +2316,28 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
 @media(prefers-reduced-motion:reduce){
  .lv-firebase-auth :is(button,input){animation:none!important;transition:none!important;}
 }
+
+
+/* Account form: clear inline validation, accessible strength and secure generator. */
+.lv-firebase-auth .lv-password-row{display:flex;align-items:center;position:relative;gap:8px;}
+.lv-firebase-auth .lv-password-row input{min-width:0;flex:1;}
+.lv-firebase-auth .lv-password-visibility{
+ flex:0 0 58px;min-height:44px;max-height:46px;border:1px solid rgba(168,186,242,.45);
+ background:rgba(29,46,97,.82);color:#eaf4ff;border-radius:11px;cursor:pointer;
+ font-size:12px;font-weight:700;
+}
+.lv-firebase-auth #firebase-auth-form .lv-password-generate{
+ width:auto;min-height:44px;max-width:max-content;padding:8px 4px;margin:0;
+ color:#a3edff;background:transparent;border:0;text-decoration:underline;
+ text-underline-offset:3px;font-size:12px;font-weight:750;text-align:left;cursor:pointer;
+}
+.lv-firebase-auth .lv-password-meter{display:grid;gap:7px;color:#c8d6f2;font-size:12px;line-height:1.55;}
+.lv-firebase-auth .lv-password-meter meter{width:100%;height:9px;accent-color:#9deafa;}
+.lv-firebase-auth .lv-form-error{min-height:0;margin:0;color:#ffd6cf;font-size:13px;line-height:1.55;}
+.lv-firebase-auth #firebase-auth-form button[type="submit"]:disabled{
+ cursor:progress;opacity:.66;box-shadow:none;
+}
+@media(max-width:650px){
+ .lv-firebase-auth .lv-password-row{gap:7px;}
+ .lv-firebase-auth .lv-password-visibility{flex-basis:54px;}
+}

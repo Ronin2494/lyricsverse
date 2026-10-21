@@ -183,7 +183,13 @@
         {transform:'translate3d(0,0,0) scale(1.035)',opacity:1,borderRadius:'41px',filter:'blur(0px)',offset:.77},
         {transform:'none',opacity:1,borderRadius:'34px',filter:'blur(0px)',offset:1}
       ],{duration:620,easing:'cubic-bezier(.16,1,.29,1)',fill:'both'});
-      openMotion.finished.then(()=>{openMotion=null;},()=>{openMotion=null;});
+      const entrance=openMotion;
+      entrance.finished.then(()=>{
+        entrance.cancel(); // Remove fill-mode styles after the entrance ends.
+        if(openMotion===entrance)openMotion=null;
+      },()=>{
+        if(openMotion===entrance)openMotion=null;
+      });
     }catch{openMotion=null;}
   }
   function finishClose(){
@@ -204,7 +210,8 @@
     panel.dataset.closing='true';
     // End the entrance animation before reversing the portal.
     if(openMotion){
-      try{openMotion.finish();}catch{openMotion.cancel();}
+      try{openMotion.finish();}catch{}
+      openMotion.cancel();
       openMotion=null;
     }
     if(reducedMotion.matches||!sourceButton||typeof panel.animate!=='function'){
@@ -217,7 +224,11 @@
         {transform:'translate3d(0,0,0) scale(1.025)',opacity:1,borderRadius:'41px',filter:'blur(0px)',offset:.2},
         {transform:origin,opacity:.72,borderRadius:'44%',filter:'blur(1.8px)'}
       ],{duration:470,easing:'cubic-bezier(.52,.06,.85,.38)',fill:'both'});
-      closeMotion.finished.then(finishClose,finishClose);
+      const exitMotion=closeMotion;
+      exitMotion.finished.then(()=>{
+        exitMotion.cancel(); // Ensure the following opening has no stale transform.
+        finishClose();
+      },finishClose);
     }catch{finishClose();}
   }
   function open(kind,shouldFocus=true){
@@ -256,7 +267,7 @@
   });
   // Defensive cleanup if a browser closes the dialog natively.
   panel.addEventListener('close',()=>{
-    if(!panel.hidden){
+    if(!panel.open&&!panel.hidden){
       panel.hidden=true;
       delete panel.dataset.closing;
       delete panel.dataset.active;

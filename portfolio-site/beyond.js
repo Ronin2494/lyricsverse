@@ -158,35 +158,115 @@
     wrap.append(editor());
     return wrap;
   }
+  // Each card is the physical origin of a native top-layer modal.
+  // Use FLIP animation so closing always returns to that exact source card.
   const renderers={music:renderMusic,movement:renderMovement,presence:renderPresence,questions:renderQuestions};
+  const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  let sourceButton=null,closing=false,openMotion=null,closeMotion=null;
+
+  const fromCard=card=>{
+    const src=card.getBoundingClientRect();
+    const dest=panel.getBoundingClientRect();
+    const x=(src.left+src.width/2)-(dest.left+dest.width/2);
+    const y=(src.top+src.height/2)-(dest.top+dest.height/2);
+    // Scaling is clamped to prevent extreme stretching when layout is tiny.
+    const sx=Math.max(.08,Math.min(1,src.width/dest.width));
+    const sy=Math.max(.08,Math.min(1,src.height/dest.height));
+    return 'translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0) scale('+sx.toFixed(4)+','+sy.toFixed(4)+')';
+  };
+  function animateOpen(card){
+    if(reducedMotion.matches||typeof panel.animate!=='function')return;
+    const origin=fromCard(card);
+    try{
+      openMotion=panel.animate([
+        {transform:origin,opacity:.76,borderRadius:'44%',filter:'blur(1.8px)',offset:0},
+        {transform:'translate3d(0,0,0) scale(1.035)',opacity:1,borderRadius:'41px',filter:'blur(0px)',offset:.77},
+        {transform:'none',opacity:1,borderRadius:'34px',filter:'blur(0px)',offset:1}
+      ],{duration:620,easing:'cubic-bezier(.16,1,.29,1)',fill:'both'});
+      openMotion.finished.then(()=>{openMotion=null;},()=>{openMotion=null;});
+    }catch{openMotion=null;}
+  }
+  function finishClose(){
+    if(panel.open&&typeof panel.close==='function')panel.close();
+    else panel.removeAttribute('open');
+    panel.hidden=true;
+    delete panel.dataset.closing;
+    delete panel.dataset.active;
+    document.body.classList.remove('beyond-popout-open');
+    buttons.forEach(b=>b.setAttribute('aria-expanded','false'));
+    const card=sourceButton;
+    sourceButton=null;active=null;closing=false;closeMotion=null;
+    if(card)card.focus({preventScroll:true});
+  }
+  function dismiss(){
+    if(!active||closing)return;
+    closing=true;
+    panel.dataset.closing='true';
+    // End the entrance animation before reversing the portal.
+    if(openMotion){
+      try{openMotion.finish();}catch{openMotion.cancel();}
+      openMotion=null;
+    }
+    if(reducedMotion.matches||!sourceButton||typeof panel.animate!=='function'){
+      finishClose();return;
+    }
+    const origin=fromCard(sourceButton);
+    try{
+      closeMotion=panel.animate([
+        {transform:'none',opacity:1,borderRadius:'34px',filter:'blur(0px)'},
+        {transform:'translate3d(0,0,0) scale(1.025)',opacity:1,borderRadius:'41px',filter:'blur(0px)',offset:.2},
+        {transform:origin,opacity:.72,borderRadius:'44%',filter:'blur(1.8px)'}
+      ],{duration:470,easing:'cubic-bezier(.52,.06,.85,.38)',fill:'both'});
+      closeMotion.finished.then(finishClose,finishClose);
+    }catch{finishClose();}
+  }
   function open(kind,shouldFocus=true){
-    if(!renderers[kind])return;
-    active=kind;
+    if(!renderers[kind]||closing)return;
     const h=HEADINGS[kind];
     document.getElementById('beyond-detail-index').textContent=h[0];
     document.getElementById('beyond-detail-title').textContent=h[1];
     document.getElementById('beyond-detail-description').textContent=h[2];
     panel.dataset.active=kind;
     body.replaceChildren(renderers[kind]());
+    const alreadyOpen=panel.open;
+    active=kind;
+    if(alreadyOpen)return; // Live data refreshed; do not replay expansion or steal focus.
+    sourceButton=buttons.find(b=>b.dataset.interest===kind);
+    if(!sourceButton)return;
     panel.hidden=false;
-    buttons.forEach(b=>b.setAttribute('aria-expanded',String(b.dataset.interest===kind)));
-    if(shouldFocus){
-      panel.focus({preventScroll:true});
-      panel.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});
-    }
+    // showModal() places the bubble above the entire page, even inside transformed sections.
+    if(typeof panel.showModal==='function')panel.showModal();
+    else panel.setAttribute('open','');
+    document.body.classList.add('beyond-popout-open');
+    buttons.forEach(b=>b.setAttribute('aria-expanded',String(b===sourceButton)));
+    panel.scrollTop=0;
+    if(shouldFocus)close.focus({preventScroll:true});
+    animateOpen(sourceButton);
   }
-  const dismiss=()=>{
-    const back=buttons.find(b=>b.dataset.interest===active);
-    panel.hidden=true;active=null;delete panel.dataset.active;
-    buttons.forEach(b=>b.setAttribute('aria-expanded','false'));
-    if(back)back.focus({preventScroll:true});
-  };
-  buttons.forEach(b=>b.addEventListener('click',()=>{
-    if(active===b.dataset.interest) dismiss();
-    else open(b.dataset.interest);
-  }));
+  buttons.forEach(b=>b.addEventListener('click',()=>open(b.dataset.interest)));
   close.addEventListener('click',dismiss);
-  panel.addEventListener('keydown',e=>{if(e.key==='Escape')dismiss();});
+  // Intercept the native Escape/cancel action, so it reverses into its source.
+  panel.addEventListener('cancel',event=>{event.preventDefault();dismiss();});
+  // Clicking the dimmed region outside the bubble also reverses the animation.
+  panel.addEventListener('click',event=>{
+    if(event.target!==panel||closing)return;
+    const rect=panel.getBoundingClientRect();
+    if(event.clientX<rect.left||event.clientX>rect.right||
+       event.clientY<rect.top||event.clientY>rect.bottom)dismiss();
+  });
+  // Defensive cleanup if a browser closes the dialog natively.
+  panel.addEventListener('close',()=>{
+    if(!panel.hidden){
+      panel.hidden=true;
+      delete panel.dataset.closing;
+      delete panel.dataset.active;
+      document.body.classList.remove('beyond-popout-open');
+      buttons.forEach(b=>b.setAttribute('aria-expanded','false'));
+      const back=sourceButton;
+      sourceButton=null;active=null;closing=false;
+      if(back)back.focus({preventScroll:true});
+    }
+  });
 
   async function load(){
     const [saved,posts]=await Promise.allSettled([

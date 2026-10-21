@@ -71,7 +71,7 @@ test('05 / activity keeps exactly two cards, dates, seven-day recorded trends, a
   assert.match(m,/records\.filter\(x=>x\.kind==='activity'/);
   assert.match(m,/DAILY STEPS/);
   assert.match(m,/ACTIVE CALORIES/);
-  assert.match(m,/No steps recorded/);
+  assert.match(m,/recorded today/);
   assert.match(m,/activity-bar/);
   assert.match(m,/beyond-activity-dial/);
   assert.match(m,/recorded>1&&entry&&maximum>0/);

@@ -1,5 +1,39 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {execFileSync} from 'node:child_process';const app=readFileSync(new URL('../src/app.js',import.meta.url),'utf8');const api=readFileSync(new URL('../api/src/handler.mjs',import.meta.url),'utf8');const auth=readFileSync(new URL('../api/src/auth.mjs',import.meta.url),'utf8');test('frontend and backend auth files parse',()=>{for(const file of ['../src/app.js','../api/src/handler.mjs','../api/src/auth.mjs'])assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',new URL(file,import.meta.url).pathname]));});test('public pages remain accessible and profile requires sign-in',()=>{assert.doesNotMatch(app,/if\(authReady&&!authUser\)\{app\.innerHTML=authHTML\(\);void initGoogleAuth\(\);return;/);assert.match(app,/if\(route\.page==='profile'&&!authUser\)\{app\.innerHTML=profileHTML\(\);mountMotion\(app\);void initGoogleAuth\(\);return;/);assert.match(app,/authConfigChecked/);assert.match(api,/authReady:authConfigured/);assert.match(app,/email\/verify/);assert.match(app,/google\.accounts\.id/);});test('auth routes and server-side verification',()=>{assert.match(api,/\/api\/v1\/auth\/email\/request/);assert.match(api,/\/api\/v1\/auth\/config/);assert.match(auth,/email_verifications/);assert.match(auth,/timingSafeEqual/);assert.match(auth,/claims\.aud!==env\.GOOGLE_CLIENT_ID/);assert.match(auth,/user_sessions/);});
-
-test('mobile profile opens real sign-in instead of placeholder',()=>{assert.match(app,/route\.page==='profile'\?profileHTML\(\)/);assert.match(app,/function profileHTML\(\)/);assert.match(app,/href="\$\{url\}"/);assert.doesNotMatch(app,/Accounts are planned for the next implementation phase/);assert.match(app,/action==='sign-in'\)\{e\.preventDefault\(\);location\.hash='#\/profile'/);});
-test('mobile storage and initial page render survive blocked browser storage',()=>{assert.match(app,/function safeStorageGet\(/);assert.match(app,/try\{return window\[type\]\?\.getItem/);assert.match(app,/authToken=safeStorageGet\('sessionStorage','lyricverse:session'\)/);assert.match(app,/authConfigChecked=true;render\(\);/);assert.match(app,/function readSaved\(\)\{try\{/);});
-test('profile includes Google, email verification, and sign out when available',()=>{assert.match(app,/authConfig\.emailEnabled/);assert.match(app,/authConfig\.googleClientId/);assert.match(app,/id="auth-form"/);assert.match(app,/id="google-signin"/);assert.match(app,/data-action="logout"/);assert.match(api,/googleClientId:authConfigured\(env\)/);});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+const app=readFileSync(new URL('../src/app.js',import.meta.url),'utf8');
+const api=readFileSync(new URL('../api/src/handler.mjs',import.meta.url),'utf8');
+const fb=readFileSync(new URL('../api/src/firebase-auth.mjs',import.meta.url),'utf8');
+test('Firebase web and server auth modules parse successfully',()=>{
+ for(const file of ['../src/app.js','../src/firebase-client.js','../api/src/firebase-auth.mjs','../api/src/handler.mjs'])
+  assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',new URL(file,import.meta.url).pathname]));
+});
+test('public pages remain accessible and profile uses Firebase',()=>{
+ assert.match(app,/if\(route\.page==='profile'&&!authUser\)/);
+ assert.match(app,/authConfigChecked=true;render\(\)/);
+ assert.match(app,/function authHTML\(\)/);
+ assert.match(app,/firebase-auth-form/);
+ assert.match(app,/data-action="firebase-google"/);
+ assert.doesNotMatch(app,/id="auth-form"|id="google-signin"|google\.accounts\.id/);
+});
+test('legacy email OTP and Google tokeninfo routes no longer authenticate',()=>{
+ assert.match(api,/api\/v1\/auth\/firebase\/session/);
+ assert.doesNotMatch(api,/api\/v1\/auth\/email\/request|api\/v1\/auth\/email\/verify/);
+ assert.doesNotMatch(api,/googleSignIn|verifyEmailOtp|requestEmailOtp/);
+ assert.match(fb,/createSession\(db,user,env,now\)/);
+ assert.match(fb,/firebaseUid/);
+});
+test('mobile profile opens Firebase sign-in, not a placeholder',()=>{
+ assert.match(app,/if\(!authUser\)return.*authHTML/);
+ assert.match(app,/route\.page==='profile'\?profileHTML\(\)/);
+ assert.match(app,/action==='sign-in'\)\{e\.preventDefault\(\);location\.hash='#\/profile'/);
+ assert.match(app,/safeStorageRemove\('sessionStorage','lyricverse:session'\)/);
+});
+test('Firebase account verification keeps profile and favorites',()=>{
+ assert.match(app,/firebaseUser\.emailVerified/);
+ assert.match(app,/syncFirebaseUser\(firebaseUser,error\)/);
+ assert.match(app,/state\.saved=authUser\.savedSongs\|\|\[\]/);
+ assert.match(app,/data-action="logout"/);
+ assert.match(app,/runFirebaseAction/);
+});

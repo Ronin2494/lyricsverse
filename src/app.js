@@ -2,7 +2,8 @@ import { stopMusicOrbs } from './music-orbs.js';
 import { mountMotion } from './motion.js';
 import { openFocusReader } from './reader-focus.js';
 import { readerArtworkSources, recoverReaderArtwork } from './reader-artwork.js';
-import { internalSongLink, localSongMatches, publishedMatch, catalogMatch, publishedLyricsTextMatches } from './internal-links.js';
+import { internalSongLink, localSongMatches, publishedMatch, catalogMatch } from './internal-links.js';
+import { publishedLyricsTextMatches } from './internal-links.js';
 import { allSongs, topSongs, newSongs, readerSong, genresDesktop, genresMobile, originalDemoLyrics, hindiDemoLyrics, hindiSongs, punjabiSongs, genresHindi, findSongs } from './catalog.js';
 
 const app = document.querySelector('#app');

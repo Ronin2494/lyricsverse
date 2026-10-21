@@ -55,7 +55,7 @@ test('form uses client validation, inline feedback and no password POST to our b
  assert.match(app,/if\(authSubmitting\)return/);
  assert.match(app,/submit\.disabled=true/);
  assert.match(app,/showFirebaseFormError\(form/);
- assert.match(app,/authMode==='signup'\?'firebase-create':'firebase-login'/);
+ assert.match(app,/authMode==='signup'\?'firebase-create':authMode==='reset'\?'firebase-reset':'firebase-login'/);
  assert.match(css,/\.lv-password-meter/);
  assert.match(css,/\.lv-form-error/);
  assert.match(app,/JSON\.stringify\(\{idToken\}\)/);

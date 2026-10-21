@@ -76,3 +76,34 @@ export function generateSecurePassword({length=20,cryptoImpl=globalThis.crypto}=
   }
   return letters.join('');
 }
+
+
+// Existing Firebase email/password users may have older, six-character
+// passwords. Do not impose the stronger *registration* policy at login.
+export const MIN_SIGNIN_PASSWORD_LENGTH=6;
+export const MAX_SIGNIN_PASSWORD_LENGTH=256;
+
+export function validateLoginCredentials(email,password){
+  const address=validateEmailAddress(email);
+  if(!address.valid)return {valid:false,field:'email',message:address.message};
+  if(typeof password!=='string'||password.length===0||!password.trim())
+    return {valid:false,field:'password',message:'Enter your password.'};
+  if(password.length<MIN_SIGNIN_PASSWORD_LENGTH)
+    return {valid:false,field:'password',message:'Password must be at least 6 characters.'};
+  if(password.length>MAX_SIGNIN_PASSWORD_LENGTH)
+    return {valid:false,field:'password',message:'Password cannot exceed 256 characters.'};
+  return {valid:true,email:address.email};
+}
+
+export const PASSWORD_RESET_CONFIRMATION=
+  'If an account exists with this email, you will receive password reset instructions.';
+
+export function validateAuthenticationSubmission({mode='signin',email='',password='',confirmation=''}={}){
+  if(mode==='reset'){
+    const address=validateEmailAddress(email);
+    return address.valid?{valid:true,email:address.email}:
+      {valid:false,field:'email',message:address.message};
+  }
+  if(mode==='signup')return validateSignupCredentials(email,password,confirmation);
+  return validateLoginCredentials(email,password);
+}

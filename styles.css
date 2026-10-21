@@ -2341,3 +2341,26 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
  .lv-firebase-auth .lv-password-row{gap:7px;}
  .lv-firebase-auth .lv-password-visibility{flex-basis:54px;}
 }
+
+
+/* Consistent sign-in requirements and password-reset form feedback. */
+.lv-firebase-auth .lv-password-rule{
+ margin: -2px 0 3px;
+ font-size: 12px;
+ line-height: 1.55;
+ color: #c7d8f5;
+}
+.lv-firebase-auth .lv-form-error:not(:empty){
+ padding: 10px 12px;
+ border: 1px solid rgba(247,145,148,.45);
+ border-radius: 10px;
+ background: rgba(171,55,65,.16);
+ color: #ffe1e1;
+}
+.lv-firebase-auth .lv-form-error:empty{display:none;}
+.lv-firebase-auth .auth-status:empty,
+.lv-firebase-auth .auth-error:empty{display:none;}
+.lv-firebase-auth #firebase-auth-form :is(input,button):focus-visible{
+ outline: 3px solid #94dff8;
+ outline-offset: 2px;
+}

@@ -39,6 +39,6 @@ test('login UX keeps email without saving or echoing password',()=>{
  assert.doesNotMatch(app,/Continue with Firebase Authentication to save/);
  assert.doesNotMatch(app,/Firebase sign-in could not be completed/);
  assert.match(app,/if\(authSubmitting\)return/);
- assert.match(app,/showFirebaseFormError\(form,address.message,'email'\)/);
+ assert.match(app,/showFirebaseFormError\(form,result.message/);
  assert.match(app,/JSON.stringify\(\{idToken\}\)/);
 });

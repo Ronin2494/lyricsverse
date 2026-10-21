@@ -1,12 +1,12 @@
 import { createVerify } from 'node:crypto';
 import { getDatabase } from './mongo.mjs';
-import { createSession, validEmail } from './auth.mjs';
+import { createSession, validEmail, authConfigured } from './auth.mjs';
 
 const CERTS_URL='https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 const certCache=new Map();
 const decode=value=>JSON.parse(Buffer.from(value,'base64url').toString('utf8'));
 export function firebaseConfigured(env=process.env){
-  return Boolean(/^[a-z0-9][a-z0-9-]{4,70}$/i.test(String(env.FIREBASE_PROJECT_ID||''))&&
+  return Boolean(authConfigured(env)&&/^[a-z0-9][a-z0-9-]{4,70}$/i.test(String(env.FIREBASE_PROJECT_ID||''))&&
     typeof env.FIREBASE_WEB_API_KEY==='string'&&env.FIREBASE_WEB_API_KEY.length>=15&&
     typeof env.FIREBASE_APP_ID==='string'&&env.FIREBASE_APP_ID.length>=10&&
     (env.MONGODB_URI||env.MONGO_DB_URI));
@@ -17,7 +17,10 @@ export function publicFirebaseConfig(env=process.env){
     apiKey:env.FIREBASE_WEB_API_KEY,
     authDomain:env.FIREBASE_AUTH_DOMAIN||env.FIREBASE_PROJECT_ID+'.firebaseapp.com',
     projectId:env.FIREBASE_PROJECT_ID,
-    appId:env.FIREBASE_APP_ID
+    appId:env.FIREBASE_APP_ID,
+    storageBucket:env.FIREBASE_STORAGE_BUCKET||undefined,
+    messagingSenderId:env.FIREBASE_MESSAGING_SENDER_ID||undefined,
+    measurementId:env.FIREBASE_MEASUREMENT_ID||undefined
   },authReady:true};
 }
 async function publicKeys(fetcher,now){

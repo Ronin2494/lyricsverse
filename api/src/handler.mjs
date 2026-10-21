@@ -1,6 +1,7 @@
 import {authConfigured,requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,updateProfile,updateSavedSongs,logout} from './auth.mjs';
 import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
+import { searchYouTubeVideos } from './video-search.mjs';
 import { searchLrclib } from './lrclib.mjs';
 import {saveRating,getRatingSummary} from './ratings.mjs';
 import { adminAuthStatus, createAdminLyrics, listAdminLyrics, listAdminActivity } from './admin.mjs';
@@ -36,6 +37,12 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
     let url;
     try { url = new URL(req.url, 'http://localhost'); } catch { return jsonResponse(res, 400, { error: 'invalid_url' }, origin); }
     try {
+      if (url.pathname === '/api/v1/media/videos/search' && req.method === 'GET') {
+        const q = (url.searchParams.get('q') || '').trim();
+        if (q.length < 2 || q.length > 120) return jsonResponse(res, 400, { error: 'invalid_query' }, origin);
+        const data = await searchYouTubeVideos(q, { apiKey: env.YOUTUBE_API_KEY });
+        return jsonResponse(res, 200, { data, query: q }, origin);
+      }
       if(url.pathname==='/api/v1/media/youtube-preview'&&req.method==='GET'){
         const title=(url.searchParams.get('title')||'').trim().slice(0,120);
         const artist=(url.searchParams.get('artist')||'').trim().slice(0,120);

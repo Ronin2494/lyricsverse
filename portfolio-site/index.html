@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="work-showcase.css?v=1" />
 <link rel="stylesheet" href="intro-orbit.css?v=1" />
 <link rel="stylesheet" href="beyond.css?v=1" />
+<link rel="stylesheet" href="portfolio-experience.css?v=1" />
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4702288635921911" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -81,6 +82,33 @@
       <div class="scene-bottom-note" aria-hidden="true"><span>RUDRANSH6619 // STORY IN MOTION</span><span>SCROLL TO EXPLORE ↓</span></div>
     </section>    <section class="intro section-reveal" aria-labelledby="intro-title"><div class="eyebrow"><span class="tiny-star">✳</span> THE HUMAN BEHIND THE IDEAS <span class="eyebrow-line"></span> TORONTO, CANADA</div><div class="intro-grid"><div><h2 id="intro-title">I turn <span class="word-gradient">what if</span><br />into <span class="underline-sketch">what's next.</span></h2><p class="intro-sub">I'm Deepak — a product-minded builder connecting technology, strategy, creativity, and the human experience.</p><div class="intro-actions"><a href="#projects" class="primary-button">Explore selected work <span aria-hidden="true">↗</span></a><a href="https://www.linkedin.com/in/deepak-s-b099186b" class="text-button" target="_blank" rel="noopener noreferrer">Get to know me <span aria-hidden="true">↗</span></a></div></div><div class="intro-orbit" aria-hidden="true"><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div><div class="orbit-sun">D<span>·</span>S</div><span class="orbit-label orbit-label-1">CREATE</span><span class="orbit-label orbit-label-2">EXPLORE</span><span class="orbit-label orbit-label-3">EVOLVE</span></div></div></section>
     <section id="projects" class="projects" aria-labelledby="projects-title"><div class="section-heading section-reveal"><div><p class="kicker">01 / SELECTED WORK</p><h2 id="projects-title">Things I've put<br /><span>into motion.</span></h2></div><p>Independent products, real problems, and experiments in making everyday experiences better.</p></div>
+      <div class="experience-view-toggle" id="experience-view-toggle" role="group" aria-label="Choose how to explore projects" hidden>
+        <button type="button" data-project-view="constellation" aria-pressed="true" aria-controls="project-constellation">CONSTELLATION</button>
+        <button type="button" data-project-view="grid" aria-pressed="false" aria-controls="project-grid">BENTO CARDS</button>
+      </div>
+      <div class="project-constellation" id="project-constellation" hidden aria-label="Interactive constellation of six portfolio projects">
+        <div class="constellation-headline"><span>SELECT A STAR · DISCOVER ITS STORY</span><span>06 PROJECTS / ONE UNIVERSE</span></div>
+        <div class="constellation-layout">
+          <div class="constellation-map" id="constellation-map" aria-label="Select a project from the constellation">
+            <svg viewBox="0 0 700 500" class="constellation-lines" aria-hidden="true" preserveAspectRatio="none">
+              <path d="M126 125Q235 20 343 70Q454 62 560 170Q600 265 580 350Q475 440 365 395Q235 455 140 342Q60 244 126 125Z"></path>
+              <path d="M126 125Q260 250 365 395M343 70Q260 210 140 342M560 170Q460 280 365 395M140 342Q350 265 580 350"></path>
+              <circle cx="350" cy="247" r="125"></circle>
+              <circle cx="350" cy="247" r="63"></circle>
+            </svg>
+            <span class="constellation-center" aria-hidden="true">DS<span>·</span></span>
+            <div id="constellation-nodes" class="constellation-nodes"></div>
+          </div>
+          <div class="constellation-preview" id="constellation-preview" tabindex="-1" aria-live="polite">
+            <span class="constellation-preview-index" id="constellation-preview-index">01 / SELECTED WORK</span>
+            <div class="constellation-preview-orb" aria-hidden="true"><span id="constellation-preview-initials">FN</span></div>
+            <h3 id="constellation-preview-title">Select a project</h3>
+            <p id="constellation-preview-description">Tap a glowing point to discover what I'm building.</p>
+            <div id="constellation-preview-tags" class="constellation-preview-tags"></div>
+            <a id="constellation-preview-link" href="#project-grid" class="constellation-preview-cta" hidden target="_blank" rel="noopener noreferrer">EXPLORE PROJECT <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+      </div>
       <div class="work-toolbar" id="work-toolbar" hidden aria-label="Explore selected work">
         <div class="work-toolbar-info">
           <span class="work-toolbar-title">EXPLORE THE COLLECTION</span>
@@ -102,7 +130,9 @@
       </div>
       <div class="more-work section-reveal"><span>ALWAYS EXPERIMENTING. ALWAYS BUILDING.</span><a href="https://github.com/Ronin2494" target="_blank" rel="noopener noreferrer">Explore my GitHub <span aria-hidden="true">↗</span></a></div>
     </section>
-    <section class="manifesto section-reveal" aria-labelledby="manifesto-title"><p class="kicker">02 / HOW I THINK</p><div class="manifesto-inner"><span class="manifesto-quote">“</span><h2 id="manifesto-title">The best products don't just solve a problem.<br /><em>They make life feel different.</em></h2><p>I start with a question, follow the people, and build toward something useful.</p></div><div class="manifesto-pills"><span>Curiosity first</span><span>Human-centered thinking</span><span>Prototype, learn, repeat</span></div></section>
+    <section class="manifesto section-reveal" aria-labelledby="manifesto-title"><p class="kicker">02 / HOW I THINK</p><div class="manifesto-inner"><span class="manifesto-quote">“</span><h2 id="manifesto-title">The best products don't just solve a problem.<br /><em>They make life feel different.</em></h2><p>I start with a question, follow the people, and build toward something useful.</p></div><div class="manifesto-pills"><span>Curiosity first</span><span>Human-centered thinking</span><span>Prototype, learn, repeat</span></div>
+      <div class="kinetic-line" aria-hidden="true"><span>CREATE</span><span>QUESTION</span><span>BUILD</span><span>EXPLORE</span></div>
+    </section>
     <section id="beyond" class="beyond section-reveal" aria-labelledby="beyond-title">
       <div class="section-heading"><div><p class="kicker">03 / BEYOND THE SCREEN</p><h2 id="beyond-title">More than<br /><span>the work.</span></h2></div><p>Each card opens above the page and returns to its place when closed.</p></div>
       <div class="hobby-grid" id="beyond-grid">
@@ -155,12 +185,18 @@
           <h3>More than<br/><em>a résumé.</em></h3>
           <p>It's Time You Started Creating a Video Resume — Again! A short film about expressing your story beyond a traditional résumé.</p>
           <div class="creative-opening-actions">
+            <button type="button" id="enter-film-theater" class="enter-film-theater" aria-haspopup="dialog" aria-controls="film-theater">ENTER THEATER <span aria-hidden="true">↗</span></button>
             <a href="https://www.youtube.com/watch?v=VAUABrdYU6U" target="_blank" rel="noopener noreferrer" aria-label="Watch the featured video on YouTube">WATCH ORIGINAL ↗</a>
             <span>WATCH HERE OR ON YOUTUBE</span>
           </div>
         </div>
       </article>
     </section>
+    <dialog class="film-theater" id="film-theater" aria-modal="true" aria-labelledby="film-theater-title">
+      <div class="film-theater-head"><div><span>FEATURED / CINEMATIC VIEW</span><h2 id="film-theater-title">More than a résumé.</h2></div><button type="button" id="close-film-theater" aria-label="Close theater">CLOSE <span aria-hidden="true">×</span></button></div>
+      <div class="film-theater-screen" id="film-theater-screen"></div>
+      <p>One film. Watch here, or <a href="https://www.youtube.com/watch?v=VAUABrdYU6U" target="_blank" rel="noopener noreferrer">open on YouTube ↗</a></p>
+    </dialog>
     <section id="membership" class="membership-section section-reveal" aria-labelledby="membership-title">
       <div class="membership-intro">
         <div>
@@ -188,6 +224,16 @@
     <footer class="footer"><span>© <span id="year">2026</span> DEEPAK SHARMA. BUILT FROM CURIOSITY.</span><a href="#portal-journey">BACK TO THE UNIVERSE ↑</a><span>MADE TO EXPLORE, NOT JUST SCROLL.</span></footer>
   </div>
 </main>
+<div class="experience-progress" id="experience-progress" aria-hidden="true"></div>
+<div class="personal-dock" id="personal-dock">
+  <button type="button" class="dock-trigger" id="dock-trigger" aria-expanded="false" aria-controls="dock-panel" aria-label="Open Portfolio quick navigation">DS<span>·</span><small>EXPLORE</small></button>
+  <nav class="dock-panel" id="dock-panel" aria-label="Portfolio quick navigation" hidden>
+    <a href="#projects"><span>01</span> BUILDING</a>
+    <a href="#creative"><span>02</span> CREATING</a>
+    <a href="#beyond"><span>03</span> EXPLORING</a>
+    <a href="#connect"><span>04</span> CONNECT</a>
+  </nav>
+</div>
 <script src="scene.js" defer></script>
 
 <script src="membership.js?v=payments-gated-2" defer></script>
@@ -195,6 +241,7 @@
 <script src="work-showcase.js?v=1" defer></script>
 <script src="intro-orbit.js?v=1" defer></script>
 <script src="beyond.js?v=1" defer></script>
+<script src="portfolio-experience.js?v=1" defer></script>
 <script type="module" src="main.js?v=portal-handoff-fast-2"></script>
 </body>
 </html>

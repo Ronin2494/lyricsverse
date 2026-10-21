@@ -103,19 +103,51 @@
   function renderMovement(){
     const wrap=make('div','');
     const today=todayKey();
-    const entry=records.find(x=>x.kind==='activity'&&x.date===today);
+    const activity=records.filter(x=>x.kind==='activity'&&typeof x.date==='string');
+    const byDate=new Map(activity.map(x=>[x.date,x]));
+    const entry=byDate.get(today);
+    const origin=new Date(today+'T12:00:00Z');
+    const recent=Array.from({length:7},(_,i)=>{
+      const day=new Date(origin.getTime()-(6-i)*86400000).toISOString().slice(0,10);
+      return {date:day,record:byDate.get(day)||null};
+    });
+    const recorded=recent.filter(x=>x.record).length;
     const grid=make('div','beyond-activity-grid');
     const data=[
-      ['01 / DAILY STEPS',entry?new Intl.NumberFormat('en-CA').format(entry.steps):'—',
-        entry?'STEPS · WALKING & MOVEMENT':'No steps recorded for today'],
-      ['02 / ACTIVE CALORIES',entry?new Intl.NumberFormat('en-CA').format(entry.activeCalories):'—',
-        entry?'KCAL · ACTIVE ENERGY':'No active calories recorded for today']
+      ['01 / DAILY STEPS','steps','STEPS · WALKING & MOVEMENT'],
+      ['02 / ACTIVE CALORIES','activeCalories','KCAL · ACTIVE ENERGY']
     ];
-    data.forEach(d=>{
+    data.forEach(([label,field,unit])=>{
       const card=make('div','beyond-activity-card');
-      append(card,make('span','beyond-activity-caption',d[0]),
-        make('strong','beyond-activity-value',d[1]),
-        make('span','beyond-activity-foot',d[2]));
+      const observed=recent.map(x=>x.record?.[field]).filter(Number.isFinite);
+      const maximum=Math.max(0,...observed);
+      const comparison=recorded>1&&entry&&maximum>0;
+      const value=entry?new Intl.NumberFormat('en-CA').format(entry[field]):'—';
+      const display=make('div','beyond-activity-display');
+      display.append(make('strong','beyond-activity-value',value));
+      const dial=make('div','beyond-activity-dial');
+      const level=comparison?Math.round(Math.max(0,Math.min(100,entry[field]/maximum*100))):0;
+      dial.setAttribute('style','--level:'+level+'%');
+      dial.setAttribute('aria-label',comparison?level+' percent of the highest recorded daily value over seven days':'Not enough recorded days for comparison');
+      dial.append(make('span','',comparison?level+'%':'—'));
+      display.append(dial);
+      const trend=make('div','beyond-activity-trend');
+      trend.setAttribute('role','img');
+      trend.setAttribute('aria-label','Past seven days: '+recent.map(x=>x.date+': '+(x.record?x.record[field]+' recorded':'no recorded value')).join('; '));
+      recent.forEach((x,i)=>{
+        const bar=make('span','activity-bar');
+        const numeric=x.record?.[field];
+        bar.setAttribute('style','--bar-height:'+(Number.isFinite(numeric)&&maximum>0?Math.max(5,Math.round(numeric/maximum*100)):5)+'%');
+        bar.setAttribute('data-today',String(i===6));
+        if(!x.record)bar.setAttribute('data-missing','true');
+        trend.append(bar);
+      });
+      append(card,make('span','beyond-activity-caption',label),
+        display,make('span','beyond-activity-foot',entry?unit:'No '+(field==='steps'?'steps':'active calories')+' recorded today'),
+        make('span','beyond-activity-caption-secondary',comparison?
+          'TODAY VS HIGHEST RECORDED DAY · LAST 7 DAYS':
+          'LAST 7 DAYS · '+recorded+' RECORDED '+(recorded===1?'DAY':'DAYS')),
+        trend);
       grid.append(card);
     });
     wrap.append(grid,make('p','beyond-activity-date',

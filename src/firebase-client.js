@@ -64,6 +64,13 @@ export async function resetFirebasePassword(config,email){
  const {auth,authSDK}=await loadFirebaseClient(config);
  await authSDK.sendPasswordResetEmail(auth,email);
 }
+export async function refreshFirebaseIdentity(config){
+ const {auth}=await loadFirebaseClient(config);
+ if(!auth.currentUser)return null;
+ await auth.currentUser.reload();
+ await auth.currentUser.getIdToken(true);
+ return auth.currentUser;
+}
 export async function signOutFirebase(config){
  const {auth,authSDK}=await loadFirebaseClient(config);
  return authSDK.signOut(auth);

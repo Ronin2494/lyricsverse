@@ -85,3 +85,12 @@ test('reduced motion, keyboard focus, touch and no-JS behavior retain usability'
   assert.match(css, /@media\(max-width:700px\)/);
   assert.match(script, /if\(!canTilt\.matches\)return/);
 });
+
+test('SeatPath appears as in progress in both filters and constellation', () => {
+  const card = html.match(/<article class="tile tile-seatpath[^]*?<\/article>/)?.[0];
+  assert.ok(card, 'SeatPath exists');
+  assert.match(card, /class="status status-build">IN PROGRESS<\/span>/);
+  assert.doesNotMatch(card, /LIVE PROTOTYPE|status-live/);
+  assert.match(html, /data-work-filter="live"[^\n]*>Live <span class="filter-number" aria-hidden="true">03<\/span>/);
+  assert.match(html, /data-work-filter="building"[^\n]*>In progress <span class="filter-number" aria-hidden="true">03<\/span>/);
+});

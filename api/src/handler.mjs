@@ -1,4 +1,5 @@
-import {authConfigured,requestEmailOtp,verifyEmailOtp,googleSignIn,currentUser,updateProfile,updateSavedSongs,logout} from './auth.mjs';
+import {currentUser,updateProfile,updateSavedSongs,logout} from './auth.mjs';
+import {publicFirebaseConfig,firebaseSignIn} from './firebase-auth.mjs';
 import { fetchAuthorizedLyrics } from './lyrics-reader.mjs';
 import { searchAdditionalSources } from './additional-sources.mjs';
 import { searchYouTubeVideos } from './video-search.mjs';
@@ -62,21 +63,27 @@ export function createHandler({ env = process.env, fetchCatalog = getWikidataSon
           return jsonResponse(res,200,{data:{videoId,searchUrl,available:!!videoId,watchUrl:videoId?'https://www.youtube.com/watch?v='+videoId:null}},origin);
         }catch{return jsonResponse(res,200,{data:{videoId:null,searchUrl,available:false}},origin);}
       }
-      if (url.pathname==='/api/v1/auth/config'&&req.method==='GET')return jsonResponse(res,200,{data:{googleClientId:authConfigured(env)&&(env.MONGODB_URI||env.MONGO_DB_URI)?env.GOOGLE_CLIENT_ID||null:null,emailEnabled:authConfigured(env)&&!!(env.MONGODB_URI||env.MONGO_DB_URI)&&!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL,authReady:authConfigured(env)&&!!(env.MONGODB_URI||env.MONGO_DB_URI)&&(!!env.GOOGLE_CLIENT_ID||(!!env.RESEND_API_KEY&&!!env.AUTH_FROM_EMAIL))}},origin);
+      if (url.pathname==='/api/v1/auth/config'&&req.method==='GET')return jsonResponse(res,200,{data:publicFirebaseConfig(env)},origin);
       if (url.pathname.startsWith('/api/v1/auth/')) {
         const route=url.pathname,token=(req.headers.authorization||'').replace(/^Bearer /i,'');
         if(route==='/api/v1/auth/me'&&req.method==='GET'){const user=await currentUser(token);return jsonResponse(res,user?200:401,user?{data:{user}}:{error:'unauthorized'},origin);}
         if(route==='/api/v1/auth/profile'&&req.method==='POST'){let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>12000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}try{return jsonResponse(res,200,{data:{user:await updateProfile(token,body)}},origin);}catch(error){return jsonResponse(res,error.message==='unauthorized'?401:400,{error:error.message==='unauthorized'?'unauthorized':error.message.startsWith('invalid_')?error.message:'profile_update_failed'},origin);}}
         if(route==='/api/v1/auth/favorites'&&req.method==='POST'){let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>12000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}try{return jsonResponse(res,200,{data:{user:await updateSavedSongs(token,body.savedSongs)}},origin);}catch(error){return jsonResponse(res,error.message==='unauthorized'?401:400,{error:error.message==='unauthorized'?'unauthorized':error.message==='invalid_saved_songs'?'invalid_saved_songs':'favorites_update_failed'},origin);}}
         if(route==='/api/v1/auth/logout'&&req.method==='POST'){await logout(token);return jsonResponse(res,200,{ok:true},origin);}
-        if(!['/api/v1/auth/email/request','/api/v1/auth/email/verify','/api/v1/auth/google'].includes(route)||req.method!=='POST')return jsonResponse(res,405,{error:'method_not_allowed'},origin);
-        const length=Number(req.headers['content-length']||0);if(length>12000)return jsonResponse(res,413,{error:'payload_too_large'},origin);
-        let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>12000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}
+        if(route!=='/api/v1/auth/firebase/session'||req.method!=='POST')return jsonResponse(res,404,{error:'not_found'},origin);
+        const length=Number(req.headers['content-length']||0);
+        if(length>16000)return jsonResponse(res,413,{error:'payload_too_large'},origin);
+        let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>16000)return jsonResponse(res,413,{error:'payload_too_large'},origin);}
         let body;try{body=JSON.parse(raw);}catch{return jsonResponse(res,400,{error:'invalid_json'},origin);}
         try{
-          const data=route.endsWith('/email/request')?await requestEmailOtp(body.email,env):route.endsWith('/email/verify')?await verifyEmailOtp(body.email,body.code,env):await googleSignIn(body.credential,env);
+          const data=await firebaseSignIn(body?.idToken,env);
           return jsonResponse(res,200,{data},origin);
-        }catch(error){const key=error?.message||'auth_failed';const status=key==='auth_not_configured'?503:key==='rate_limited'?429:key==='email_delivery_failed'?502:key.startsWith('invalid')?400:503;if(status===503)console.error('[auth] '+route+' failed:',error);return jsonResponse(res,status,{error:status===503?'auth_unavailable':key},origin);}
+        }catch(error){
+          const key=error?.message||'auth_failed';
+          const status=key==='auth_not_configured'?503:key==='firebase_certificates_unavailable'?503:key==='firebase_account_conflict'?409:key==='invalid_firebase_token'?401:503;
+          if(status===503)console.error('[firebase-auth] session failed:',key);
+          return jsonResponse(res,status,{error:status===503?'auth_unavailable':key},origin);
+        }
       }
       if (url.pathname === '/api/v1/admin/session') {
         if(req.method!=='GET') return jsonResponse(res,405,{error:'method_not_allowed'},origin);

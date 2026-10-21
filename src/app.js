@@ -2,7 +2,7 @@ import { stopMusicOrbs } from './music-orbs.js';
 import { mountMotion } from './motion.js';
 import { openFocusReader } from './reader-focus.js';
 import { readerArtworkSources, recoverReaderArtwork } from './reader-artwork.js';
-import { internalSongLink, localSongMatches, publishedMatch, catalogMatch } from './internal-links.js';
+import { internalSongLink, localSongMatches, publishedMatch, catalogMatch, publishedLyricsTextMatches } from './internal-links.js';
 import { allSongs, topSongs, newSongs, readerSong, genresDesktop, genresMobile, originalDemoLyrics, hindiDemoLyrics, hindiSongs, punjabiSongs, genresHindi, findSongs } from './catalog.js';
 
 const app = document.querySelector('#app');
@@ -112,6 +112,7 @@ function startLiveMusicSearch(){
  clearTimeout(searchDebounceTimer);
  const q=state.query.trim();
  if(currentRoute().page!=='search')return;
+ ++providerRequest;
  if(q.length<2){
    ++providerRequest;providerSongs=[];videoResults=[];videoLoading=false;providerLoading=false;
    providerError=false;videoStatus='idle';activeSearchVideo=null;updateLiveSearchResults();return;
@@ -163,8 +164,8 @@ function videoResultsHTML(){
 }
 function providerResultsHTML(){
  const q=state.query.trim();if(!q)return '';
- const matches=localSongMatches(q,{published:publishedSongs,catalog:allSongs});
- const localHTML=matches.length?'<section class="local-lyrics-results" aria-label="LyricVerse songs"><h2>LyricVerse results</h2><p class="library-description">Explore songs and read uploaded lyrics directly on LyricVerse.</p><div class="compact-lyrics-grid">'+matches.map(item=>'<a class="compact-lyric-card" href="'+esc(item.href)+'"><span class="compact-card-copy"><span class="compact-badge">'+(item.type==='lyrics'?'LYRICVERSE · LYRICS':'LYRICVERSE · SONG DETAILS')+'</span><strong>'+esc(item.title)+'</strong><span class="compact-artist">'+esc(item.artist)+'</span><span class="compact-open">'+(item.type==='lyrics'?'Read lyrics ↗':'View song ↗')+'</span></span></a>').join('')+'</div></section>':'';
+ const matches=localSongMatches(q,{published:publishedSongs,catalog:allSongs});for(const item of publishedLyricsTextMatches(q,publishedSongs)){if(!matches.some(match=>match.href===item.href))matches.push(item);}
+ const localHTML=matches.length?'<section class="local-lyrics-results" aria-label="LyricVerse songs"><h2>LyricVerse results</h2><p class="library-description">Explore songs and read uploaded lyrics directly on LyricVerse.</p><div class="compact-lyrics-grid">'+matches.map(item=>'<a class="compact-lyric-card" href="'+esc(item.href)+'"><span class="compact-card-copy"><span class="compact-badge">'+(item.inLyrics?'LYRICVERSE · LYRICS TEXT':item.type==='lyrics'?'LYRICVERSE · LYRICS':'LYRICVERSE · SONG DETAILS')+'</span><strong>'+esc(item.title)+'</strong><span class="compact-artist">'+esc(item.artist)+'</span><span class="compact-open">'+(item.type==='lyrics'?'Read lyrics ↗':'View song ↗')+'</span></span></a>').join('')+'</div></section>':'';
  const external=providerSongs.filter(song=>['LRCLIB','Genius','Web lyrics search'].includes(song.provider)).filter(song=>song.provider==='Web lyrics search'||!internalSongLink(song,{published:publishedSongs,catalog:allSongs})).sort((a,b)=>Number(b.provider==='Web lyrics search')-Number(a.provider==='Web lyrics search'));
  const externalHTML=providerLoading?'<p>Searching music sources…</p>':providerError?'<p>External search is temporarily unavailable.</p>':external.length?'<div class="compact-lyrics-grid">'+external.map(song=>(song.provider==='LRCLIB'?'<button type="button" class="compact-lyric-card" data-lrclib-id="'+esc(String(song.id||''))+'">':'<a class="compact-lyric-card" href="'+esc(song.url)+'" target="_blank" rel="noopener noreferrer">')+'<span class="compact-card-copy"><span class="compact-badge">'+esc(song.provider)+'</span><strong>'+esc(song.provider==='Web lyrics search'?'Search lyrics across the web':song.title)+'</strong><span class="compact-artist">'+esc(song.provider==='Web lyrics search'?'Additional external results':song.artist)+'</span><span class="compact-open">'+(song.provider==='LRCLIB'?'Read source lyrics':'Find lyrics ↗')+'</span></span>'+(song.provider==='LRCLIB'?'</button>':'</a>')).join('')+'</div>':localHTML?'':'<p>No additional sources found.</p>';
  const reader=activeLrclibLyrics?'<article class="lyrics-reader"><h3>'+esc(activeLrclibLyrics.title)+' — '+esc(activeLrclibLyrics.artist)+'</h3><pre style="white-space:pre-wrap;font:inherit;line-height:1.9">'+esc(activeLrclibLyrics.lyrics)+'</pre></article>':'';

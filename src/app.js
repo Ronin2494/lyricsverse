@@ -269,7 +269,7 @@ async function runFirebaseAction(action,args=[]){
      if(!user)throw Error('Sign in to your Firebase account first.');
      await syncFirebaseUser(user);
    }
- }catch(error){authError=describeFirebaseError(error,action==='firebase-login'?'signin':action==='firebase-create'?'signup':action==='firebase-reset'?'reset':action==='firebase-google'?'google':'signin');render();}finally{authSubmitting=false;}
+ }catch(error){if(action==='firebase-reset'&&['auth/user-not-found','auth/invalid-credential','auth/invalid-email'].includes(error?.code)){authError='';authStatus=PASSWORD_RESET_CONFIRMATION;}else authError=describeFirebaseError(error,action==='firebase-login'?'signin':action==='firebase-create'?'signup':action==='firebase-reset'?'reset':action==='firebase-google'?'google':'signin');render();}finally{authSubmitting=false;}
 }
 function render(){
  const route=currentRoute();

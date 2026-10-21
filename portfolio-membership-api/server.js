@@ -85,7 +85,7 @@ function parsePrice(raw){
   const cents=Math.round(Number(normalized)*100);
   return Number.isSafeInteger(cents)&&cents>=100&&cents<=100000?cents:null;
 }
-let dbStatus = 'connecting', users, bucket, files, orders;
+let dbStatus = 'connecting', users, bucket, files, orders, creativeRecords;
 const sign = value => createHmac('sha256', SECRET).update(value).digest('hex');
 const same = (a, b) => { const x = Buffer.from(a || ''); const y = Buffer.from(b || ''); return x.length === y.length && timingSafeEqual(x,y); };
 const text = (v, max) => typeof v === 'string' ? v.trim().replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0,max) : '';
@@ -151,6 +151,111 @@ async function authorized(req,res,next){
 function adminOnly(req,res,next){if(!isAdmin(req.user))return res.status(403).json({error:'Owner access only.'});next();}
 
 app.get('/api/me',ready,asyncRoute(authorized),(req,res)=>res.json({user:profile(req.user)}));
+
+// Creative interests publishing. Public read; writes require the verified creator.
+const creativeKinds = new Set(['composition','music','meditation','question','activity']);
+const creativeText = (v,max) => typeof v==='string'
+  ? v.trim().replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'').slice(0,max) : '';
+const creativeDate = raw => {
+  const value=String(raw||'');
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number.isFinite(Date.parse(value+'T12:00:00Z')) &&
+    new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value?value:null;
+};
+function creativeVideoURL(raw){
+  try{
+    const u=new URL(String(raw));
+    if(u.protocol!=='https:'||u.username||u.password||u.port)return null;
+    const host=u.hostname.toLowerCase();
+    if(['www.youtube.com','youtube.com','m.youtube.com'].includes(host)){
+      if(u.pathname==='/watch'&&!/^[a-zA-Z0-9_-]{6,20}$/.test(u.searchParams.get('v')||''))return null;
+      if(u.pathname!=='/watch'&&!/^\/(shorts|live)\/[a-zA-Z0-9_-]{6,20}\/?$/.test(u.pathname))return null;
+    }else if(host==='youtu.be'){
+      if(!/^\/[a-zA-Z0-9_-]{6,20}\/?$/.test(u.pathname))return null;
+    }else if(['instagram.com','www.instagram.com'].includes(host)){
+      if(!/^\/(reel|p|tv)\/[a-zA-Z0-9_-]+\/?$/.test(u.pathname))return null;
+    }else return null;
+    u.hash='';
+    return u.href;
+  }catch{return null;}
+}
+function creativeDocument(input){
+  const kind=String(input?.kind||'');
+  if(!creativeKinds.has(kind))return {error:'Choose a valid creative category.'};
+  if(kind==='activity'){
+    const date=creativeDate(input?.date);
+    const steps=input?.steps,activeCalories=input?.activeCalories;
+    if(!date||!Number.isSafeInteger(steps)||steps<0||steps>200000||
+       !Number.isSafeInteger(activeCalories)||activeCalories<0||activeCalories>15000){
+      return {error:'Enter an ISO date, steps (0–200000) and active calories (0–15000).'};
+    }
+    return {record:{kind,date,steps,activeCalories}};
+  }
+  const title=creativeText(input?.title,150);
+  if(!title)return {error:'Enter a title.'};
+  if(kind==='music'||kind==='meditation'){
+    const url=creativeVideoURL(input?.url);
+    if(!url)return {error:'Provide a public Instagram Reel or YouTube video link.'};
+    return {record:{kind,title,url}};
+  }
+  const body=creativeText(input?.body,6000);
+  if(kind==='composition'&&!body)return {error:'Enter your original writing before publishing.'};
+  return {record:{kind,title,body}};
+}
+const publicCreativeRecord = doc => ({
+  id:doc._id.toHexString(),kind:doc.kind,title:doc.title||'',
+  body:doc.body||'',url:doc.url||'',date:doc.date||'',
+  steps:doc.kind==='activity'?doc.steps:undefined,
+  activeCalories:doc.kind==='activity'?doc.activeCalories:undefined
+});
+app.get('/api/creative',asyncRoute(async(_req,res)=>{
+  if(dbStatus!=='connected')return res.json({items:[],pending:true});
+  const docs=await creativeRecords.find({published:true}).sort({updatedAt:-1}).limit(160).toArray();
+  return res.json({items:docs.map(publicCreativeRecord)});
+}));
+app.get('/api/admin/creative',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(_req,res)=>{
+  const docs=await creativeRecords.find({published:true}).sort({updatedAt:-1}).limit(200).toArray();
+  res.json({items:docs.map(publicCreativeRecord)});
+}));
+app.post('/api/admin/creative',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
+  const result=creativeDocument(req.body);
+  if(result.error)return res.status(400).json({error:result.error});
+  const record=result.record;
+  const now=new Date();
+  if(record.kind==='activity'){
+    const item=await creativeRecords.findOneAndUpdate(
+      {kind:'activity',date:record.date},
+      {$set:{...record,published:true,updatedAt:now},
+       $setOnInsert:{createdAt:now,createdBy:req.user.email}},
+      {upsert:true,returnDocument:'after'}
+    );
+    return res.status(200).json({ok:true,item:publicCreativeRecord(item)});
+  }
+  const saved={...record,published:true,createdAt:now,updatedAt:now,createdBy:req.user.email};
+  const resultInsert=await creativeRecords.insertOne(saved);
+  res.status(201).json({ok:true,item:publicCreativeRecord({...saved,_id:resultInsert.insertedId})});
+}));
+app.patch('/api/admin/creative/:id',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
+  if(!ObjectId.isValid(req.params.id))return res.sendStatus(404);
+  const _id=new ObjectId(req.params.id);
+  const prior=await creativeRecords.findOne({_id,published:true});
+  if(!prior)return res.sendStatus(404);
+  const input={...req.body,kind:prior.kind};
+  const result=creativeDocument(input);
+  if(result.error)return res.status(400).json({error:result.error});
+  if(prior.kind==='activity'&&prior.date!==result.record.date)
+    return res.status(409).json({error:'Daily activity dates cannot be changed; create or update the other date.'});
+  await creativeRecords.updateOne({_id},{$set:{...result.record,updatedAt:new Date()}});
+  res.json({ok:true});
+}));
+app.delete('/api/admin/creative/:id',ready,asyncRoute(authorized),adminOnly,asyncRoute(async(req,res)=>{
+  if(!ObjectId.isValid(req.params.id))return res.sendStatus(404);
+  const result=await creativeRecords.deleteOne({_id:new ObjectId(req.params.id),published:true});
+  if(!result.deletedCount)return res.sendStatus(404);
+  res.json({ok:true});
+}));
+
+
 
 // Orders v2: prices are loaded only from published server-side media metadata.
 // Never trust a browser-supplied amount, item label, currency, or checkout URL.
@@ -347,10 +452,13 @@ async function connectDatabase(){
     await connection.connect();
     const db=connection.db(process.env.MONGODB_DB||'badbunny_membership');
     users=db.collection('members');orders=db.collection('paypal_orders');
+    creativeRecords=db.collection('creative_entries');
     bucket=new GridFSBucket(db,{bucketName:'media'});files=db.collection('media.files');
     await Promise.all([
       users.createIndex({email:1},{unique:true}),
-      orders.createIndex({orderId:1},{unique:true}),orders.createIndex({buyerEmail:1,mode:1,status:1,mediaId:1})
+      orders.createIndex({orderId:1},{unique:true}),orders.createIndex({buyerEmail:1,mode:1,status:1,mediaId:1}),
+      creativeRecords.createIndex({kind:1,date:1},{unique:true,partialFilterExpression:{kind:'activity'}}),
+      creativeRecords.createIndex({published:1,updatedAt:-1})
     ]);
     dbStatus='connected';
   }catch(e){dbStatus='unavailable';console.error('MongoDB setup:',e.message);}

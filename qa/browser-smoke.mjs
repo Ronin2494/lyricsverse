@@ -53,10 +53,10 @@ async function run(label,fn){try{await fn();results.passed.push(label);console.l
 async function audit(page,label){
  await page.addScriptTag({path:axePath});
  const a=await page.evaluate(()=>axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));
- results.a11y.push({label,violations:a.violations.map(x=>({id:x.id,impact:x.impact,nodes:x.nodes.length}))});
+ results.a11y.push({label,violations:a.violations.map(x=>({id:x.id,impact:x.impact,nodes:x.nodes.slice(0,8).map(n=>({target:n.target,summary:n.failureSummary,html:n.html.slice(0,240)}))}))});
  const elements=await page.evaluate(()=>[...document.querySelectorAll('main *')].filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&(r.left < -3||r.right>document.documentElement.clientWidth+3);}).slice(0,12).map(e=>e.tagName+'.'+e.className));
  results.overflow.push({label,elements});
- console.log('A11Y',label,a.violations.length,'OVERFLOW',elements.length);
+ console.log('A11Y',label,JSON.stringify(results.a11y.at(-1).violations),'OVERFLOW',JSON.stringify(elements));
 }
 let browser;
 try{

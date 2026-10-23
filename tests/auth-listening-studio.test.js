@@ -31,7 +31,7 @@ test('account entry wraps a working Firebase form inside asymmetrical studio com
  assert.match(html,/class="lv-auth-studio"/);
  assert.match(html,/aria-labelledby="lv-auth-studio-title"/);
  assert.match(html,/class="lv-auth-studio-scene" aria-hidden="true"/);
- assert.match(html,/class="lv-auth-studio-bento"/);
+ assert.match(html,/class="lv-auth-studio-discover" href="#\/search"/);
  assert.match(html,/href="#\/search"/);
  assert.match(html,/Explore music without signing in/);
  assert.ok(html.indexOf('id="firebase-auth-form"')<html.indexOf('class="lv-auth-studio"'), 'keyboard reaches sign-in before decoration');

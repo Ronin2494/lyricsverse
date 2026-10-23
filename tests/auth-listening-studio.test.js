@@ -36,16 +36,14 @@ test('account entry wraps a working Firebase form inside asymmetrical studio com
  assert.match(html,/Explore music without signing in/);
  assert.ok(html.indexOf('id="firebase-auth-form"')<html.indexOf('class="lv-auth-studio"'), 'keyboard reaches sign-in before decoration');
 });
-test('studio bento has three genuinely unequal editorial cards, not an even tile grid',()=>{
+test('quiet studio keeps the approved music aesthetic without redundant cards',()=>{
  const html=markup('signin');
- assert.equal((html.match(/class="lv-auth-studio-tile /g)||[]).length,3);
- assert.match(css,/\.lv-auth-studio-tile-feature \{[\s\S]*?grid-column: span 7;[\s\S]*?grid-row: span 2;/);
- assert.match(css,/\.lv-auth-studio-tile-save \{[\s\S]*?grid-column: span 5;/);
- assert.match(css,/\.lv-auth-studio-tile-return \{[\s\S]*?grid-column: span 5;/);
- assert.match(css,/\.lv-auth-studio-bento \{[\s\S]*?grid-template-columns: repeat\(12, minmax\(0, 1fr\)\)/);
- assert.match(html,/class="lv-auth-studio-tile lv-auth-studio-tile-feature" href="#\/search"/);
- assert.match(html,/class="lv-auth-studio-tile lv-auth-studio-tile-save"/);
- assert.match(html,/class="lv-auth-studio-tile lv-auth-studio-tile-return"/);
+ assert.match(html,/class="auth-gate auth-gate--studio auth-gate--quiet"/);
+ assert.match(html,/class="lv-auth-studio-vinyl"/);
+ assert.match(html,/class="lv-auth-studio-discover" href="#\/search"/);
+ assert.doesNotMatch(html,/lv-auth-studio-bento|lv-auth-studio-tile/);
+ assert.match(css,/\.auth-gate--quiet \.lv-auth-studio\{[\s\S]*?min-height:0/);
+ assert.match(css,/@media\(max-width:790px\)\{[\s\S]*?\.auth-gate--quiet \.lv-auth-studio\{display:none/);
 });
 test('signup, signin, and reset retain distinct accessible controls and validation',()=>{
  const signin=markup('signin');

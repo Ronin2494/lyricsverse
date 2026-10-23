@@ -23,7 +23,7 @@ function markup(mode,{configured=true,email='',error=''}={}){
 }
 test('account entry wraps a working Firebase form inside asymmetrical studio composition',()=>{
  const html=markup('signin');
- assert.match(html,/class="auth-gate auth-gate--studio"/);
+ assert.match(html,/class="auth-gate auth-gate--studio auth-gate--quiet"/);
  assert.match(html,/class="lv-auth-workspace"/);
  assert.match(html,/class="auth-panel lv-firebase-auth"/);
  assert.match(html,/id="firebase-auth-form" novalidate/);

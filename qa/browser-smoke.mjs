@@ -16,7 +16,7 @@ const server=createServer(async(req,res)=>{try{
  const content=await readFile(target);
  res.writeHead(200,{'content-type':MIME[extname(target)]||'application/octet-stream'});res.end(content);
 }catch{res.writeHead(404);res.end('Not found');}});
-const results={scope:'Built site in headless Chromium; Firebase/API/third-party calls mocked; no production account writes',passed:[],failed:[],a11y:[],overflow:[],screenshots:[]};
+const results={scope:'Built site in headless Chromium; Firebase/API/third-party calls mocked; no production account writes',passed:[],failed:[],a11y:[],overflow:[],performance:[],screenshots:[]};
 const fakeAuth=[
  'const auth={listeners:[],currentUser:null};',
  'export function getAuth(){return auth;}',
@@ -55,8 +55,18 @@ async function audit(page,label){
  const a=await page.evaluate(()=>axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));
  results.a11y.push({label,violations:a.violations.map(x=>({id:x.id,impact:x.impact,nodes:x.nodes.slice(0,8).map(n=>({target:n.target,summary:n.failureSummary,html:n.html.slice(0,240)}))}))});
  const elements=await page.evaluate(()=>[...document.querySelectorAll('main *')].filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&(r.left < -3||r.right>document.documentElement.clientWidth+3);}).slice(0,12).map(e=>e.tagName+'.'+e.className));
- results.overflow.push({label,elements});
- console.log('A11Y',label,JSON.stringify(results.a11y.at(-1).violations),'OVERFLOW',JSON.stringify(elements));
+ const metrics=await page.evaluate(()=>{
+  const nav=performance.getEntriesByType('navigation')[0];
+  const doc=document.documentElement;
+  return {viewport:doc.clientWidth,scrollWidth:doc.scrollWidth,hasHorizontalScroll:doc.scrollWidth>doc.clientWidth+3,
+    domContentLoadedMs:Math.round(nav?.domContentLoadedEventEnd||0),
+    loadEventMs:Math.round(nav?.loadEventEnd||0)};
+ });
+ results.overflow.push({label,elements,documentScrollWidth:metrics.scrollWidth,viewport:metrics.viewport,hasHorizontalScroll:metrics.hasHorizontalScroll});
+ results.performance.push({label,...metrics,source:'LOCAL_FIXTURE—not production LCP/CLS/INP'});
+ console.log('A11Y',label,JSON.stringify(results.a11y.at(-1).violations),'OVERFLOW',JSON.stringify({elements,scrollWidth:metrics.scrollWidth,viewport:metrics.viewport}));
+ if(a.violations.some(v=>['critical','serious'].includes(v.impact)))throw Error('Serious WCAG accessibility violations: '+a.violations.map(v=>v.id).join(', '));
+
 }
 let browser;
 try{

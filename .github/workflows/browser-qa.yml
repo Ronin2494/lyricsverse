@@ -16,8 +16,8 @@ jobs:
         run: npm run build
       - name: Install browser tooling without changing application dependencies
         run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.56.1 axe-core@4.10.3
-      - name: Install Chromium and OS dependencies
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium browser
+        run: npx playwright install chromium
       - name: Browser route and form smoke with local isolated API and Firebase fixtures
         run: node qa/browser-smoke.mjs
       - name: Upload screenshots, accessibility and QA evidence

@@ -92,6 +92,9 @@ try{
    await visit('#/search');
    const input=page.locator('input[name="q"]:visible');
    assert.equal(await input.count(),1);
+   assert.equal(await page.locator('.lv-search-prompt').count(),2);
+   await page.locator('[data-discovery-query="love"]').click();
+   assert.equal(await input.inputValue(),'love');
    await input.fill('midnight');
    assert.equal(await page.locator('.neon-search-content').count(),1);
    await audit(page,device.name+'-search');
@@ -110,6 +113,9 @@ try{
   });
   await run(device.name+' password input, signup, reset',async()=>{
    await visit('#/profile');
+   assert.equal(await page.locator('.lv-auth-studio-bento').count(),0);
+   assert.ok(await page.locator('.lv-auth-studio-discover').count());
+   if(device.name==='mobile')assert.equal(await page.locator('.lv-auth-studio:visible').count(),0);
    await page.locator('#firebase-email').fill('tester@example.com');
    await page.locator('#firebase-password').fill('123');
    await page.locator('#firebase-auth-form button[type=submit]').click();

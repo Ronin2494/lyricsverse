@@ -2824,3 +2824,134 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
  .neon-home .neon-genre-strip .genres{max-width:100%;min-width:0;}
  .neon-home .neon-genre-strip .genres .chip{max-width:100%;}
 }
+
+
+/* LyricVerse clarity pass — quieter Listening Studio, purposeful search entry. */
+.auth-gate--quiet .lv-auth-workspace{
+  grid-template-columns:minmax(340px,1fr) minmax(0,.86fr);
+  max-width:1160px;
+  align-items:stretch;
+}
+.auth-gate--quiet .lv-auth-studio{
+  min-height:0;
+  justify-content:center;
+  padding:clamp(26px,3.1vw,46px);
+}
+.auth-gate--quiet .lv-auth-studio h2{
+  font-size:clamp(30px,3vw,44px);
+  max-width:15ch;
+}
+.auth-gate--quiet .lv-auth-studio > p{max-width:26ch;}
+.auth-gate--quiet .lv-auth-studio-scene{
+  flex:0 0 auto;
+  min-height:240px;
+  max-height:260px;
+  margin:8px 0 14px;
+}
+.auth-gate--quiet .lv-auth-studio-vinyl{
+  width:clamp(175px,18vw,233px);
+}
+.auth-gate--quiet .lv-auth-studio-discover{
+  position:relative;
+  z-index:1;
+  display:inline-flex;
+  align-items:center;
+  align-self:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  min-height:48px;
+  margin-top:6px;
+  padding:9px 17px;
+  border:1px solid rgba(162,192,255,.45);
+  border-radius:14px;
+  background:rgba(35,45,98,.48);
+  color:#d2ecff;
+  font-size:13px;
+  font-weight:700;
+  text-decoration:none;
+}
+.auth-gate--quiet .lv-auth-studio-discover:hover{
+  border-color:#9deaff;
+  background:rgba(48,62,119,.64);
+}
+.auth-gate--quiet .lv-auth-studio-discover:focus-visible{
+  outline:3px solid #91eafa;outline-offset:3px;
+}
+.auth-gate--quiet .lv-firebase-actions{gap:5px 18px;}
+.auth-gate--quiet .lv-firebase-auth{padding-block:clamp(27px,3.5vw,48px);}
+@media(max-width:790px){
+ .auth-gate--quiet .lv-auth-workspace{grid-template-columns:minmax(0,1fr);max-width:560px;}
+ .auth-gate--quiet .lv-auth-studio{display:none;}
+}
+.lv-search-welcome{
+  width:100%;
+  min-width:0;
+  padding:clamp(22px,3vw,34px);
+  border:1px solid rgba(156,172,245,.22);
+  border-radius:24px;
+  background:linear-gradient(145deg,rgba(20,27,68,.76),rgba(9,17,44,.92));
+}
+.lv-search-welcome-heading{max-width:44rem;margin-bottom:24px;}
+.lv-search-welcome-heading h2{
+  margin:9px 0;
+  font-family:'Sora','Inter',sans-serif;
+  font-size:clamp(23px,2.8vw,36px);
+  line-height:1.2;
+  letter-spacing:-.045em;
+  color:#f5f7ff;
+}
+.lv-search-welcome-heading p{margin:0;color:#c6d5ec;font-size:14px;}
+.lv-search-prompts{
+  display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(0,.85fr);
+  align-items:stretch;
+  gap:14px;
+}
+.lv-search-prompt{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  min-width:0;
+  min-height:152px;
+  padding:clamp(18px,2.4vw,27px);
+  border-radius:18px;
+  border:1px solid rgba(179,194,253,.32);
+  text-align:left;
+  cursor:pointer;
+  color:#eff5ff;
+  box-shadow:inset 0 1px rgba(255,255,255,.05);
+}
+.lv-search-prompt-feature{
+  background:radial-gradient(ellipse at 84% 18%,rgba(194,128,250,.20),transparent 66%),linear-gradient(135deg,#29346a,#1a2656);
+}
+.lv-search-prompt-secondary{
+  background:radial-gradient(ellipse at 80% 10%,rgba(108,214,249,.17),transparent 65%),linear-gradient(135deg,#153e54,#132746);
+}
+.lv-search-prompt > span{
+  color:#b9eafa;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.12em;
+}
+.lv-search-prompt > strong{
+  color:#fff;
+  font-family:'Sora','Inter',sans-serif;
+  font-size:clamp(19px,2.1vw,28px);
+  line-height:1.25;
+  letter-spacing:-.035em;
+}
+.lv-search-prompt > small{font-size:12px;color:#d5e3f6;line-height:1.5;}
+.lv-search-prompt:hover{border-color:#aaecff;filter:brightness(1.08);}
+.lv-search-prompt:focus-visible{outline:3px solid #9ceaff;outline-offset:4px;}
+@media(max-width:760px){
+ .lv-search-prompts{grid-template-columns:minmax(0,1fr);}
+ .lv-search-prompt{min-height:120px;}
+ .lv-search-welcome{padding:20px;}
+}
+@media(prefers-reduced-motion:reduce){
+ .lv-search-prompt,.auth-gate--quiet .lv-auth-studio-discover{
+  animation:none!important;transition:none!important;
+ }
+}

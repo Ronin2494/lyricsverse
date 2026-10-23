@@ -2756,3 +2756,71 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
     transition: none !important;
   }
 }
+
+
+/* Browser QA 2026-10-23: WCAG contrast and narrow viewport containment.
+ * Fixes measured 1.05:1 search suggestion text and mobile reader toolbar overflow.
+ * Purely decorative orbital elements can extend inside their clipped panels.
+ */
+.search-results .search-result,
+.search-results .search-result > span{
+  color:#eff5ff;
+}
+.search-results .search-result small{color:#c5d4ec;}
+.search-results .search-result:focus-visible{
+  outline:3px solid #8de9fb;
+  outline-offset:-2px;
+}
+@media(max-width:767px){
+ .neon-reader .neon-reader-hero,
+ .neon-reader .song-profile-banner,
+ .neon-reader .song-profile-banner .profile-info,
+ .neon-reader .reader-tabs{
+   min-width:0!important;
+   width:100%!important;
+   max-width:100%!important;
+   box-sizing:border-box;
+ }
+ .neon-reader .mobile-reader-controls{
+   display:flex;
+   flex-wrap:wrap;
+   justify-content:flex-start;
+   gap:8px;
+   width:100%!important;
+   max-width:100%!important;
+   min-width:0;
+ }
+ .neon-reader .mobile-reader-controls .chip{
+   width:auto!important;
+   max-width:100%;
+   min-height:44px;
+   flex:0 1 auto;
+   white-space:normal;
+ }
+ .neon-reader .reader-tabs .chip{
+   min-height:44px;
+   min-width:0;
+   max-width:100%;
+   white-space:normal;
+ }
+}
+@media(max-width:767px){
+ .neon-home .song-section .song-grid{
+   display:grid;
+   grid-template-columns:repeat(2,minmax(0,1fr));
+   gap:12px;
+   min-width:0;
+   max-width:100%;
+ }
+ .neon-home .song-section .card-shell,
+ .neon-home .song-section .favorite-card,
+ .neon-home .song-section .song-card{
+   width:100%;
+   max-width:100%;
+   min-width:0;
+   flex:none;
+ }
+ .neon-home .song-section .song-card-image{min-width:0;}
+ .neon-home .neon-genre-strip .genres{max-width:100%;min-width:0;}
+ .neon-home .neon-genre-strip .genres .chip{max-width:100%;}
+}

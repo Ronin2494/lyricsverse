@@ -42,3 +42,9 @@ test('quiet login removes promotional repetition and preserves Firebase account 
  assert.doesNotMatch(auth,/lv-auth-studio-bento|lv-auth-studio-tile-feature|lv-auth-studio-lyric-note/);
  assert.match(css,/@media\(max-width:790px\)\{[\s\S]*?\.auth-gate--quiet \.lv-auth-studio\{display:none/);
 });
+
+test('empty-search discovery must span both existing result columns at all widths',()=>{
+ assert.match(css,/\.neon-search-page \.neon-search-content > \.lv-search-welcome\{[\s\S]*?grid-column:1 \/ -1/);
+ assert.match(css,/\.neon-search-page \.neon-search-content > \.lv-search-welcome\{[\s\S]*?justify-self:stretch/);
+ assert.match(css,/\.lv-search-prompts\{[\s\S]*?grid-template-columns:minmax\(0,1\.55fr\) minmax\(0,\.85fr\)/);
+});

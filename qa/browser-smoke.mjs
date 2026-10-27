@@ -93,6 +93,29 @@ try{
    const input=page.locator('input[name="q"]:visible');
    assert.equal(await input.count(),1);
    assert.equal(await page.locator('.lv-search-prompt').count(),2);
+   // Structural visual gate: introductory layout must span both results columns,
+   // not inherit only the narrow external-sources track.
+   const geometry=await page.evaluate(()=>{
+     const content=document.querySelector('.neon-search-content');
+     const panel=document.querySelector('.lv-search-welcome');
+     const cards=[...document.querySelectorAll('.lv-search-prompt')];
+     const c=content.getBoundingClientRect(),p=panel.getBoundingClientRect();
+     const items=cards.map(card=>card.getBoundingClientRect());
+     return {containerWidth:c.width,panelWidth:p.width,panelLeft:p.left,containerLeft:c.left,
+       cardWidths:items.map(item=>item.width),cardTops:items.map(item=>item.top)};
+   });
+   assert.ok(geometry.panelWidth>=geometry.containerWidth*.97,
+     'Empty-search panel is squeezed into a results-grid column: '+JSON.stringify(geometry));
+   assert.ok(Math.abs(geometry.panelLeft-geometry.containerLeft)<=3,
+     'Empty-search panel must align with full results grid');
+   if(device.name==='desktop'){
+     assert.ok(geometry.cardWidths[0]>geometry.cardWidths[1]*1.3,
+       'Desktop bento tiles must preserve purposeful unequal spans');
+   }else{
+     assert.ok(Math.abs(geometry.cardTops[0]-geometry.cardTops[1])>=50,
+       'Mobile search prompts should stack instead of clipping');
+   }
+   await page.screenshot({path:resolve(out,device.name+'-search-welcome.png'),fullPage:true,animations:'disabled'});
    await page.locator('[data-discovery-query="love"]').click();
    assert.equal(await input.inputValue(),'love');
    await input.fill('midnight');

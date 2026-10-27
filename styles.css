@@ -2883,6 +2883,16 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
  .auth-gate--quiet .lv-auth-workspace{grid-template-columns:minmax(0,1fr);max-width:560px;}
  .auth-gate--quiet .lv-auth-studio{display:none;}
 }
+/* Unlike side-by-side provider/video results, this is one full-width intro. */
+.neon-search-page .neon-search-content > .lv-search-welcome{
+  grid-column:1 / -1;
+  grid-row:auto;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  justify-self:stretch;
+}
 .lv-search-welcome{
   width:100%;
   min-width:0;

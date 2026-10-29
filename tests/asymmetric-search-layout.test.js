@@ -45,7 +45,7 @@ test('tablet and phone layouts reflow without clipping or equalizing card height
 });
 
 test('click-to-play, YouTube links and external source actions remain unchanged',()=>{
- assert.match(search,/data-lrclib-id/);
+ assert.match(search,/Lyrics not published here/);
  assert.match(search,/Find lyrics ↗/);
  assert.match(js,/data-video-search-id/);
  assert.match(js,/youtube-nocookie\.com\/embed\//);

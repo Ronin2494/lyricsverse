@@ -7,4 +7,4 @@ test('song cover uses matched artwork with generated fallback',()=>{const cover=
 test('artwork matching checks song title and artist',()=>{assert.match(app,/itunes\.apple\.com\/search/);assert.match(app,/normalized\(x\.trackName\)===normalized\(song\.title\)/);assert.match(app,/normalized\(x\.artistName\)===normalized\(song\.artist\)/);});
 test('cover styling maintains image dimensions',()=>{assert.match(css,/\.cover-art \.song-cover-thumbnail\{display:block;width:100%;height:100%;object-fit:cover/);});
 
-test('fictional Figma demo catalog is not searched as real music',()=>{assert.doesNotMatch(app,/void enrichArtwork\(allSongs\)/);assert.match(app,/allSongs\.some\(demo=>demo\.id===song\.id\)/);assert.match(app,/Demo song/);});
+test('fictional Figma demo catalog is not searched as real music',()=>{assert.doesNotMatch(app,/void enrichArtwork\(allSongs\)/);assert.match(app,/allSongs\.some\(demo=>demo\.id===song\.id\)/);assert.doesNotMatch(app,/Demo song metadata/);});

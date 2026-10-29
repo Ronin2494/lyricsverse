@@ -69,7 +69,7 @@ test('Shared search supports a single input, live debouncing, existing lyrics so
  assert.match(app,/youtube-nocookie\.com\/embed\//);
  assert.match(app,/data-video-search-id/);
  assert.match(app,/videoStatus==='not_configured'/);
- assert.match(app,/const localHTML=matches\.length/);
+ assert.match(app,/const localHTML='<section class="local-lyrics-results"/);
  assert.match(app,/return localHTML\+'<section class="provider-results"/);
  assert.match(css,/\.lv-video-grid/);
  assert.match(css,/@media \(max-width:650px\)/);

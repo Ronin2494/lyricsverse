@@ -12,7 +12,7 @@ const search=js.slice(js.indexOf('function providerResultsHTML()'),js.indexOf('f
 
 test('published LyricVerse results retain their own full-width row',()=>{
  assert.match(layout,/\.neon-search-content > \.local-lyrics-results \{\s*grid-column: 1 \/ -1/);
- assert.match(search,/return localHTML\+'<section class="provider-results"/);
+ assert.match(search,/return localHTML\+webHTML\+'<section class="provider-results"/);
 });
 
 test('external sources and YouTube results occupy distinct asymmetrical columns',()=>{

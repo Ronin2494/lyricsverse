@@ -69,8 +69,8 @@ test('Shared search supports a single input, live debouncing, existing lyrics so
  assert.match(app,/youtube-nocookie\.com\/embed\//);
  assert.match(app,/data-video-search-id/);
  assert.match(app,/videoStatus==='not_configured'/);
- assert.match(app,/const localHTML=matches\.length/);
- assert.match(app,/return localHTML\+'<section class="provider-results"/);
+ assert.match(app,/const localHTML='<section class="local-lyrics-results"/);
+ assert.match(app,/return localHTML\+webHTML\+'<section class="provider-results"/);
  assert.match(css,/\.lv-video-grid/);
  assert.match(css,/@media \(max-width:650px\)/);
  assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
@@ -93,4 +93,15 @@ test('Server endpoint validates query and returns unavailable status without You
  assert.equal(output.data.status,'not_configured');
  assert.equal(output.data.videos.length,0);
  assert.equal(okay.headers['Cache-Control'],'no-store');
+});
+
+test('Search sources follow the required local, web, other provider, video priority',()=>{
+ const section=app.slice(app.indexOf('function providerResultsHTML(){'),app.indexOf('function searchWelcomeHTML(){'));
+ assert.ok(section.includes('return localHTML+webHTML+'), 'web search must appear immediately after local results');
+ assert.ok(section.indexOf('return localHTML+webHTML+')<section.lastIndexOf('videoResultsHTML()'), 'videos must render last');
+ assert.match(section,/providerSongs\.find\(song=>song\.provider==='Web lyrics search'/);
+ assert.match(section,/const webUrl=webResult\?\.url\|\|/, 'web search must work when provider has no result');
+ assert.match(section,/providerError\?'<p>Additional providers are temporarily unavailable/, 'provider failure must not remove the web section');
+ assert.match(section,/\['LRCLIB','Genius'\]/, 'other providers must be isolated from web search');
+ assert.match(section,/No matching lyrics published on LyricVerse yet/, 'local empty state must be explicit');
 });
